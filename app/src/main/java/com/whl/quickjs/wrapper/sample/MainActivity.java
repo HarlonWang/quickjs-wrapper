@@ -8,12 +8,20 @@ import com.whl.quickjs.wrapper.QuickJSContext;
 
 public class MainActivity extends AppCompatActivity {
 
+    QuickJSContext context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        QuickJSContext context = new QuickJSContext();
-        context.evaluate("", "", 1);
+        context = QuickJSContext.create();
+        context.evaluate("var a = 1;");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        context.destroyContext();
     }
 }
