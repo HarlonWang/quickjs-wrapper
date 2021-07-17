@@ -8,15 +8,15 @@
 #include "quickjs/quickjs.h"
 
 
-class ContextWrapper {
+class QuickJSWrapper {
 private:
     JSValue checkNotException(JSValue &value) const;
 public:
     JSRuntime *runtime;
     JSContext *context;
 
-    ContextWrapper();
-    ~ContextWrapper();
+    QuickJSWrapper();
+    ~QuickJSWrapper();
 
     JSValue evaluate(const char *script, const char *file_name = "undefined.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;
     JSValue getGlobalObject() const;
