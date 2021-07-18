@@ -13,7 +13,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, 
     const char *js = env->GetStringUTFChars(script, JNI_FALSE);
     wrapper->evaluate(js);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "hello=%s", "123");
-    return NULL;
+    return nullptr;
 }extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {
