@@ -3,7 +3,9 @@ package com.whl.quickjs.wrapper.sample;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 
+import com.whl.quickjs.wrapper.JSValue;
 import com.whl.quickjs.wrapper.QuickJSContext;
 
 public class MainActivity extends AppCompatActivity {
@@ -16,7 +18,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         context = QuickJSContext.create();
-        context.evaluate("var a = 1;");
+        JSValue value = context.evaluate("var a = 1;");
+        Log.d("quickjs-android-wrapper", "Main value = " + value);
     }
 
     @Override

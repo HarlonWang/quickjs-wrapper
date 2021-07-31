@@ -19,12 +19,12 @@ public class QuickJSContext {
         context = createContext();
     }
 
-    public Object evaluate(String script) {
+    public JSValue evaluate(String script) {
         return evaluate(script, UNDEFINED);
     }
 
-    public Object evaluate(String script, String fileName) {
-        return evaluate(context, script, fileName);
+    public JSValue evaluate(String script, String fileName) {
+        return new JSValue(context, evaluate(context, script, fileName));
     }
 
     public void destroyContext() {
@@ -33,6 +33,6 @@ public class QuickJSContext {
 
     private native long createContext();
     private native void destroyContext(long context);
-    private native Object evaluate(long context, String script, String fileName);
+    private native long evaluate(long context, String script, String fileName);
 
 }
