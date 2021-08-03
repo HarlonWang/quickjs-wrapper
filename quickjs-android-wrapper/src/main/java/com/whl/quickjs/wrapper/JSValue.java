@@ -9,10 +9,20 @@ public class JSValue {
         this.value = value;
     }
 
+    public long getValue() {
+        return value;
+    }
+
+    public JSValue getProperty(String name) {
+        return new JSValue(context, getProperty(context, value, name));
+    }
+
     @Override
     public String toString() {
-        return "JSValue{" +
-                "value=" + value +
-                '}';
+        return stringify(context, value);
     }
+
+    private native long getProperty(long context, long value, String name);
+    private native String stringify(long context, long value);
+
 }
