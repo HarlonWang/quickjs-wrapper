@@ -32,7 +32,7 @@ public class QuickJSContext {
     }
 
     public JSValue call(JSValue func, JSValue thisObj, int argCount, JSValue argValue) {
-        return new JSValue(context, call(context, func.getValue(), thisObj.getValue(), argCount, 123));
+        return new JSValue(context, call(context, func.getValue(), thisObj.getValue(), argCount, argValue == null ? -1 : argValue.getValue()));
     }
 
     public void destroyContext() {

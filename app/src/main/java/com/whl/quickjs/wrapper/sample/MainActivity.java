@@ -2,6 +2,7 @@ package com.whl.quickjs.wrapper.sample;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,10 +35,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Toast.makeText(MainActivity.this, "当时发生的", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, SecondActivity.class));
             }
         });
 
-        Log.d("quickjs-android-wrapper", "Main value = " + result.toString());
+        // Log.d("quickjs-android-wrapper", "Main value = " + result.toString());
     }
 
     @Override

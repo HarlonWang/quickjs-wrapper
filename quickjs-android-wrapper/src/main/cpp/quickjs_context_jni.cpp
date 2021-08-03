@@ -82,7 +82,7 @@ JNIEXPORT jstring JNICALL
 Java_com_whl_quickjs_wrapper_JSValue_stringify(JNIEnv *env, jobject thiz, jlong context,
                                                jlong value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    JSValue jsObj = JS_MKPTR(JS_TAG_STRING, reinterpret_cast<void *>(value));
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     const char *stringify = wrapper->stringify(jsObj);
     return env->NewStringUTF(stringify);
 }
