@@ -3,6 +3,11 @@
 #include <android/log.h>
 #include "quickjs_wrapper.h"
 
+static void j_println(QuickJSWrapper *wrapper, JSValue &value) {
+    const char *result = wrapper->stringify(value);
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-native", "println=%s", result);
+}
+
 static void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
     char msg[512];
     va_list args;
@@ -10,18 +15,6 @@ static void throwJavaException(JNIEnv *env, const char *exceptionClass, const ch
     vsnprintf(msg, sizeof(msg), fmt, args);
     va_end (args);
     env->ThrowNew(env->FindClass(exceptionClass), msg);
-}
-
-extern "C"
-JNIEXPORT jlong JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {
-    auto *wrapper = new(std::nothrow) QuickJSWrapper();
-    if (!wrapper || !wrapper->context || !wrapper->runtime) {
-        delete wrapper;
-        wrapper = nullptr;
-    }
-
-    return reinterpret_cast<jlong>(wrapper);
 }
 
 extern "C"
@@ -45,12 +38,14 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, 
     const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
     const char *c_file_name = env->GetStringUTFChars(file_name, JNI_FALSE);
 
-    JSValue value = wrapper->evaluate(c_script, c_file_name);
+    JSValue result = wrapper->evaluate(c_script, c_file_name);
+
+    j_println(wrapper, result);
 
     env->ReleaseStringUTFChars(script, c_script);
     env->ReleaseStringUTFChars(file_name, c_file_name);
 
-    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(result));
 }
 
 extern "C"
@@ -58,8 +53,6 @@ JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_getGlobalObject(JNIEnv *env, jobject thiz,
                                                             jlong context) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-
-
     JSValue value = wrapper->getGlobalObject();
     return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
 }
@@ -135,4 +128,14 @@ Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong contex
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
 
     return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(child));
+}extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {
+    auto *wrapper = new(std::nothrow) QuickJSWrapper();
+    if (!wrapper || !wrapper->context || !wrapper->runtime) {
+        delete wrapper;
+        wrapper = nullptr;
+    }
+
+    return reinterpret_cast<jlong>(wrapper);
 }

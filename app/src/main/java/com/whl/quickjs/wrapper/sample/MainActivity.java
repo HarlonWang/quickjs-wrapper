@@ -27,7 +27,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         context = QuickJSContext.create();
-        JSValue value = context.evaluate(TEST_SCRIPT);
+        JSValue value = context.evaluate("'hello, world!'.toUpperCase();");
+        if (true) {
+            return;
+        }
+
         JSValue testFunc = context.getGlobalObject().getProperty("test");
         JSValue result = context.call(testFunc, context.getGlobalObject(), 1, null);
 
