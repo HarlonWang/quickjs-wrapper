@@ -22,5 +22,16 @@ public class SecondActivity extends AppCompatActivity {
         JSValue renderFunc = globalObj.getProperty("render");
         JSValue result = context.call(renderFunc, globalObj, 1, null);
         Log.d("quickjs-android-wrapper", "Second value = " + result.toString());
+
+        JSValue children = result.getProperty("children");
+        if (children.isArray()) {
+            int length = children.getLength();
+            Log.d("quickjs-android-wrapper", "Second length = " + children.getLength());
+            for (int i = 0; i < length; i++) {
+                JSValue item = children.getByIndex(i);
+                Log.d("quickjs-android-wrapper", "item value = " + item.toString());
+            }
+        }
+
     }
 }

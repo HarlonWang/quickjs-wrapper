@@ -3,31 +3,54 @@
 #include <android/log.h>
 #include "quickjs_wrapper.h"
 
-extern "C"
-JNIEXPORT jlong JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, jlong context, jstring script,
-                                                     jstring file_name) {
-    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    const char *js = env->GetStringUTFChars(script, JNI_FALSE);
-
-    // todo file name
-    JSValue value = wrapper->evaluate(js);
-
-    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+static void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
+    char msg[512];
+    va_list args;
+    va_start (args, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, args);
+    va_end (args);
+    env->ThrowNew(env->FindClass(exceptionClass), msg);
 }
 
 extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {
-    return reinterpret_cast<jlong>(new QuickJSWrapper);
+    auto *wrapper = new(std::nothrow) QuickJSWrapper();
+    if (!wrapper || !wrapper->context || !wrapper->runtime) {
+        delete wrapper;
+        wrapper = nullptr;
+    }
+
+    return reinterpret_cast<jlong>(wrapper);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_destroyContext(JNIEnv *env, jobject thiz,
                                                            jlong context) {
-    // todo
-    // delete reinterpret_cast<QuickJSWrapper*>(context);
+    delete reinterpret_cast<QuickJSWrapper*>(context);
+}
+
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, jlong context, jstring script,
+                                                     jstring file_name) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    if (!wrapper) {
+        throwJavaException(env, "java/lang/NullPointerException",
+                           "Null QuickJS wrapper - did you destroy your QuickJS?");
+        return -1;
+    }
+
+    const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
+    const char *c_file_name = env->GetStringUTFChars(file_name, JNI_FALSE);
+
+    JSValue value = wrapper->evaluate(c_script, c_file_name);
+
+    env->ReleaseStringUTFChars(script, c_script);
+    env->ReleaseStringUTFChars(file_name, c_file_name);
+
+    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
 }
 
 extern "C"
@@ -35,6 +58,8 @@ JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_getGlobalObject(JNIEnv *env, jobject thiz,
                                                             jlong context) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+
+
     JSValue value = wrapper->getGlobalObject();
     return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
 }
@@ -85,4 +110,29 @@ Java_com_whl_quickjs_wrapper_JSValue_stringify(JNIEnv *env, jobject thiz, jlong 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     const char *stringify = wrapper->stringify(jsObj);
     return env->NewStringUTF(stringify);
+}extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_whl_quickjs_wrapper_JSValue_isArray(JNIEnv *env, jobject thiz, jlong context, jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    return JS_IsArray(wrapper->context, jsObj) != 0;
+}extern "C"
+JNIEXPORT jint JNICALL
+Java_com_whl_quickjs_wrapper_JSValue_getLength(JNIEnv *env, jobject thiz, jlong context,
+                                               jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JSValue length = wrapper->getProperty(jsObj, "length");
+    return JS_VALUE_GET_INT(length);
+}extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong context, jlong value,
+                                         jint index) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JSValue child = JS_GetPropertyUint32(wrapper->context, jsObj, index);
+    const char *childStr = wrapper->stringify(child);
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
+
+    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(child));
 }
