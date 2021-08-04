@@ -6,16 +6,23 @@
 #define QUICKJS_TEST_CONTEXT_WRAPPER_H
 
 #include "quickjs/quickjs.h"
-
+#include <jni.h>
 
 class QuickJSWrapper {
-private:
     JSValue checkNotException(JSValue &value) const;
 public:
     JSRuntime *runtime;
     JSContext *context;
+    jclass booleanClass;
+    jclass integerClass;
+    jclass doubleClass;
+    jclass longClass;
+    jmethodID booleanValueOf;
+    jmethodID integerValueOf;
+    jmethodID doubleValueOf;
+    jmethodID longValueOf;
 
-    QuickJSWrapper();
+    QuickJSWrapper(JNIEnv *env);
     ~QuickJSWrapper();
 
     JSValue evaluate(const char *script, const char *file_name = "undefined.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;

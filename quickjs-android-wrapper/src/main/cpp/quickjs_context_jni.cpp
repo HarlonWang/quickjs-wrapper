@@ -3,6 +3,57 @@
 #include <android/log.h>
 #include "quickjs_wrapper.h"
 
+static jobject toJavaObject(JNIEnv *env, QuickJSWrapper *wrapper, const JSValueConst& value) {
+    jobject result;
+    switch (JS_VALUE_GET_NORM_TAG(value)) {
+        case JS_TAG_EXCEPTION: {
+            result = nullptr;
+            break;
+        }
+
+        case JS_TAG_STRING: {
+            const char* string = JS_ToCString(wrapper->context, value);
+            result = env->NewStringUTF(string);
+            JS_FreeCString(wrapper->context, string);
+            break;
+        }
+
+        case JS_TAG_BOOL: {
+            jvalue v;
+            v.z = static_cast<jboolean>(JS_VALUE_GET_BOOL(value));
+            result = env->CallStaticObjectMethodA(wrapper->booleanClass, wrapper->booleanValueOf, &v);
+            break;
+        }
+
+        case JS_TAG_INT: {
+            jvalue v;
+            v.j = static_cast<jint>(JS_VALUE_GET_INT(value));
+            result = env->CallStaticObjectMethodA(wrapper->integerClass, wrapper->integerValueOf, &v);
+            break;
+        }
+
+        case JS_TAG_FLOAT64: {
+            jvalue v;
+            v.d = static_cast<jdouble>(JS_VALUE_GET_FLOAT64(value));
+            result = env->CallStaticObjectMethodA(wrapper->doubleClass, wrapper->doubleValueOf, &v);
+            break;
+        }
+
+        case JS_TAG_OBJECT: {
+            jvalue v;
+            v.j = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+            result = env->CallStaticObjectMethodA(wrapper->doubleClass, wrapper->doubleValueOf, &v);
+            break;
+        }
+
+        default:
+            result = nullptr;
+            break;
+    }
+
+    return result;
+}
+
 static void j_println(QuickJSWrapper *wrapper, JSValue &value) {
     const char *result = wrapper->stringify(value);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-native", "println=%s", result);
@@ -25,14 +76,14 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_destroyContext(JNIEnv *env, jobject 
 }
 
 extern "C"
-JNIEXPORT jlong JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, jlong context, jstring script,
                                                      jstring file_name) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     if (!wrapper) {
         throwJavaException(env, "java/lang/NullPointerException",
                            "Null QuickJS wrapper - did you destroy your QuickJS?");
-        return -1;
+        return nullptr;
     }
 
     const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
@@ -45,7 +96,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, 
     env->ReleaseStringUTFChars(script, c_script);
     env->ReleaseStringUTFChars(file_name, c_file_name);
 
-    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(result));
+    return toJavaObject(env, wrapper, result);
 }
 
 extern "C"
@@ -131,7 +182,7 @@ Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong contex
 }extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {
-    auto *wrapper = new(std::nothrow) QuickJSWrapper();
+    auto *wrapper = new(std::nothrow) QuickJSWrapper(env);
     if (!wrapper || !wrapper->context || !wrapper->runtime) {
         delete wrapper;
         wrapper = nullptr;

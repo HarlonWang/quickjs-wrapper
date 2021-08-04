@@ -6,9 +6,19 @@ using namespace std;
 
 #include "quickjs_wrapper.h"
 
-QuickJSWrapper::QuickJSWrapper() {
+QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     runtime = JS_NewRuntime();
     context = JS_NewContext(runtime);
+
+    booleanClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")));
+    integerClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")));
+    doubleClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")));
+    longClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Long")));
+
+    booleanValueOf = env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
+    integerValueOf = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
+    doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
+    longValueOf = env->GetStaticMethodID(longClass, "valueOf", "(J)Ljava/lang/Long;");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {

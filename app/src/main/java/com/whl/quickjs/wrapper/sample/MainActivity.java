@@ -27,7 +27,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         context = QuickJSContext.create();
-        JSValue value = context.evaluate("'hello, world!'.toUpperCase();");
+        Object value = context.evaluate("nope();");
+        Log.d("quickjs-android-wrapper", "boolean value = " + value);
         if (true) {
             return;
         }
