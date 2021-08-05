@@ -5,6 +5,10 @@
 #ifndef QUICKJS_TEST_CONTEXT_WRAPPER_H
 #define QUICKJS_TEST_CONTEXT_WRAPPER_H
 
+#include <iostream>
+#include <set>
+using namespace std;
+
 #include "quickjs/quickjs.h"
 #include <jni.h>
 
@@ -13,6 +17,9 @@ class QuickJSWrapper {
 public:
     JSRuntime *runtime;
     JSContext *context;
+
+    set<jlong> values;
+
     jclass booleanClass;
     jclass integerClass;
     jclass doubleClass;

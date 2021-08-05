@@ -43,6 +43,9 @@ static jobject toJavaObject(JNIEnv *env, QuickJSWrapper *wrapper, const JSValueC
             jvalue v;
             v.j = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
             result = env->CallStaticObjectMethodA(wrapper->longClass, wrapper->longValueOf, &v);
+
+            // todo refactor
+            wrapper->values.insert(v.j);
             break;
         }
 
@@ -105,7 +108,12 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getGlobalObject(JNIEnv *env, jobject
                                                             jlong context) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     JSValue value = wrapper->getGlobalObject();
-    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+    auto result = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+
+    // todo refactor
+    wrapper->values.insert(result);
+
+    return result;
 }
 
 extern "C"

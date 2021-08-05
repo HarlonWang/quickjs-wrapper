@@ -56,6 +56,8 @@ public class QuickJSTest {
 
         String returnRet = (String) context.call(func, globalObject, 1, null);
         Log.d(TAG, "returnRet = " + returnRet);
+
+        context.destroyContext();
     }
 
     @Test
@@ -67,6 +69,8 @@ public class QuickJSTest {
                 "\n" +
                 "test(3);");
         Log.d(TAG, "ret = " + ret.getByIndex(2));
+
+        context.destroyContext();
     }
 
 }

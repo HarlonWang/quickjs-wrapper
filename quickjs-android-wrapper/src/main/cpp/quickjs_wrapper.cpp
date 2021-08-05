@@ -1,9 +1,6 @@
 //
 // Created by yonglan.whl on 2021/7/14.
 //
-#include <iostream>
-using namespace std;
-
 #include "quickjs_wrapper.h"
 
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
@@ -22,6 +19,15 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
+    if (!values.empty()) {
+        for(auto i = values.begin(); i != values.end(); i++) {
+            JSValue v = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(*i));
+            JS_FreeValue(context, v);
+        }
+
+        values.clear();
+    }
+
     JS_FreeContext(context);
 
     // todo try catch
