@@ -42,7 +42,7 @@ static jobject toJavaObject(JNIEnv *env, jobject &thiz, QuickJSWrapper *wrapper,
         case JS_TAG_OBJECT: {
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
             if (JS_IsArray(wrapper->context, value)) {
-                result = env->NewObject(wrapper->jsObjectClass, wrapper->jsObjectInit, thiz, value_ptr);
+                result = env->NewObject(wrapper->jsArrayClass, wrapper->jsArrayInit, thiz, value_ptr);
             } else {
                 result = env->NewObject(wrapper->jsObjectClass, wrapper->jsObjectInit, thiz, value_ptr);
             }

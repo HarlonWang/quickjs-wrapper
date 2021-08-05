@@ -13,6 +13,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *jniEnv) {
     doubleClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")));
     longClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Long")));
     jsObjectClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSObject")));
+    jsArrayClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSArray")));
 
     booleanValueOf = env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -20,6 +21,8 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *jniEnv) {
     longValueOf = env->GetStaticMethodID(longClass, "valueOf", "(J)Ljava/lang/Long;");
 
     jsObjectInit = env->GetMethodID(jsObjectClass, "<init>",
+                                    "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsArrayInit = env->GetMethodID(jsArrayClass, "<init>",
                                     "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
 }
 

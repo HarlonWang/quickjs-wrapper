@@ -62,7 +62,7 @@ public class QuickJSTest {
     }
 
     @Test
-    public void getJSValueByIndexTest() {
+    public void getJSArrayTest() {
         QuickJSContext context = QuickJSContext.create();
         JSArray ret = (JSArray) context.evaluate("function test(name) {\n" +
                 "\treturn [1, 2, name];\n" +
