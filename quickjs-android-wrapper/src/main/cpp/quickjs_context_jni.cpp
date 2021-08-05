@@ -169,7 +169,7 @@ Java_com_whl_quickjs_wrapper_JSValue_getLength(JNIEnv *env, jobject thiz, jlong 
     JSValue length = wrapper->getProperty(jsObj, "length");
     return JS_VALUE_GET_INT(length);
 }extern "C"
-JNIEXPORT jlong JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong context, jlong value,
                                          jint index) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
@@ -178,7 +178,7 @@ Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong contex
     const char *childStr = wrapper->stringify(child);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
 
-    return reinterpret_cast<jlong>(JS_VALUE_GET_PTR(child));
+    return toJavaObject(env, wrapper, child);
 }extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {

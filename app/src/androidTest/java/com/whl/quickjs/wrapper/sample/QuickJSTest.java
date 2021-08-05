@@ -58,4 +58,15 @@ public class QuickJSTest {
         Log.d(TAG, "returnRet = " + returnRet);
     }
 
+    @Test
+    public void getJSValueByIndexTest() {
+        QuickJSContext context = QuickJSContext.create();
+        JSValue ret = (JSValue) context.evaluate("function test(name) {\n" +
+                "\treturn [1, 2, name];\n" +
+                "}\n" +
+                "\n" +
+                "test(3);");
+        Log.d(TAG, "ret = " + ret.getByIndex(2));
+    }
+
 }

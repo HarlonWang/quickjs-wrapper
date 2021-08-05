@@ -28,7 +28,7 @@ public class SecondActivity extends AppCompatActivity {
             int length = children.getLength();
             Log.d("quickjs-android-wrapper", "Second length = " + children.getLength());
             for (int i = 0; i < length; i++) {
-                JSValue item = children.getByIndex(i);
+                JSValue item = (JSValue) children.getByIndex(i);
                 Log.d("quickjs-android-wrapper", "item value = " + item.toString());
             }
         }

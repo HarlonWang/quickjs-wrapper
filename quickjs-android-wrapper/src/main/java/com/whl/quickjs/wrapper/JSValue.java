@@ -34,8 +34,13 @@ public class JSValue {
         return getLength(context, value);
     }
 
-    public JSValue getByIndex(int index) {
-        return new JSValue(context, get(context, value, index));
+    public Object getByIndex(int index) {
+        Object result = get(context, value, index);
+        if (result instanceof Long) {
+            return new JSValue(context, (Long) result);
+        }
+
+        return result;
     }
 
     @Override
@@ -47,6 +52,6 @@ public class JSValue {
     private native String stringify(long context, long value);
     private native boolean isArray(long context, long value);
     private native int getLength(long context, long value);
-    private native long get(long context, long value, int index);
+    private native Object get(long context, long value, int index);
 
 }
