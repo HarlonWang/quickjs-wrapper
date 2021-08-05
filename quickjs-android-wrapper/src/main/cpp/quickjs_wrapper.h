@@ -27,12 +27,14 @@ public:
     jclass longClass;
     jclass jsObjectClass;
     jclass jsArrayClass;
+    jclass jsFunctionClass;
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
     jmethodID doubleValueOf;
     jmethodID longValueOf;
     jmethodID jsObjectInit;
     jmethodID jsArrayInit;
+    jmethodID jsFunctionInit;
 
     QuickJSWrapper(JNIEnv *env);
     ~QuickJSWrapper();

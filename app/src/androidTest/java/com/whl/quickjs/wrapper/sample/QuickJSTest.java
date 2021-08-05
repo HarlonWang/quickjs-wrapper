@@ -3,6 +3,7 @@ package com.whl.quickjs.wrapper.sample;
 import android.util.Log;
 
 import com.whl.quickjs.wrapper.JSArray;
+import com.whl.quickjs.wrapper.JSFunction;
 import com.whl.quickjs.wrapper.JSObject;
 import com.whl.quickjs.wrapper.QuickJSContext;
 
@@ -75,26 +76,13 @@ public class QuickJSTest {
     }
 
     @Test
-    public void getJSObjectTest() {
+    public void getJSFunctionTest() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("function test(name) {\n" +
                 "\treturn \"hello, \" + name;\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
-        JSObject func = (JSObject) globalObject.getProperty("test");
-        Log.d(TAG, "func: " + func.getPointer());
-        Object result = context.call(func, globalObject, 1, null);
-        Log.d(TAG, "result: " + result);
-    }
-
-    @Test
-    public void getJSObjectTest2() {
-        QuickJSContext context = QuickJSContext.create();
-        context.evaluate("function test(name) {\n" +
-                "\treturn \"hello, \" + name;\n" +
-                "}");
-        JSObject globalObject = context.getGlobalObject();
-        JSObject func = (JSObject) globalObject.getProperty("test");
+        JSFunction func = (JSFunction) globalObject.getProperty("test");
         Log.d(TAG, "func: " + func.getPointer());
         Object result = context.call(func, globalObject, 1, null);
         Log.d(TAG, "result: " + result);
