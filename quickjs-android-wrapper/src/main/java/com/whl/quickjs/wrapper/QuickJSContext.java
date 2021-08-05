@@ -36,8 +36,13 @@ public class QuickJSContext {
         return new JSValue(context, getGlobalObject(context));
     }
 
-    public JSValue call(JSValue func, JSValue thisObj, int argCount, JSValue argValue) {
-        return new JSValue(context, call(context, func.getValue(), thisObj.getValue(), argCount, argValue == null ? -1 : argValue.getValue()));
+    public Object call(JSValue func, JSValue thisObj, int argCount, JSValue argValue) {
+        Object result = call(context, func.getValue(), thisObj.getValue(), argCount, argValue == null ? -1 : argValue.getValue());
+        if (result instanceof Long) {
+            return new JSValue(context, (Long) result);
+        }
+
+        return result;
     }
 
     public void destroyContext() {
@@ -48,6 +53,6 @@ public class QuickJSContext {
     private native void destroyContext(long context);
     private native Object evaluate(long context, String script, String fileName);
     private native long getGlobalObject(long context);
-    private native long call(long context, long func, long thisObj, int argCount, long argValue);
+    private native Object call(long context, long func, long thisObj, int argCount, long argValue);
 
 }

@@ -19,11 +19,11 @@ public class SecondActivity extends AppCompatActivity {
         context.evaluate(Script.RENDER);
 
         JSValue globalObj = context.getGlobalObject();
-        JSValue renderFunc = globalObj.getProperty("render");
-        JSValue result = context.call(renderFunc, globalObj, 1, null);
+        JSValue renderFunc = (JSValue) globalObj.getProperty("render");
+        JSValue result = (JSValue) context.call(renderFunc, globalObj, 1, null);
         Log.d("quickjs-android-wrapper", "Second value = " + result.toString());
 
-        JSValue children = result.getProperty("children");
+        JSValue children = (JSValue) result.getProperty("children");
         if (children.isArray()) {
             int length = children.getLength();
             Log.d("quickjs-android-wrapper", "Second length = " + children.getLength());

@@ -33,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        JSValue testFunc = context.getGlobalObject().getProperty("test");
-        JSValue result = context.call(testFunc, context.getGlobalObject(), 1, null);
+        JSValue testFunc = (JSValue) context.getGlobalObject().getProperty("test");
+        JSValue result = (JSValue) context.call(testFunc, context.getGlobalObject(), 1, null);
 
         findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
             @Override

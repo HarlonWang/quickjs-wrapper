@@ -17,8 +17,13 @@ public class JSValue {
         return context;
     }
 
-    public JSValue getProperty(String name) {
-        return new JSValue(context, getProperty(context, value, name));
+    public Object getProperty(String name) {
+        Object result = getProperty(context, value, name);
+        if (result instanceof Long) {
+            return new JSValue(context, (Long) result);
+        }
+
+        return result;
     }
 
     public boolean isArray() {
@@ -38,7 +43,7 @@ public class JSValue {
         return stringify(context, value);
     }
 
-    private native long getProperty(long context, long value, String name);
+    private native Object getProperty(long context, long value, String name);
     private native String stringify(long context, long value);
     private native boolean isArray(long context, long value);
     private native int getLength(long context, long value);
