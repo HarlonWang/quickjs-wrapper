@@ -3,7 +3,7 @@
 #include <android/log.h>
 #include "quickjs_wrapper.h"
 
-static jobject toJavaObject(JNIEnv *env, QuickJSWrapper *wrapper, const JSValueConst& value) {
+static jobject toJavaObject(JNIEnv *env, jobject &thiz, QuickJSWrapper *wrapper, const JSValueConst& value) {
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -40,12 +40,15 @@ static jobject toJavaObject(JNIEnv *env, QuickJSWrapper *wrapper, const JSValueC
         }
 
         case JS_TAG_OBJECT: {
-            jvalue v;
-            v.j = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
-            result = env->CallStaticObjectMethodA(wrapper->longClass, wrapper->longValueOf, &v);
+            auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+            if (JS_IsArray(wrapper->context, value)) {
+                result = env->NewObject(wrapper->jsObjectClass, wrapper->jsObjectInit, thiz, value_ptr);
+            } else {
+                result = env->NewObject(wrapper->jsObjectClass, wrapper->jsObjectInit, thiz, value_ptr);
+            }
 
             // todo refactor
-            wrapper->values.insert(v.j);
+            wrapper->values.insert(value_ptr);
             break;
         }
 
@@ -99,11 +102,11 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, 
     env->ReleaseStringUTFChars(script, c_script);
     env->ReleaseStringUTFChars(file_name, c_file_name);
 
-    return toJavaObject(env, wrapper, result);
+    return toJavaObject(env, thiz, wrapper, result);
 }
 
 extern "C"
-JNIEXPORT jlong JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_getGlobalObject(JNIEnv *env, jobject thiz,
                                                             jlong context) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
@@ -113,12 +116,12 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getGlobalObject(JNIEnv *env, jobject
     // todo refactor
     wrapper->values.insert(result);
 
-    return result;
+    return toJavaObject(env, thiz, wrapper, value);
 }
 
 extern "C"
 JNIEXPORT jobject JNICALL
-Java_com_whl_quickjs_wrapper_JSValue_getProperty(JNIEnv *env, jobject thiz, jlong context, jlong value,
+Java_com_whl_quickjs_wrapper_QuickJSContext_getProperty(JNIEnv *env, jobject thiz, jlong context, jlong value,
                                                  jstring name) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
 
@@ -132,7 +135,7 @@ Java_com_whl_quickjs_wrapper_JSValue_getProperty(JNIEnv *env, jobject thiz, jlon
     const char *r_result = wrapper->stringify(propsValue);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get props r_value=%s", r_result);
 
-    return toJavaObject(env, wrapper, propsValue);
+    return toJavaObject(env, thiz, wrapper, propsValue);
 }
 
 extern "C"
@@ -147,30 +150,25 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_call(JNIEnv *env, jobject thiz, jlon
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
+
     JSValue funcRet = wrapper->call(jsFunc, jsObj, 1, &argv);
     const char *r_result = wrapper->stringify(funcRet);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get props func_value=%s", r_result);
 
-    return toJavaObject(env, wrapper, funcRet);
+    return toJavaObject(env, thiz, wrapper, funcRet);
 }
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_whl_quickjs_wrapper_JSValue_stringify(JNIEnv *env, jobject thiz, jlong context,
+Java_com_whl_quickjs_wrapper_QuickJSContext_stringify(JNIEnv *env, jobject thiz, jlong context,
                                                jlong value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     const char *stringify = wrapper->stringify(jsObj);
     return env->NewStringUTF(stringify);
 }extern "C"
-JNIEXPORT jboolean JNICALL
-Java_com_whl_quickjs_wrapper_JSValue_isArray(JNIEnv *env, jobject thiz, jlong context, jlong value) {
-    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
-    return JS_IsArray(wrapper->context, jsObj) != 0;
-}extern "C"
 JNIEXPORT jint JNICALL
-Java_com_whl_quickjs_wrapper_JSValue_getLength(JNIEnv *env, jobject thiz, jlong context,
+Java_com_whl_quickjs_wrapper_QuickJSContext_length(JNIEnv *env, jobject thiz, jlong context,
                                                jlong value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
@@ -178,7 +176,7 @@ Java_com_whl_quickjs_wrapper_JSValue_getLength(JNIEnv *env, jobject thiz, jlong 
     return JS_VALUE_GET_INT(length);
 }extern "C"
 JNIEXPORT jobject JNICALL
-Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong context, jlong value,
+Java_com_whl_quickjs_wrapper_QuickJSContext_get(JNIEnv *env, jobject thiz, jlong context, jlong value,
                                          jint index) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
@@ -186,7 +184,7 @@ Java_com_whl_quickjs_wrapper_JSValue_get(JNIEnv *env, jobject thiz, jlong contex
     const char *childStr = wrapper->stringify(child);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
 
-    return toJavaObject(env, wrapper, child);
+    return toJavaObject(env, thiz, wrapper, child);
 }extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {

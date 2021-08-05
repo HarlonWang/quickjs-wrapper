@@ -24,35 +24,46 @@ public class QuickJSContext {
     }
 
     public Object evaluate(String script, String fileName) {
-        Object result = evaluate(context, script, fileName);
-        if (result instanceof Long) {
-            return new JSValue(context, (Long) result);
-        }
-
-        return result;
+        return evaluate(context, script, fileName);
     }
 
-    public JSValue getGlobalObject() {
-        return new JSValue(context, getGlobalObject(context));
+    public JSObject getGlobalObject() {
+        return getGlobalObject(context);
     }
 
-    public Object call(JSValue func, JSValue thisObj, int argCount, JSValue argValue) {
-        Object result = call(context, func.getValue(), thisObj.getValue(), argCount, argValue == null ? -1 : argValue.getValue());
-        if (result instanceof Long) {
-            return new JSValue(context, (Long) result);
-        }
-
-        return result;
+    public Object call(JSObject func, JSObject thisObj, int argCount, JSObject argValue) {
+        return call(context, func.getPointer(), thisObj.getPointer(), argCount, argValue == null ? -1 : argValue.getPointer());
     }
 
     public void destroyContext() {
         destroyContext(context);
     }
 
+    public String stringify(JSObject jsObj) {
+        return stringify(context, jsObj.getPointer());
+    }
+
+    public Object getProperty(JSObject jsObj, String name) {
+        return getProperty(context, jsObj.getPointer(), name);
+    }
+
+    public int length(JSArray jsArray) {
+        return length(context, jsArray.getPointer());
+    }
+
+    public Object get(JSArray jsArray, int index) {
+        return get(context, jsArray.getPointer(), index);
+    }
+
     private native long createContext();
     private native void destroyContext(long context);
     private native Object evaluate(long context, String script, String fileName);
-    private native long getGlobalObject(long context);
+    private native JSObject getGlobalObject(long context);
     private native Object call(long context, long func, long thisObj, int argCount, long argValue);
+
+    private native Object getProperty(long context, long objValue, String name);
+    private native String stringify(long context, long objValue);
+    private native int length(long context, long objValue);
+    private native Object get(long context, long objValue, int index);
 
 }

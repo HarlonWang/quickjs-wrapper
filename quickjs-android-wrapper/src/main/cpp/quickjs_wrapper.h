@@ -15,6 +15,7 @@ using namespace std;
 class QuickJSWrapper {
     JSValue checkNotException(JSValue &value) const;
 public:
+    JNIEnv *env;
     JSRuntime *runtime;
     JSContext *context;
 
@@ -24,10 +25,12 @@ public:
     jclass integerClass;
     jclass doubleClass;
     jclass longClass;
+    jclass jsObjectClass;
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
     jmethodID doubleValueOf;
     jmethodID longValueOf;
+    jmethodID jsObjectInit;
 
     QuickJSWrapper(JNIEnv *env);
     ~QuickJSWrapper();

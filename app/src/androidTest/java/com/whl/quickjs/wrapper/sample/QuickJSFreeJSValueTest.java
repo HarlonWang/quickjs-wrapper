@@ -1,6 +1,6 @@
 package com.whl.quickjs.wrapper.sample;
 
-import com.whl.quickjs.wrapper.JSValue;
+import com.whl.quickjs.wrapper.JSObject;
 import com.whl.quickjs.wrapper.QuickJSContext;
 
 import org.junit.After;
@@ -24,7 +24,7 @@ public class QuickJSFreeJSValueTest {
     @Test
     public void freeJSValueTest() {
         context.evaluate("var a = 1;");
-        JSValue globalObject = context.getGlobalObject();
+        JSObject globalObject = context.getGlobalObject();
     }
 
 }

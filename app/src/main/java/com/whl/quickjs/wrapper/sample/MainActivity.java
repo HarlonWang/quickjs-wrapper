@@ -8,7 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.whl.quickjs.wrapper.JSValue;
+import com.whl.quickjs.wrapper.JSObject;
 import com.whl.quickjs.wrapper.QuickJSContext;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        JSValue testFunc = (JSValue) context.getGlobalObject().getProperty("test");
-        JSValue result = (JSValue) context.call(testFunc, context.getGlobalObject(), 1, null);
+        JSObject testFunc = (JSObject) context.getGlobalObject().getProperty("test");
+        JSObject result = (JSObject) context.call(testFunc, context.getGlobalObject(), 1, null);
 
         findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
             @Override
