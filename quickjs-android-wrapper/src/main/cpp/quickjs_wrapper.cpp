@@ -23,6 +23,9 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 
 QuickJSWrapper::~QuickJSWrapper() {
     JS_FreeContext(context);
+
+    // todo try catch
+    // void JS_FreeRuntime(JSRuntime *): assertion "list_empty(&rt->gc_obj_list)" failed
     JS_FreeRuntime(runtime);
 }
 
