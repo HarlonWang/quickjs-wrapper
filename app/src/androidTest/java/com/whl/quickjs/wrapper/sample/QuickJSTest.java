@@ -12,8 +12,17 @@ import static org.junit.Assert.*;
 public class QuickJSTest {
 
     @Test
-    public void createQuickJSContext() {
+    public void createQuickJSContextTest() {
         QuickJSContext.create();
+    }
+
+    @Test
+    public void destroyQuickJSContextTest() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("var a = 123;");
+        JSObject globalObject = context.getGlobalObject();
+        assertEquals(123, globalObject.getProperty("a"));
+        context.destroyContext();
     }
 
     @Test
