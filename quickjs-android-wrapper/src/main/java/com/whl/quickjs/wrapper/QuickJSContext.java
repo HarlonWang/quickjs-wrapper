@@ -31,10 +31,6 @@ public class QuickJSContext {
         return getGlobalObject(context);
     }
 
-    public Object call(JSObject func, JSObject thisObj, int argCount, JSObject argValue) {
-        return call(context, func.getPointer(), thisObj.getPointer(), argCount, argValue == null ? -1 : argValue.getPointer());
-    }
-
     public void destroyContext() {
         destroyContext(context);
     }
@@ -55,11 +51,15 @@ public class QuickJSContext {
         return get(context, jsArray.getPointer(), index);
     }
 
+    public Object call(JSObject func, JSObject thisObj, Object... args) {
+        return call(context, func.getPointer(), thisObj.getPointer(), args);
+    }
+
     private native long createContext();
     private native void destroyContext(long context);
     private native Object evaluate(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
-    private native Object call(long context, long func, long thisObj, int argCount, long argValue);
+    private native Object call(long context, long func, long thisObj, Object[] args);
 
     private native Object getProperty(long context, long objValue, String name);
     private native String stringify(long context, long objValue);

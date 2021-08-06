@@ -2,6 +2,7 @@
 #include <string>
 #include <android/log.h>
 #include "quickjs_wrapper.h"
+#include <vector>
 
 static jobject toJavaObject(JNIEnv *env, jobject &thiz, QuickJSWrapper *wrapper, const JSValueConst& value) {
     jobject result;
@@ -140,21 +141,78 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getProperty(JNIEnv *env, jobject thi
     return toJavaObject(env, thiz, wrapper, propsValue);
 }
 
+std::string getName(JNIEnv* env, jobject javaClass) {
+    auto classType = env->GetObjectClass(javaClass);
+    const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
+    auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
+    const auto s = env->GetStringUTFChars(javaString, nullptr);
+
+    std::string str(s);
+    env->ReleaseStringUTFChars(javaString, s);
+    env->DeleteLocalRef(javaString);
+    env->DeleteLocalRef(classType);
+    return str;
+}
+
+
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_call(JNIEnv *env, jobject thiz, jlong context,
-                                                 jlong func, jlong this_obj, jint arg_count,
-                                                 jlong arg_value) {
+                                                 jlong func, jlong this_obj, jobjectArray args) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
 
-    // todo delete
-    JSValue argv = JS_NewString(wrapper->context, "args");
+    int argc = env->GetArrayLength(args);
+    vector<JSValue> arguments;
+    for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
+        jobject arg = env->GetObjectArrayElement(args, numArgs);
+        if (!arg) {
+            __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "call Java type with null");
+            break;
+        }
+
+        auto classType = env->GetObjectClass(arg);
+        const auto typeName = getName(env, classType);
+        __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "call args type=%s", typeName.c_str());
+
+        if (!typeName.empty() && typeName[0] == '[') {
+            throwJavaException(env, "java/lang/RuntimeException",
+                               "Unsupported Java type with Array!");
+            return nullptr;
+        }
+
+        if (typeName == "java.lang.String") {
+            const auto s = env->GetStringUTFChars(static_cast<jstring>(arg), JNI_FALSE);
+            auto jsString = JS_NewString(wrapper->context, s);
+            env->ReleaseStringUTFChars(static_cast<jstring>(arg), s);
+            arguments.push_back(jsString);
+        } else if (typeName == "java.lang.Double" || typeName == "double") {
+            arguments.push_back(JS_NewFloat64(wrapper->context, env->CallDoubleMethod(arg, wrapper->doubleGetValue)));
+        } else if (typeName == "java.lang.Integer" || typeName == "int") {
+            arguments.push_back(JS_NewInt32(wrapper->context, env->CallIntMethod(arg, wrapper->integerGetValue)));
+        } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
+            arguments.push_back(JS_NewBool(wrapper->context, env->CallBooleanMethod(arg, wrapper->booleanGetValue)));
+        } else {
+            // Throw an exception for unsupported argument type.
+            throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
+                               typeName.c_str());
+        }
+
+        env->DeleteLocalRef(arg);
+    }
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
 
-    JSValue funcRet = wrapper->call(jsFunc, jsObj, 1, &argv);
+    JSValue funcRet = wrapper->call(jsFunc, jsObj, arguments.size(), arguments.data());
+
+    JS_FreeValue(wrapper->context, jsObj);
+    JS_FreeValue(wrapper->context, jsFunc);
+    for (JSValue argument : arguments) {
+        JS_FreeValue(wrapper->context, argument);
+    }
+
     const char *r_result = wrapper->stringify(funcRet);
+
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get props func_value=%s", r_result);
 
     return toJavaObject(env, thiz, wrapper, funcRet);

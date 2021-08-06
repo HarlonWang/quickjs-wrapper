@@ -11,7 +11,6 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *jniEnv) {
     booleanClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")));
     integerClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")));
     doubleClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")));
-    longClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Long")));
     jsObjectClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSObject")));
     jsArrayClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSArray")));
     jsFunctionClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSFunction")));
@@ -19,21 +18,20 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *jniEnv) {
     booleanValueOf = env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
     doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
-    longValueOf = env->GetStaticMethodID(longClass, "valueOf", "(J)Ljava/lang/Long;");
 
-    jsObjectInit = env->GetMethodID(jsObjectClass, "<init>",
-                                    "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsArrayInit = env->GetMethodID(jsArrayClass, "<init>",
-                                    "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsFunctionInit = env->GetMethodID(jsFunctionClass, "<init>",
-                                   "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    booleanGetValue = env->GetMethodID(booleanClass, "booleanValue", "()Z");
+    integerGetValue = env->GetMethodID(integerClass, "intValue", "()I");
+    doubleGetValue = env->GetMethodID(doubleClass, "doubleValue", "()D");
+
+    jsObjectInit = env->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsArrayInit = env->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsFunctionInit = env->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
     env->DeleteGlobalRef(doubleClass);
     env->DeleteGlobalRef(integerClass);
     env->DeleteGlobalRef(booleanClass);
-    env->DeleteGlobalRef(longClass);
 
     if (!values.empty()) {
         for(auto i = values.begin(); i != values.end(); i++) {

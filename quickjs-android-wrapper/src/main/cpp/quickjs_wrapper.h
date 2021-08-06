@@ -24,14 +24,18 @@ public:
     jclass booleanClass;
     jclass integerClass;
     jclass doubleClass;
-    jclass longClass;
     jclass jsObjectClass;
     jclass jsArrayClass;
     jclass jsFunctionClass;
+
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
     jmethodID doubleValueOf;
-    jmethodID longValueOf;
+
+    jmethodID booleanGetValue;
+    jmethodID integerGetValue;
+    jmethodID doubleGetValue;
+
     jmethodID jsObjectInit;
     jmethodID jsArrayInit;
     jmethodID jsFunctionInit;

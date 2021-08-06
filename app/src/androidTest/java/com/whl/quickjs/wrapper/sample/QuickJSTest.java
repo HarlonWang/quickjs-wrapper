@@ -1,13 +1,13 @@
 package com.whl.quickjs.wrapper.sample;
 
-import android.util.Log;
-
 import com.whl.quickjs.wrapper.JSArray;
 import com.whl.quickjs.wrapper.JSFunction;
 import com.whl.quickjs.wrapper.JSObject;
 import com.whl.quickjs.wrapper.QuickJSContext;
 
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class QuickJSTest {
 
@@ -21,71 +21,70 @@ public class QuickJSTest {
     @Test
     public void evalReturnTypeTest() {
         QuickJSContext context = QuickJSContext.create();
-        Log.d(TAG, context.evaluate("true;").toString());
-        Log.d(TAG, context.evaluate("false;").toString());
-        Log.d(TAG, context.evaluate("1123;").toString());
-        Log.d(TAG, context.evaluate("1.1231;").toString());
-        Log.d(TAG, context.evaluate("\"hello wrapper\";").toString());
+        assertEquals(true, context.evaluate("true;"));
+        assertEquals(false, context.evaluate("false;"));
+        assertEquals(123, context.evaluate("123;"));
+        assertEquals(1.23, context.evaluate("1.23;"));
+        assertEquals("hello wrapper", context.evaluate("\"hello wrapper\";"));
     }
 
     @Test
-    public void getPropertyIntTest() {
+    public void getPropertiesTest() {
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("var a = 1;");
-        JSObject globalObject = context.getGlobalObject();
-        int a = (int) globalObject.getProperty("a");
-        Log.d(TAG, "a = " + a);
-    }
-
-    @Test
-    public void getPropertyStringTest() {
-        QuickJSContext context = QuickJSContext.create();
-        context.evaluate("var a = \"string test\";");
-        JSObject globalObject = context.getGlobalObject();
-        String a = (String) globalObject.getProperty("a");
-        Log.d(TAG, "a = " + a);
-    }
-
-    @Test
-    public void getPropertyFunctionTest() {
-        QuickJSContext context = QuickJSContext.create();
-        context.evaluate("function test(name) {\n" +
+        context.evaluate("var intValue = 1;\n" +
+                "var doubleValue = 1.23;\n" +
+                "var stringValue = \"hi Jack\";\n" +
+                "var booleanValue = true;\n" +
+                "\n" +
+                "function testFunc(name) {\n" +
                 "\treturn \"hello, \" + name;\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
-        JSObject func = (JSObject) globalObject.getProperty("test");
-        Log.d(TAG, "func = " + func.getPointer());
-
-        String returnRet = (String) context.call(func, globalObject, 1, null);
-        Log.d(TAG, "returnRet = " + returnRet);
-
-        context.destroyContext();
+        assertEquals(1, globalObject.getProperty("intValue"));
+        assertEquals(1.23, globalObject.getProperty("doubleValue"));
+        assertEquals("hi Jack", globalObject.getProperty("stringValue"));
+        assertEquals(true, globalObject.getProperty("booleanValue"));
+        JSFunction function = (JSFunction) globalObject.getProperty("testFunc");
+        assertEquals("hello, yonglan-whl", context.call(function, globalObject, "yonglan-whl"));
     }
 
     @Test
     public void getJSArrayTest() {
         QuickJSContext context = QuickJSContext.create();
-        JSArray ret = (JSArray) context.evaluate("function test(name) {\n" +
-                "\treturn [1, 2, name];\n" +
+        JSArray ret = (JSArray) context.evaluate("function test(value) {\n" +
+                "\treturn [1, 2, value];\n" +
                 "}\n" +
                 "\n" +
                 "test(3);");
-        Log.d(TAG, "ret = " + ret.get(2));
-
-        context.destroyContext();
+        assertEquals(3, ret.get(2));
     }
 
     @Test
-    public void getJSFunctionTest() {
+    public void JSFunctionArgsTest() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("function test(intValue, stringValue, doubleValue, booleanValue) {\n" +
+                "\treturn \"hello, \" + intValue + stringValue + doubleValue + booleanValue;\n" +
+                "}");
+        JSObject globalObject = context.getGlobalObject();
+        JSFunction func = (JSFunction) globalObject.getProperty("test");
+        assertEquals("hello, 1string123.11true", context.call(func, globalObject, 1, "string", 123.11, true));
+    }
+
+    @Test
+    public void JSFunctionArgsTestWithUnSupportType() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("function test(name) {\n" +
                 "\treturn \"hello, \" + name;\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
-        Log.d(TAG, "func: " + func.getPointer());
-        Object result = context.call(func, globalObject, 1, null);
-        Log.d(TAG, "result: " + result);
+        try {
+            context.call(func, globalObject, new int[]{1, 2});
+            fail();
+        } catch (Exception e) {
+            assertEquals("java.lang.RuntimeException: Unsupported Java type with Array!", e.toString());
+        }
+
     }
 
 }
