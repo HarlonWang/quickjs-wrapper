@@ -11,8 +11,6 @@ import static org.junit.Assert.*;
 
 public class QuickJSTest {
 
-    private static final String TAG = "QuickJSTest";
-
     @Test
     public void createQuickJSContext() {
         QuickJSContext.create();

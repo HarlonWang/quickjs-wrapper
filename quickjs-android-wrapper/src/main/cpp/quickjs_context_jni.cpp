@@ -63,6 +63,19 @@ static jobject toJavaObject(JNIEnv *env, jobject &thiz, QuickJSWrapper *wrapper,
     return result;
 }
 
+static string getName(JNIEnv* env, jobject javaClass) {
+    auto classType = env->GetObjectClass(javaClass);
+    const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
+    auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
+    const auto s = env->GetStringUTFChars(javaString, nullptr);
+
+    std::string str(s);
+    env->ReleaseStringUTFChars(javaString, s);
+    env->DeleteLocalRef(javaString);
+    env->DeleteLocalRef(classType);
+    return str;
+}
+
 static void j_println(QuickJSWrapper *wrapper, JSValue &value) {
     const char *result = wrapper->stringify(value);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-native", "println=%s", result);
@@ -140,20 +153,6 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getProperty(JNIEnv *env, jobject thi
 
     return toJavaObject(env, thiz, wrapper, propsValue);
 }
-
-std::string getName(JNIEnv* env, jobject javaClass) {
-    auto classType = env->GetObjectClass(javaClass);
-    const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
-    auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
-    const auto s = env->GetStringUTFChars(javaString, nullptr);
-
-    std::string str(s);
-    env->ReleaseStringUTFChars(javaString, s);
-    env->DeleteLocalRef(javaString);
-    env->DeleteLocalRef(classType);
-    return str;
-}
-
 
 extern "C"
 JNIEXPORT jobject JNICALL
