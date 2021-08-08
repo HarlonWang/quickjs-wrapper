@@ -3,35 +3,35 @@
 //
 #include "quickjs_wrapper.h"
 
-QuickJSWrapper::QuickJSWrapper(JNIEnv *jniEnv) {
-    env = jniEnv;
+QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
+    jniEnv = env;
     runtime = JS_NewRuntime();
     context = JS_NewContext(runtime);
 
-    booleanClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")));
-    integerClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")));
-    doubleClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")));
-    jsObjectClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSObject")));
-    jsArrayClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSArray")));
-    jsFunctionClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/whl/quickjs/wrapper/JSFunction")));
+    booleanClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
+    integerClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
+    doubleClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Double")));
+    jsObjectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObject")));
+    jsArrayClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
+    jsFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
 
-    booleanValueOf = env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
-    integerValueOf = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
-    doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
+    booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
+    integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
+    doubleValueOf = jniEnv->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
 
-    booleanGetValue = env->GetMethodID(booleanClass, "booleanValue", "()Z");
-    integerGetValue = env->GetMethodID(integerClass, "intValue", "()I");
-    doubleGetValue = env->GetMethodID(doubleClass, "doubleValue", "()D");
+    booleanGetValue = jniEnv->GetMethodID(booleanClass, "booleanValue", "()Z");
+    integerGetValue = jniEnv->GetMethodID(integerClass, "intValue", "()I");
+    doubleGetValue = jniEnv->GetMethodID(doubleClass, "doubleValue", "()D");
 
-    jsObjectInit = env->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsArrayInit = env->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsFunctionInit = env->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
-    env->DeleteGlobalRef(doubleClass);
-    env->DeleteGlobalRef(integerClass);
-    env->DeleteGlobalRef(booleanClass);
+    jniEnv->DeleteGlobalRef(doubleClass);
+    jniEnv->DeleteGlobalRef(integerClass);
+    jniEnv->DeleteGlobalRef(booleanClass);
 
     if (!values.empty()) {
         for(auto i = values.begin(); i != values.end(); i++) {
@@ -47,6 +47,77 @@ QuickJSWrapper::~QuickJSWrapper() {
     // todo try catch
     // void JS_FreeRuntime(JSRuntime *): assertion "list_empty(&rt->gc_obj_list)" failed
     JS_FreeRuntime(runtime);
+}
+
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, const JSValueConst& value){
+    jobject result;
+    switch (JS_VALUE_GET_NORM_TAG(value)) {
+        case JS_TAG_EXCEPTION: {
+            result = nullptr;
+            break;
+        }
+
+        case JS_TAG_STRING: {
+            const char* string = JS_ToCString(context, value);
+            result = env->NewStringUTF(string);
+            JS_FreeCString(context, string);
+            break;
+        }
+
+        case JS_TAG_BOOL: {
+            jvalue v;
+            v.z = static_cast<jboolean>(JS_VALUE_GET_BOOL(value));
+            result = env->CallStaticObjectMethodA(booleanClass, booleanValueOf, &v);
+            break;
+        }
+
+        case JS_TAG_INT: {
+            jvalue v;
+            v.j = static_cast<jint>(JS_VALUE_GET_INT(value));
+            result = env->CallStaticObjectMethodA(integerClass, integerValueOf, &v);
+            break;
+        }
+
+        case JS_TAG_FLOAT64: {
+            jvalue v;
+            v.d = static_cast<jdouble>(JS_VALUE_GET_FLOAT64(value));
+            result = env->CallStaticObjectMethodA(doubleClass, doubleValueOf, &v);
+            break;
+        }
+
+        case JS_TAG_OBJECT: {
+            auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+            if (JS_IsFunction(context, value)) {
+                result = env->NewObject(jsFunctionClass, jsFunctionInit, thiz, value_ptr);
+            } else if (JS_IsArray(context, value)) {
+                result = env->NewObject(jsArrayClass, jsArrayInit, thiz, value_ptr);
+            } else {
+                result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
+            }
+
+            // todo refactor
+            values.insert(value_ptr);
+            break;
+        }
+
+        default:
+            result = nullptr;
+            break;
+    }
+
+    return result;
+}
+
+jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstring file_name) {
+    const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
+    const char *c_file_name = env->GetStringUTFChars(file_name, JNI_FALSE);
+
+    JSValue result = evaluate(c_script, c_file_name);
+
+    env->ReleaseStringUTFChars(script, c_script);
+    env->ReleaseStringUTFChars(file_name, c_file_name);
+
+    return toJavaObject(env, thiz, result);
 }
 
 JSValue QuickJSWrapper::evaluate(const char *script, const char *file_name, int eval_flag) const {
@@ -86,6 +157,104 @@ JSValue QuickJSWrapper::checkNotException(JSValue &value) const {
     }
 
     return value;
+}
+
+jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) {
+    JSValue value = getGlobalObject();
+    auto result = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+
+    // todo refactor
+    values.insert(result);
+
+    return toJavaObject(env, thiz, value);
+}
+
+jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstring name) {
+    const char *propsName = env->GetStringUTFChars(name, JNI_FALSE);
+    JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JSValue propsValue = getProperty(jsObject, propsName);
+
+    return toJavaObject(env, thiz, propsValue);
+}
+
+jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj,
+                             jobjectArray args) {
+    int argc = env->GetArrayLength(args);
+    vector<JSValue> arguments;
+    for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
+        jobject arg = env->GetObjectArrayElement(args, numArgs);
+        if (!arg) {
+            __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "call Java type with null");
+            break;
+        }
+
+        auto classType = env->GetObjectClass(arg);
+        const auto typeName = getName(env, classType);
+        __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "call args type=%s", typeName.c_str());
+
+        if (!typeName.empty() && typeName[0] == '[') {
+            throwJavaException(env, "java/lang/RuntimeException",
+                               "Unsupported Java type with Array!");
+            return nullptr;
+        }
+
+        if (typeName == "java.lang.String") {
+            const auto s = env->GetStringUTFChars(static_cast<jstring>(arg), JNI_FALSE);
+            auto jsString = JS_NewString(context, s);
+            env->ReleaseStringUTFChars(static_cast<jstring>(arg), s);
+            arguments.push_back(jsString);
+        } else if (typeName == "java.lang.Double" || typeName == "double") {
+            arguments.push_back(JS_NewFloat64(context, env->CallDoubleMethod(arg, doubleGetValue)));
+        } else if (typeName == "java.lang.Integer" || typeName == "int") {
+            arguments.push_back(JS_NewInt32(context, env->CallIntMethod(arg, integerGetValue)));
+        } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
+            arguments.push_back(JS_NewBool(context, env->CallBooleanMethod(arg, booleanGetValue)));
+        } else {
+            // Throw an exception for unsupported argument type.
+            throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
+                               typeName.c_str());
+        }
+
+        env->DeleteLocalRef(arg);
+    }
+
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
+    JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
+
+    JSValue funcRet = call(jsFunc, jsObj, arguments.size(), arguments.data());
+
+    JS_FreeValue(context, jsObj);
+    JS_FreeValue(context, jsFunc);
+    for (JSValue argument : arguments) {
+        JS_FreeValue(context, argument);
+    }
+
+    const char *r_result = stringify(funcRet);
+
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get props func_value=%s", r_result);
+
+    return toJavaObject(env, thiz, funcRet);
+}
+
+jstring QuickJSWrapper::stringify(JNIEnv *env, jlong value) const {
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    const char *result = stringify(jsObj);
+    return env->NewStringUTF(result);
+}
+
+jint QuickJSWrapper::length(JNIEnv *env, jlong value) {
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JSValue length = getProperty(jsObj, "length");
+    return JS_VALUE_GET_INT(length);
+}
+
+jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) {
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JSValue child = JS_GetPropertyUint32(context, jsObj, index);
+    const char *childStr = stringify(child);
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
+
+    return toJavaObject(env, thiz, child);
 }
 
 string getName(JNIEnv* env, jobject javaClass) {
