@@ -63,31 +63,9 @@ static jobject toJavaObject(JNIEnv *env, jobject &thiz, QuickJSWrapper *wrapper,
     return result;
 }
 
-static string getName(JNIEnv* env, jobject javaClass) {
-    auto classType = env->GetObjectClass(javaClass);
-    const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
-    auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
-    const auto s = env->GetStringUTFChars(javaString, nullptr);
-
-    std::string str(s);
-    env->ReleaseStringUTFChars(javaString, s);
-    env->DeleteLocalRef(javaString);
-    env->DeleteLocalRef(classType);
-    return str;
-}
-
 static void j_println(QuickJSWrapper *wrapper, JSValue &value) {
     const char *result = wrapper->stringify(value);
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-native", "println=%s", result);
-}
-
-static void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
-    char msg[512];
-    va_list args;
-    va_start (args, fmt);
-    vsnprintf(msg, sizeof(msg), fmt, args);
-    va_end (args);
-    env->ThrowNew(env->FindClass(exceptionClass), msg);
 }
 
 extern "C"

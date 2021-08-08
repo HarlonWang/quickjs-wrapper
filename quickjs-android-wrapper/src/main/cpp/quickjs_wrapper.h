@@ -56,4 +56,7 @@ public:
     JSValue evaluate_binary(const char *script) const;
 };
 
+string getName(JNIEnv* env, jobject javaClass);
+void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
+
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

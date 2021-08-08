@@ -87,3 +87,25 @@ JSValue QuickJSWrapper::checkNotException(JSValue &value) const {
 
     return value;
 }
+
+string getName(JNIEnv* env, jobject javaClass) {
+    auto classType = env->GetObjectClass(javaClass);
+    const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
+    auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
+    const auto s = env->GetStringUTFChars(javaString, nullptr);
+
+    std::string str(s);
+    env->ReleaseStringUTFChars(javaString, s);
+    env->DeleteLocalRef(javaString);
+    env->DeleteLocalRef(classType);
+    return str;
+}
+
+void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
+    char msg[512];
+    va_list args;
+    va_start (args, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, args);
+    va_end (args);
+    env->ThrowNew(env->FindClass(exceptionClass), msg);
+}
