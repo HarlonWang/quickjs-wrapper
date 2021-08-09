@@ -1,6 +1,7 @@
 package com.whl.quickjs.wrapper.sample;
 
 import com.whl.quickjs.wrapper.JSArray;
+import com.whl.quickjs.wrapper.JSCallFunction;
 import com.whl.quickjs.wrapper.JSFunction;
 import com.whl.quickjs.wrapper.JSObject;
 import com.whl.quickjs.wrapper.QuickJSContext;
@@ -92,6 +93,30 @@ public class QuickJSTest {
             assertEquals("java.lang.RuntimeException: Unsupported Java type with Array!", e.toString());
         }
 
+    }
+
+    @Test
+    public void setPropertiesTest() {
+        QuickJSContext context = QuickJSContext.create();
+        JSObject globalObj = context.getGlobalObject();
+        globalObj.setProperty("stringValue", "hello test");
+        globalObj.setProperty("intValue", 123);
+        globalObj.setProperty("doubleValue", 123.11);
+        globalObj.setProperty("booleanValue", true);
+        globalObj.setProperty("functionValue", new JSCallFunction() {
+            @Override
+            public Object call(Object args) {
+                return null;
+            }
+        });
+        assertEquals("hello test", context.evaluate("stringValue;"));
+        assertEquals(123, context.evaluate("intValue;"));
+        assertEquals(123.11, context.evaluate("doubleValue;"));
+        assertEquals(true, context.evaluate("booleanValue;"));
+
+        assertNull(context.evaluate("functionValue();"));
+
+        context.destroyContext();
     }
 
 }

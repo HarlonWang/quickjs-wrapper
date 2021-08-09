@@ -3,10 +3,30 @@
 //
 #include "quickjs_wrapper.h"
 
+static JSValue jsCall(JSContext *ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst *argv, int flags) {
+    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
+    void *v_str = JS_GetOpaque(func_obj, wrapper->jsClassId);
+    const char * c_str = static_cast<const char *>(v_str);
+
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "jsCall=%s", c_str);
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "jsCall argc=%u", argc);
+    return JS_UNDEFINED;
+}
+
+static void jsFinalizer(JSRuntime *rt, JSValue val) {
+    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(rt));
+    if (wrapper) {
+        // delete reinterpret_cast<void*>(JS_GetOpaque(val, context->jsClassId));
+        JS_FreeValue(wrapper->context, val);
+    }
+}
+
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jniEnv = env;
     runtime = JS_NewRuntime();
     context = JS_NewContext(runtime);
+    JS_SetRuntimeOpaque(runtime, this);
+    jsClassId = 0;
 
     booleanClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
     integerClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
@@ -32,6 +52,9 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(doubleClass);
     jniEnv->DeleteGlobalRef(integerClass);
     jniEnv->DeleteGlobalRef(booleanClass);
+    jniEnv->DeleteGlobalRef(jsObjectClass);
+    jniEnv->DeleteGlobalRef(jsArrayClass);
+    jniEnv->DeleteGlobalRef(jsFunctionClass);
 
     if (!values.empty()) {
         for(auto i = values.begin(); i != values.end(); i++) {
@@ -174,6 +197,8 @@ jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstr
     JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     JSValue propsValue = getProperty(jsObject, propsName);
 
+    env->ReleaseStringUTFChars(name, propsName);
+
     return toJavaObject(env, thiz, propsValue);
 }
 
@@ -255,6 +280,64 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
 
     return toJavaObject(env, thiz, child);
+}
+
+void
+QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) {
+    auto classType = env->GetObjectClass(value);
+    const auto typeName = getName(env, classType);
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "call args type=%s", typeName.c_str());
+
+    if (!typeName.empty() && typeName[0] == '[') {
+        throwJavaException(env, "java/lang/RuntimeException",
+                           "Unsupported Java type with Array!");
+        return;
+    }
+
+    JSValue propValue;
+    if (typeName == "java.lang.String") {
+        const auto s = env->GetStringUTFChars(static_cast<jstring>(value), JNI_FALSE);
+        propValue = JS_NewString(context, s);
+        env->ReleaseStringUTFChars(static_cast<jstring>(value), s);
+    } else if (typeName == "java.lang.Double" || typeName == "double") {
+        propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
+    } else if (typeName == "java.lang.Integer" || typeName == "int") {
+        propValue = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
+    } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
+        propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
+    } else {
+        if (env->IsInstanceOf(value, env->FindClass("com/whl/quickjs/wrapper/JSCallFunction"))) {
+            if (jsClassId == 0) {
+                JS_NewClassID(&jsClassId);
+                JSClassDef classDef;
+                memset(&classDef, 0, sizeof(JSClassDef));
+                classDef.class_name = "WrapperJSCallProxy";
+                classDef.finalizer = jsFinalizer;
+                classDef.call = jsCall;
+                if (JS_NewClass(runtime, jsClassId, &classDef)) {
+                    jsClassId = 0;
+                    throwJavaException(env, "java/lang/NullPointerException",
+                                       "Failed to allocate JavaScript proxy class");
+                }
+            }
+
+            if (jsClassId != 0) {
+                propValue = JS_NewObjectClass(context, jsClassId);
+                const char *test = "js call was invoked";
+                JS_SetOpaque(propValue, (void *) test);
+            }
+        } else {
+            // Throw an exception for unsupported argument type.
+            throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
+                               typeName.c_str());
+        }
+    }
+
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
+    const char* propName = env->GetStringUTFChars(name, JNI_FALSE);
+    setProperty(jsObj, propName, propValue);
+
+    env->ReleaseStringUTFChars(name, propName);
 }
 
 string getName(JNIEnv* env, jobject javaClass) {

@@ -20,6 +20,7 @@ private:
     JSValue evaluate(const char *script, const char *file_name = "undefined.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;
     JSValue getGlobalObject() const;
     JSValue getProperty(JSValue &this_obj, const char *propName) const;
+    int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
     JSValue call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const;
     const char* stringify(JSValue &value) const;
 
@@ -27,6 +28,8 @@ public:
     JNIEnv *jniEnv;
     JSRuntime *runtime;
     JSContext *context;
+
+    JSClassID jsClassId;
 
     set<jlong> values;
 
@@ -54,8 +57,8 @@ public:
 
     jobject evaluate(JNIEnv*, jobject thiz, jstring script, jstring file_name);
     jobject getGlobalObject(JNIEnv*, jobject thiz);
-    int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
     jobject getProperty(JNIEnv*, jobject thiz, jlong value, jstring name);
+    void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value);
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring stringify(JNIEnv *env, jlong value) const;
     jobject toJavaObject(JNIEnv *env, jobject thiz, const JSValueConst& value);

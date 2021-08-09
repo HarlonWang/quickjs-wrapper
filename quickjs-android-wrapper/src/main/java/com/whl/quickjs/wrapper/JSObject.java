@@ -22,6 +22,10 @@ public class JSObject {
         return context.getProperty(this, name);
     }
 
+    public void setProperty(String name, Object value) {
+        context.setProperty(this, name, value);
+    }
+
     @Override
     public String toString() {
         return context.stringify(this);

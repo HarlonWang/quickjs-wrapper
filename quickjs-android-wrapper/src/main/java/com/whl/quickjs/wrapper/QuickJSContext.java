@@ -43,6 +43,10 @@ public class QuickJSContext {
         return getProperty(context, jsObj.getPointer(), name);
     }
 
+    public void setProperty(JSObject jsObj, String name, Object value) {
+        setProperty(context, jsObj.getPointer(), name, value);
+    }
+
     public int length(JSArray jsArray) {
         return length(context, jsArray.getPointer());
     }
@@ -62,6 +66,7 @@ public class QuickJSContext {
     private native Object call(long context, long func, long thisObj, Object[] args);
 
     private native Object getProperty(long context, long objValue, String name);
+    private native void setProperty(long context, long objValue, String name, Object value);
     private native String stringify(long context, long objValue);
     private native int length(long context, long objValue);
     private native Object get(long context, long objValue, int index);
