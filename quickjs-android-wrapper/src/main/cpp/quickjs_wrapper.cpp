@@ -34,6 +34,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jsObjectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObject")));
     jsArrayClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
     jsFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
+    jsCallFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -55,6 +56,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsObjectClass);
     jniEnv->DeleteGlobalRef(jsArrayClass);
     jniEnv->DeleteGlobalRef(jsFunctionClass);
+    jniEnv->DeleteGlobalRef(jsCallFunctionClass);
 
     if (!values.empty()) {
         for(auto i = values.begin(); i != values.end(); i++) {
@@ -306,7 +308,7 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
     } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
         propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else {
-        if (env->IsInstanceOf(value, env->FindClass("com/whl/quickjs/wrapper/JSCallFunction"))) {
+        if (env->IsInstanceOf(value, jsCallFunctionClass)) {
             if (jsClassId == 0) {
                 JS_NewClassID(&jsClassId);
                 JSClassDef classDef;

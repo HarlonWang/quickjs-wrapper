@@ -39,6 +39,7 @@ public:
     jclass jsObjectClass;
     jclass jsArrayClass;
     jclass jsFunctionClass;
+    jclass jsCallFunctionClass;
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
