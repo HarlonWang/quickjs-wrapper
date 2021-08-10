@@ -5,19 +5,17 @@
 
 static JSValue jsCall(JSContext *ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst *argv, int flags) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
-    void *v_str = JS_GetOpaque(func_obj, wrapper->jsClassId);
-    const char * c_str = static_cast<const char *>(v_str);
-
-    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "jsCall=%s", c_str);
-    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "jsCall argc=%u", argc);
-    return JS_UNDEFINED;
+    auto funcCall = static_cast<QuickJSFunctionProxy *>(JS_GetOpaque(func_obj, wrapper->jsClassId));
+    return funcCall->wrapper->jsFuncCall(funcCall->value, funcCall->thiz, this_val, argc, argv);
 }
 
 static void jsFinalizer(JSRuntime *rt, JSValue val) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(rt));
     if (wrapper) {
-        // delete reinterpret_cast<void*>(JS_GetOpaque(val, context->jsClassId));
-        JS_FreeValue(wrapper->context, val);
+        auto funcCall = static_cast<QuickJSFunctionProxy *>(JS_GetOpaque(val, wrapper->jsClassId));
+        wrapper->jniEnv->DeleteGlobalRef(funcCall->value);
+        wrapper->jniEnv->DeleteGlobalRef(funcCall->thiz);
+        delete funcCall;
     }
 }
 
@@ -28,6 +26,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     JS_SetRuntimeOpaque(runtime, this);
     jsClassId = 0;
 
+    objectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
     integerClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
     doubleClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Double")));
@@ -50,6 +49,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
+    jniEnv->DeleteGlobalRef(objectClass);
     jniEnv->DeleteGlobalRef(doubleClass);
     jniEnv->DeleteGlobalRef(integerClass);
     jniEnv->DeleteGlobalRef(booleanClass);
@@ -325,8 +325,11 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
 
             if (jsClassId != 0) {
                 propValue = JS_NewObjectClass(context, jsClassId);
-                const char *test = "js call was invoked";
-                JS_SetOpaque(propValue, (void *) test);
+                auto *funcProxy = new QuickJSFunctionProxy;
+                funcProxy->wrapper = this;
+                funcProxy->value = env->NewGlobalRef(value);
+                funcProxy->thiz = env->NewGlobalRef(thiz);
+                JS_SetOpaque(propValue, (void *) funcProxy);
             }
         } else {
             // Throw an exception for unsupported argument type.
@@ -340,6 +343,53 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
     setProperty(jsObj, propName, propValue);
 
     env->ReleaseStringUTFChars(name, propName);
+}
+
+JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv){
+    jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
+
+    for (int i = 0; i < argc; i++) {
+        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, toJavaObject(jniEnv, thiz, argv[i]));
+    }
+
+    auto funcClass = jniEnv->GetObjectClass(func_value);
+    auto funcMethodId = jniEnv->GetMethodID(funcClass, "call", "([Ljava/lang/Object;)Ljava/lang/Object;");
+    return toJSValue(jniEnv, jniEnv->CallObjectMethod(func_value, funcMethodId, javaArgs));
+}
+
+JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) {
+    if (!value) {
+        return JS_UNDEFINED;
+    }
+
+    auto classType = env->GetObjectClass(value);
+    const auto typeName = getName(env, classType);
+
+    if (!typeName.empty() && typeName[0] == '[') {
+        throwJavaException(env, "java/lang/RuntimeException",
+                           "Unsupported Java type with Array!");
+        return JS_UNDEFINED;
+    }
+
+    JSValue result;
+    if (typeName == "java.lang.String") {
+        const auto s = env->GetStringUTFChars(static_cast<jstring>(value), JNI_FALSE);
+        result = JS_NewString(context, s);
+        env->ReleaseStringUTFChars(static_cast<jstring>(value), s);
+    } else if (typeName == "java.lang.Double" || typeName == "double") {
+        result = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
+    } else if (typeName == "java.lang.Integer" || typeName == "int") {
+        result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
+    } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
+        result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
+    } else {
+        // Throw an exception for unsupported argument type.
+        throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
+                           typeName.c_str());
+        result = JS_UNDEFINED;
+    }
+
+    return result;
 }
 
 string getName(JNIEnv* env, jobject javaClass) {

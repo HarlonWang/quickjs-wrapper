@@ -33,6 +33,7 @@ public:
 
     set<jlong> values;
 
+    jclass objectClass;
     jclass booleanClass;
     jclass integerClass;
     jclass doubleClass;
@@ -63,8 +64,10 @@ public:
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring stringify(JNIEnv *env, jlong value) const;
     jobject toJavaObject(JNIEnv *env, jobject thiz, const JSValueConst& value);
+    JSValue toJSValue(JNIEnv *env, jobject value);
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
+    JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);
 
     // JS --> bytecode
     const char* compile(const char *script, int eval_flag = JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_TYPE_GLOBAL) const;
@@ -74,5 +77,11 @@ public:
 
 string getName(JNIEnv* env, jobject javaClass);
 void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
+
+typedef struct {
+    QuickJSWrapper *wrapper;
+    jobject value;
+    jobject thiz;
+} QuickJSFunctionProxy;
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

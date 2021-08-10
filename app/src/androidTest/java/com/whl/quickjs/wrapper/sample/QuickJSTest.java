@@ -105,16 +105,16 @@ public class QuickJSTest {
         globalObj.setProperty("booleanValue", true);
         globalObj.setProperty("functionValue", new JSCallFunction() {
             @Override
-            public Object call(Object args) {
-                return null;
+            public Object call(Object... args) {
+                System.out.println("arg = " + args.length);
+                return "call back";
             }
         });
         assertEquals("hello test", context.evaluate("stringValue;"));
         assertEquals(123, context.evaluate("intValue;"));
         assertEquals(123.11, context.evaluate("doubleValue;"));
         assertEquals(true, context.evaluate("booleanValue;"));
-
-        assertNull(context.evaluate("functionValue();"));
+        assertEquals("call back", context.evaluate("functionValue();"));
 
         context.destroyContext();
     }
