@@ -26,6 +26,10 @@ public class JSObject {
         context.setProperty(this, name, value);
     }
 
+    public void free() {
+        context.freeValue(this);
+    }
+
     @Override
     public String toString() {
         return context.stringify(this);

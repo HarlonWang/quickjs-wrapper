@@ -68,6 +68,7 @@ public:
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
     JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);
+    void freeValue(jlong i);
 
     // JS --> bytecode
     const char* compile(const char *script, int eval_flag = JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_TYPE_GLOBAL) const;

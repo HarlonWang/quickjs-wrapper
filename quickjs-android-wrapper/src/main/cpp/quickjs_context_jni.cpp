@@ -84,4 +84,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_setProperty(JNIEnv *env, jobject thi
                                                         jobject value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     wrapper->setProperty(env, thiz, this_obj, name, value);
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_freeValue(JNIEnv *env, jobject thiz, jlong context,
+                                                      jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    wrapper->freeValue(value);
 }
