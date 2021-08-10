@@ -354,7 +354,11 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
 
     auto funcClass = jniEnv->GetObjectClass(func_value);
     auto funcMethodId = jniEnv->GetMethodID(funcClass, "call", "([Ljava/lang/Object;)Ljava/lang/Object;");
-    return toJSValue(jniEnv, jniEnv->CallObjectMethod(func_value, funcMethodId, javaArgs));
+    auto result = jniEnv->CallObjectMethod(func_value, funcMethodId, javaArgs);
+
+    jniEnv->DeleteLocalRef(javaArgs);
+
+    return toJSValue(jniEnv, result);
 }
 
 JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) {
