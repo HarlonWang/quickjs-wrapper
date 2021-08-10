@@ -24,15 +24,30 @@ public class SecondActivity extends AppCompatActivity {
         JSObject result = (JSObject) context.call(renderFunc, globalObj, 1, null);
         Log.d("quickjs-android-wrapper", "Second value = " + result.toString());
 
-        JSArray children = (JSArray) result.getProperty("children");
-        if (children != null) {
-            int length = children.length();
-            Log.d("quickjs-android-wrapper", "Second length = " + children.length());
-            for (int i = 0; i < length; i++) {
-                JSObject item = (JSObject) children.get(i);
-                Log.d("quickjs-android-wrapper", "item value = " + item.toString());
-            }
-        }
+//        JSArray children = (JSArray) result.getProperty("children");
+//        if (children != null) {
+//            int length = children.length();
+//            Log.d("quickjs-android-wrapper", "Second length = " + children.length());
+//            for (int i = 0; i < length; i++) {
+//                JSObject item = (JSObject) children.get(i);
+//                Log.d("quickjs-android-wrapper", "item value = " + item.toString());
+//            }
+//        }
+
+        recursionPrintln(result);
 
     }
+
+    public void recursionPrintln(JSObject root) {
+        System.out.println("SecondActivity Recursion type: " + root);
+        Object children = root.getProperty("children");
+        if (children instanceof JSArray) {
+            int length = ((JSArray) children).length();
+            for (int i = 0; i < length; i++) {
+                JSObject item = (JSObject) ((JSArray) children).get(i);
+                recursionPrintln(item);
+            }
+        }
+    }
+
 }
