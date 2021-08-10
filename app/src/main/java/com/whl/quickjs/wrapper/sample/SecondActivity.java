@@ -25,14 +25,14 @@ public class SecondActivity extends AppCompatActivity {
         Log.d("quickjs-android-wrapper", "Second value = " + result.toString());
 
         JSArray children = (JSArray) result.getProperty("children");
-//        if (children.isArray()) {
-//            int length = children.getLength();
-//            Log.d("quickjs-android-wrapper", "Second length = " + children.getLength());
-//            for (int i = 0; i < length; i++) {
-//                JSValue item = (JSValue) children.getByIndex(i);
-//                Log.d("quickjs-android-wrapper", "item value = " + item.toString());
-//            }
-//        }
+        if (children != null) {
+            int length = children.length();
+            Log.d("quickjs-android-wrapper", "Second length = " + children.length());
+            for (int i = 0; i < length; i++) {
+                JSObject item = (JSObject) children.get(i);
+                Log.d("quickjs-android-wrapper", "item value = " + item.toString());
+            }
+        }
 
     }
 }

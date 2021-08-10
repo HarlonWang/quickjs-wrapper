@@ -4,37 +4,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.whl.quickjs.wrapper.JSObject;
-import com.whl.quickjs.wrapper.QuickJSContext;
-
 public class MainActivity extends AppCompatActivity {
-
-    private static final String TEST_SCRIPT = "var a = 1;\n" +
-            "\n" +
-            "function test(name) {\n" +
-            "\treturn \"圣诞节快乐都解放了\" + name;\n" +
-            "}";
-
-    QuickJSContext context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        context = QuickJSContext.create();
-        Object value = context.evaluate("nope();");
-        Log.d("quickjs-android-wrapper", "boolean value = " + value);
-        if (true) {
-            return;
-        }
-
-        JSObject testFunc = (JSObject) context.getGlobalObject().getProperty("test");
-        JSObject result = (JSObject) context.call(testFunc, context.getGlobalObject(), 1, null);
 
         findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -43,13 +21,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, SecondActivity.class));
             }
         });
-
-        // Log.d("quickjs-android-wrapper", "Main value = " + result.toString());
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        context.destroyContext();
     }
 }
