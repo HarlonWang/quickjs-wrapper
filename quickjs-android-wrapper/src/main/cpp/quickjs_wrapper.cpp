@@ -225,22 +225,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
             return nullptr;
         }
 
-        if (typeName == "java.lang.String") {
-            const auto s = env->GetStringUTFChars(static_cast<jstring>(arg), JNI_FALSE);
-            auto jsString = JS_NewString(context, s);
-            env->ReleaseStringUTFChars(static_cast<jstring>(arg), s);
-            arguments.push_back(jsString);
-        } else if (typeName == "java.lang.Double" || typeName == "double") {
-            arguments.push_back(JS_NewFloat64(context, env->CallDoubleMethod(arg, doubleGetValue)));
-        } else if (typeName == "java.lang.Integer" || typeName == "int") {
-            arguments.push_back(JS_NewInt32(context, env->CallIntMethod(arg, integerGetValue)));
-        } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
-            arguments.push_back(JS_NewBool(context, env->CallBooleanMethod(arg, booleanGetValue)));
-        } else {
-            // Throw an exception for unsupported argument type.
-            throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
-                               typeName.c_str());
-        }
+        arguments.push_back(toJSValue(env, arg));
 
         env->DeleteLocalRef(arg);
     }
