@@ -123,4 +123,25 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void setConsoleLogTest() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("var console = {};");
+        JSObject console = (JSObject) context.getGlobalObject().getProperty("console");
+        console.setProperty("log", new JSCallFunction() {
+            @Override
+            public Object call(Object... args) {
+                StringBuilder b = new StringBuilder();
+                for (Object o: args) {
+                    b.append(o == null ? "null" : o.toString());
+                }
+
+                assertEquals("123", b.toString());
+                return null;
+            }
+        });
+
+        context.evaluate("console.log(123)");
+    }
+
 }
