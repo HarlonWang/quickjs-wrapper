@@ -186,12 +186,12 @@ JSValue QuickJSWrapper::checkNotException(JSValue &value) const {
 
 jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) {
     JSValue value = getGlobalObject();
-    auto result = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
 
-    // todo refactor
-    values.insert(result);
+    auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+    jobject result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
 
-    return toJavaObject(env, thiz, value);
+    JS_FreeValue(context, value);
+    return result;
 }
 
 jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstring name) {
