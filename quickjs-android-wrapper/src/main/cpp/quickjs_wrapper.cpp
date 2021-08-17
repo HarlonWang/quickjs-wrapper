@@ -58,15 +58,6 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsFunctionClass);
     jniEnv->DeleteGlobalRef(jsCallFunctionClass);
 
-    if (!values.empty()) {
-        for(auto i = values.begin(); i != values.end(); i++) {
-            JSValue v = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(*i));
-            JS_FreeValue(context, v);
-        }
-
-        values.clear();
-    }
-
     JS_FreeContext(context);
 
     // todo try catch
@@ -120,8 +111,6 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, const JSValueCon
                 result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
             }
 
-            // todo refactor
-            values.insert(value_ptr);
             break;
         }
 
@@ -235,8 +224,10 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
 
     JSValue funcRet = call(jsFunc, jsObj, arguments.size(), arguments.data());
 
-    JS_FreeValue(context, jsObj);
-    JS_FreeValue(context, jsFunc);
+    // todo refactor
+    // JS_FreeValue(context, jsObj);
+    // JS_FreeValue(context, jsFunc);
+
     for (JSValue argument : arguments) {
         JS_FreeValue(context, argument);
     }

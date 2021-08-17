@@ -7,10 +7,12 @@ public class JSArray extends JSObject{
     }
 
     public int length() {
+        checkReleased();
         return getContext().length(this);
     }
 
     public Object get(int index) {
+        checkReleased();
         return getContext().get(this, index);
     }
 

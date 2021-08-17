@@ -31,8 +31,6 @@ public:
 
     JSClassID jsClassId;
 
-    set<jlong> values;
-
     jclass objectClass;
     jclass booleanClass;
     jclass integerClass;
