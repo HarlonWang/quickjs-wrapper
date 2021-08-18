@@ -131,7 +131,7 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& va
                     auto text = stringify(value);
                     __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "insert value=%s", text);
                     JS_FreeCString(context, text);
-                    freeValue(value_ptr);
+                    JS_FreeValue(context, value);
                 }
             }
 
@@ -399,8 +399,16 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) {
 }
 
 void QuickJSWrapper::freeValue(jlong value) {
-    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
-    JS_FreeValue(context, jsObj);
+    // current only free exist value in map.
+    // todo refactor
+    map<jlong, JSValue>::iterator exist;
+    exist = values.find(value);
+    if (exist != values.end()) {
+        values.erase(exist);
+
+        JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+        JS_FreeValue(context, jsObj);
+    }
 }
 
 string getName(JNIEnv* env, jobject javaClass) {

@@ -98,10 +98,13 @@ public class JSFreeValueTest {
 
         JSObject age = (JSObject) obj1.getProperty("age");
         JSObject age1 = (JSObject) obj1.getProperty("age");
+        JSObject age2 = (JSObject) obj1.getProperty("age");
+        JSObject age3 = (JSObject) obj1.getProperty("age");
 //
-//        age1.free();
-//        age2.free();
-//        age3.free();
+        age.free();
+        age1.free();
+        age2.free();
+        age3.free();
     }
 
 }
