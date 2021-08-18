@@ -13,6 +13,7 @@ using namespace std;
 #include "quickjs/quickjs.h"
 #include <jni.h>
 #include <android/log.h>
+#include <map>
 
 class QuickJSWrapper {
 private:
@@ -28,6 +29,8 @@ public:
     JNIEnv *jniEnv;
     JSRuntime *runtime;
     JSContext *context;
+
+    map<jlong, JSValue> values;
 
     JSClassID jsClassId;
 
@@ -61,7 +64,7 @@ public:
     void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value);
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring stringify(JNIEnv *env, jlong value) const;
-    jobject toJavaObject(JNIEnv *env, jobject thiz, const JSValueConst& value);
+    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool insert = true);
     JSValue toJSValue(JNIEnv *env, jobject value);
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);

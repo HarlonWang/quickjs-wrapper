@@ -58,6 +58,19 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsFunctionClass);
     jniEnv->DeleteGlobalRef(jsCallFunctionClass);
 
+    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "free value=%u", values.size());
+    map<jlong, JSValue>::iterator i;
+    for (i = values.begin(); i != values.end(); ++i) {
+        JSValue item = i->second;
+
+        auto text = stringify(item);
+        __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "free value=%s", text);
+        JS_FreeCString(context, text);
+
+        JS_FreeValue(context, item);
+    }
+    values.clear();
+
     JS_FreeContext(context);
 
     // todo try catch
@@ -65,7 +78,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     JS_FreeRuntime(runtime);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, const JSValueConst& value){
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool insert){
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -109,6 +122,17 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, const JSValueCon
                 result = env->NewObject(jsArrayClass, jsArrayInit, thiz, value_ptr);
             } else {
                 result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
+            }
+
+            if (insert) {
+                if (values.count(value_ptr) == 0) {
+                    values.insert(pair<jlong, JSValue>(value_ptr, value));
+                } else{
+                    auto text = stringify(value);
+                    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "insert value=%s", text);
+                    JS_FreeCString(context, text);
+                    freeValue(value_ptr);
+                }
             }
 
             break;
@@ -160,7 +184,9 @@ JSValue QuickJSWrapper::call(JSValue &func_obj, JSValue &this_obj, int argc, JSV
 
 const char * QuickJSWrapper::stringify(JSValue &value) const {
     JSValue obj = JS_JSONStringify(context, value, JS_UNDEFINED, JS_UNDEFINED);
-    return JS_ToCString(context, checkNotException(obj));
+    auto result = JS_ToCString(context, checkNotException(obj));
+    JS_FreeValue(context, obj);
+    return result;
 }
 
 JSValue QuickJSWrapper::checkNotException(JSValue &value) const {
@@ -184,8 +210,9 @@ jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) {
 }
 
 jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstring name) {
-    const char *propsName = env->GetStringUTFChars(name, JNI_FALSE);
     JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+
+    const char *propsName = env->GetStringUTFChars(name, JNI_FALSE);
     JSValue propsValue = getProperty(jsObject, propsName);
 
     env->ReleaseStringUTFChars(name, propsName);
@@ -232,30 +259,29 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         JS_FreeValue(context, argument);
     }
 
-    const char *r_result = stringify(funcRet);
-
-    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get props func_value=%s", r_result);
-
     return toJavaObject(env, thiz, funcRet);
 }
 
 jstring QuickJSWrapper::stringify(JNIEnv *env, jlong value) const {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     const char *result = stringify(jsObj);
-    return env->NewStringUTF(result);
+    jstring string =env->NewStringUTF(result);
+    JS_FreeCString(context, result);
+    return string;
 }
 
 jint QuickJSWrapper::length(JNIEnv *env, jlong value) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+
     JSValue length = getProperty(jsObj, "length");
+    JS_FreeValue(context, length);
+
     return JS_VALUE_GET_INT(length);
 }
 
 jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     JSValue child = JS_GetPropertyUint32(context, jsObj, index);
-    const char *childStr = stringify(child);
-    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "get index=%s", childStr);
 
     return toJavaObject(env, thiz, child);
 }
@@ -325,7 +351,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
-        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, toJavaObject(jniEnv, thiz, argv[i]));
+        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, toJavaObject(jniEnv, thiz, argv[i], false));
     }
 
     auto funcClass = jniEnv->GetObjectClass(func_value);
