@@ -42,6 +42,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     booleanGetValue = jniEnv->GetMethodID(booleanClass, "booleanValue", "()Z");
     integerGetValue = jniEnv->GetMethodID(integerClass, "intValue", "()I");
     doubleGetValue = jniEnv->GetMethodID(doubleClass, "doubleValue", "()D");
+    jsObjectGetValue = jniEnv->GetMethodID(jsObjectClass, "getPointer", "()J");
 
     jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
@@ -256,7 +257,9 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     // JS_FreeValue(context, jsFunc);
 
     for (JSValue argument : arguments) {
-        JS_FreeValue(context, argument);
+        if (!JS_IsObject(argument)) {
+            JS_FreeValue(context, argument);
+        }
     }
 
     return toJavaObject(env, thiz, funcRet);
@@ -388,6 +391,8 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) {
         result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
     } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
+    } else if (env->IsInstanceOf(value, jsObjectClass)) {
+        result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
     } else {
         // Throw an exception for unsupported argument type.
         throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",

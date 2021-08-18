@@ -50,6 +50,7 @@ public:
     jmethodID booleanGetValue;
     jmethodID integerGetValue;
     jmethodID doubleGetValue;
+    jmethodID jsObjectGetValue;
 
     jmethodID jsObjectInit;
     jmethodID jsArrayInit;
