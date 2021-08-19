@@ -8,12 +8,15 @@ coming soon
 
 ## 常见错误：
 1. fault addr 0x18 in tid 22363
+
 一般是 JSValue 已经被 FreeValue，再次调用就会报这个错误
 
 2. list_empty(&rt->gc_obj_list)" failed
+
 一般是使用的 JSValue 没有被 FreeValue 导致
 
 3. TypeError: not a function" failed
+
 一般是该 function 对象被释放后，再次调用的时候就会报这个错
 
                 context.setProperty(context.getGlobalObject(), "setTimeout", new JSCallFunction() {
