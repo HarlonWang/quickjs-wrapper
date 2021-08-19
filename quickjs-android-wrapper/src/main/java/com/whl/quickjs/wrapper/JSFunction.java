@@ -6,9 +6,9 @@ public class JSFunction extends JSObject{
         super(context, pointer);
     }
 
-    public Object call() {
-        // todo getContext().call();
-        return null;
-    }
+    // todo getContext().call();
+//    public Object call() {
+//        return null;
+//    }
 
 }
