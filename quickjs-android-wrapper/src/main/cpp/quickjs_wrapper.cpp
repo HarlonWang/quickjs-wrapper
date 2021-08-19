@@ -416,6 +416,16 @@ void QuickJSWrapper::freeValue(jlong value) {
     }
 }
 
+void QuickJSWrapper::dupValue(jlong value) const {
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JS_DupValue(context, jsObj);
+}
+
+void QuickJSWrapper::freeDupValue(jlong value) const {
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JS_FreeValue(context, jsObj);
+}
+
 string getName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
     const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");

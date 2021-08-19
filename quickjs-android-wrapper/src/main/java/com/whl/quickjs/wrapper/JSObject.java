@@ -38,6 +38,19 @@ public class JSObject {
         isReleased = true;
     }
 
+    /**
+     * Release with @freeDupValue
+     */
+    public void dupValue() {
+        checkReleased();
+        context.dupValue(this);
+    }
+
+    public void freeDupValue() {
+        checkReleased();
+        context.freeDupValue(this);
+    }
+
     @Override
     public String toString() {
         checkReleased();

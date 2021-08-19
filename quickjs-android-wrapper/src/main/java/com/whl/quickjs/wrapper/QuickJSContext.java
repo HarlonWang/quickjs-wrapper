@@ -51,6 +51,14 @@ public class QuickJSContext {
         freeValue(context, jsObj.getPointer());
     }
 
+    public void dupValue(JSObject jsObj) {
+        dupValue(context, jsObj.getPointer());
+    }
+
+    public void freeDupValue(JSObject jsObj) {
+        freeDupValue(context, jsObj.getPointer());
+    }
+
     public int length(JSArray jsArray) {
         return length(context, jsArray.getPointer());
     }
@@ -75,5 +83,6 @@ public class QuickJSContext {
     private native int length(long context, long objValue);
     private native Object get(long context, long objValue, int index);
     private native void freeValue(long context, long objValue);
-
+    private native void dupValue(long context, long objValue);
+    private native void freeDupValue(long context, long objValue);
 }

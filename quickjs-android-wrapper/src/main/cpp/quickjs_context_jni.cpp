@@ -90,4 +90,16 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_freeValue(JNIEnv *env, jobject thiz,
                                                       jlong value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     wrapper->freeValue(value);
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_dupValue(JNIEnv *env, jobject thiz, jlong context,
+                                                     jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    wrapper->dupValue(value);
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_freeDupValue(JNIEnv *env, jobject thiz, jlong context,
+                                                         jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    wrapper->freeDupValue(value);
 }
