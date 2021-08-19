@@ -31,7 +31,7 @@ public class JSObject {
         context.setProperty(this, name, value);
     }
 
-    public void free() {
+    public void release() {
         checkReleased();
 
         context.freeValue(this);
