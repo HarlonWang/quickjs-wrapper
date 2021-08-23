@@ -107,4 +107,46 @@ public class JSFreeValueTest {
         age3.release();
     }
 
+    @Test
+    public void funcArgsFreeTest() {
+        // set console.log
+        context.evaluate("var console = {};");
+        JSObject console = (JSObject) context.getGlobalObject().getProperty("console");
+        console.setProperty("log", new JSCallFunction() {
+            @Override
+            public Object call(Object... args) {
+                StringBuilder b = new StringBuilder();
+                for (Object o: args) {
+                    b.append(o == null ? "null" : o.toString());
+                }
+
+                Log.d("tiny-console", b.toString());
+                return null;
+            }
+        });
+
+        context.evaluate("var state = {};\n" +
+                "\n" +
+                "\n" +
+                "function setState(data) {\n" +
+                "\tstate = data;\n" +
+                "}\n" +
+                "\n" +
+                "function getState() {\n" +
+                "\treturn state;\n" +
+                "}");
+
+
+        context.evaluate("\n" +
+                "function stateTest() {\n" +
+                "\tsetState({count: 0});\n" +
+                "\n" +
+                "\tconsole.log(getState().count);\n" +
+                "}\n");
+
+        context.evaluate("stateTest();");
+        context.evaluate("setState({count: 1});");
+        context.evaluate("console.log(getState().count);");
+    }
+
 }

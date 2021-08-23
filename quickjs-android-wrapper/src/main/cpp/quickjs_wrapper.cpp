@@ -336,6 +336,8 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
                 funcProxy->thiz = env->NewGlobalRef(thiz);
                 JS_SetOpaque(propValue, (void *) funcProxy);
             }
+        } else if(env->IsInstanceOf(value, jsObjectClass)) {
+            propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
         } else {
             // Throw an exception for unsupported argument type.
             throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
