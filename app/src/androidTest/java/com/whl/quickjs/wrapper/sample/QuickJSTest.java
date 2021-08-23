@@ -1,5 +1,7 @@
 package com.whl.quickjs.wrapper.sample;
 
+import android.util.Log;
+
 import com.whl.quickjs.wrapper.JSArray;
 import com.whl.quickjs.wrapper.JSCallFunction;
 import com.whl.quickjs.wrapper.JSFunction;
@@ -23,7 +25,7 @@ public class QuickJSTest {
         context.evaluate("var a = 123;");
 
         JSObject gloObj = context.getGlobalObject();
-        gloObj.free();
+        gloObj.release();
 
         JSObject globalObject = context.getGlobalObject();
         assertEquals(123, globalObject.getProperty("a"));
@@ -142,6 +144,47 @@ public class QuickJSTest {
         });
 
         context.evaluate("console.log(123)");
+    }
+
+    @Test
+    public void arrowFuncTest() {
+        // set console.log
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("var console = {};");
+        JSObject console = (JSObject) context.getGlobalObject().getProperty("console");
+        console.setProperty("log", new JSCallFunction() {
+            @Override
+            public Object call(Object... args) {
+                StringBuilder b = new StringBuilder();
+                for (Object o: args) {
+                    b.append(o == null ? "null" : o.toString());
+                }
+
+                Log.d("tiny-console", b.toString());
+                return null;
+            }
+        });
+
+
+        context.evaluate("function test(index) {\n" +
+                "\tconsole.log(index);\n" +
+                "}\n" +
+                "\n" +
+                "function render() {\n" +
+                "\n" +
+                "\tvar index = 123;\n" +
+                "\tvar invokeTest = () => {\n" +
+                "\t\ttest(index);\n" +
+                "\t}\n" +
+                "\n" +
+                "\treturn {\n" +
+                "\t\tfunc: invokeTest\n" +
+                "\t};\n" +
+                "}");
+
+        JSObject jsObj = (JSObject) context.evaluate("render();");
+        JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
+        context.call(jsFunction, jsObj);
     }
 
 }
