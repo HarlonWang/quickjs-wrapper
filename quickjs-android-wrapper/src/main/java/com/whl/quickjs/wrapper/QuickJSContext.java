@@ -83,6 +83,10 @@ public class QuickJSContext {
         nativeCleaner.register(jsObj, jsObj.getPointer());
     }
 
+    public JSObject parseJSON(String json) {
+        return parseJSON(context, json);
+    }
+
     private native long createContext();
     private native void destroyContext(long context);
     private native Object evaluate(long context, String script, String fileName);
@@ -97,4 +101,5 @@ public class QuickJSContext {
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);
+    private native JSObject parseJSON(long context, String json);
 }

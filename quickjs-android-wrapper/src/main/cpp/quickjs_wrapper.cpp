@@ -428,6 +428,14 @@ void QuickJSWrapper::freeDupValue(jlong value) const {
     JS_FreeValue(context, jsObj);
 }
 
+jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
+    const char *c_json = env->GetStringUTFChars(json, JNI_FALSE);
+    auto jsonObj = JS_ParseJSON(context, c_json, strlen(c_json), "parseJSON.js");
+    jobject result = toJavaObject(env, thiz, jsonObj);
+    env->ReleaseStringUTFChars(json, c_json);
+    return result;
+}
+
 string getName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
     const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");

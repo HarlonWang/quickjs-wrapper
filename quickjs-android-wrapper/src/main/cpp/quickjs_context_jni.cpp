@@ -102,4 +102,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_freeDupValue(JNIEnv *env, jobject th
                                                          jlong value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     wrapper->freeDupValue(value);
+}extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_parseJSON(JNIEnv *env, jobject thiz, jlong context,
+                                                      jstring json) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->parseJSON(env, thiz, json);
 }

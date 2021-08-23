@@ -196,4 +196,15 @@ public class QuickJSTest {
         assertEquals("{\"count\":0}", context.getGlobalObject().getProperty("test1").toString());
     }
 
+    @Test
+    public void jsonParseTest() {
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+
+        QuickJSContext context = QuickJSContext.create();
+        JSObject result = context.parseJSON(text);
+        assertEquals("270", result.getProperty("leadsId"));
+
+        context.destroyContext();
+    }
+
 }
