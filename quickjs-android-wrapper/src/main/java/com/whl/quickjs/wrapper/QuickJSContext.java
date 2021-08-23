@@ -14,6 +14,12 @@ public class QuickJSContext {
     }
 
     private final long context;
+    private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
+        @Override
+        public void onRemove(long pointer) {
+            freeDupValue(context, pointer);
+        }
+    };
 
     private QuickJSContext() {
         context = createContext();
@@ -32,6 +38,7 @@ public class QuickJSContext {
     }
 
     public void destroyContext() {
+        nativeCleaner.forceClean();
         destroyContext(context);
     }
 
@@ -69,6 +76,11 @@ public class QuickJSContext {
 
     public Object call(JSObject func, JSObject thisObj, Object... args) {
         return call(context, func.getPointer(), thisObj.getPointer(), args);
+    }
+
+    public void hold(JSObject jsObj) {
+        jsObj.dupValue();
+        nativeCleaner.register(jsObj, jsObj.getPointer());
     }
 
     private native long createContext();
