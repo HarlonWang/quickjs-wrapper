@@ -227,23 +227,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     vector<JSValue> arguments;
     for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
         jobject arg = env->GetObjectArrayElement(args, numArgs);
-        if (!arg) {
-            __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "call Java type with null");
-            break;
-        }
-
-        auto classType = env->GetObjectClass(arg);
-        const auto typeName = getName(env, classType);
-        __android_log_print(ANDROID_LOG_DEBUG, "quickjs-android-wrapper", "call args type=%s", typeName.c_str());
-
-        if (!typeName.empty() && typeName[0] == '[') {
-            throwJavaException(env, "java/lang/RuntimeException",
-                               "Unsupported Java type with Array!");
-            return nullptr;
-        }
-
         arguments.push_back(toJSValue(env, arg));
-
         env->DeleteLocalRef(arg);
     }
 

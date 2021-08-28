@@ -85,6 +85,17 @@ public class QuickJSTest {
     }
 
     @Test
+    public void JSFunctionNullArgsTest() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("function test(arg1, arg2, arg3) {\n" +
+                "\treturn \"hello, \" + arg1 + arg2 + arg3;\n" +
+                "}");
+        JSObject globalObject = context.getGlobalObject();
+        JSFunction func = (JSFunction) globalObject.getProperty("test");
+        assertEquals("hello, undefined-13", context.call(func, globalObject, null, -1, 3));
+    }
+
+    @Test
     public void JSFunctionArgsTestWithUnSupportType() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("function test(name) {\n" +
