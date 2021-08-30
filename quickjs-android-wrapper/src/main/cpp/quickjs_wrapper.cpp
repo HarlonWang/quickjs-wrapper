@@ -352,7 +352,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     return toJSValue(jniEnv, result);
 }
 
-JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) {
+JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
     if (!value) {
         return JS_UNDEFINED;
     }

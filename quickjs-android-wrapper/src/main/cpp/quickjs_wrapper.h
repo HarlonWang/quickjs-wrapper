@@ -66,7 +66,7 @@ public:
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring stringify(JNIEnv *env, jlong value) const;
     jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool insert = true);
-    JSValue toJSValue(JNIEnv *env, jobject value);
+    JSValue toJSValue(JNIEnv *env, jobject value) const;
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
     JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);
