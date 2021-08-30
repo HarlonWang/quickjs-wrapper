@@ -422,7 +422,7 @@ jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
 
 string getName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
-    const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
+    const auto method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
     auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
     const auto s = env->GetStringUTFChars(javaString, nullptr);
 
