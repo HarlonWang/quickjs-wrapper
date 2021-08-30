@@ -227,7 +227,12 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     vector<JSValue> arguments;
     for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
         jobject arg = env->GetObjectArrayElement(args, numArgs);
-        arguments.push_back(toJSValue(env, arg));
+        auto jsArg = toJSValue(env, arg);
+        if (jsArg == JS_EXCEPTION) {
+            return nullptr;
+        }
+
+        arguments.push_back(jsArg);
         env->DeleteLocalRef(arg);
     }
 
@@ -363,7 +368,7 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
     if (!typeName.empty() && typeName[0] == '[') {
         throwJavaException(env, "java/lang/RuntimeException",
                            "Unsupported Java type with Array!");
-        return JS_UNDEFINED;
+        return JS_EXCEPTION;
     }
 
     JSValue result;
@@ -383,7 +388,7 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
         // Throw an exception for unsupported argument type.
         throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                            typeName.c_str());
-        result = JS_UNDEFINED;
+        result = JS_EXCEPTION;
     }
 
     return result;
