@@ -331,6 +331,7 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
             // Throw an exception for unsupported argument type.
             throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                                typeName.c_str());
+            return;
         }
     }
 
