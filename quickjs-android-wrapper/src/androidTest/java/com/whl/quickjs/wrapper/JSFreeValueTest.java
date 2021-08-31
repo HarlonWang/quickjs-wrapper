@@ -1,4 +1,4 @@
-package com.whl.quickjs.wrapper.sample;
+package com.whl.quickjs.wrapper;
 
 import android.util.Log;
 

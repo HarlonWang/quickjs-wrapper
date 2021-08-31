@@ -25,6 +25,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    sourceSets {
+        androidTest.root '../quickjs-android-wrapper/src/androidTest'
+        androidTest.java.srcDirs '../quickjs-android-wrapper/src/androidTest/java'
+    }
 }
 
 dependencies {
