@@ -24,6 +24,8 @@ private:
     int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
     JSValue call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const;
     const char* stringify(JSValue &value) const;
+    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool hold = true);
+    JSValue toJSValue(JNIEnv *env, jobject value) const;
 
 public:
     JNIEnv *jniEnv;
@@ -66,8 +68,6 @@ public:
     void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value);
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring stringify(JNIEnv *env, jlong value) const;
-    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool insert = true);
-    JSValue toJSValue(JNIEnv *env, jobject value) const;
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
     JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);

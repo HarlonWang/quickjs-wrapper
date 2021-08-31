@@ -80,7 +80,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     JS_FreeRuntime(runtime);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool insert){
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool hold){
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -126,7 +126,7 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& va
                 result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
             }
 
-            if (insert) {
+            if (hold) {
                 if (values.count(value_ptr) == 0) {
                     values.insert(pair<jlong, JSValue>(value_ptr, value));
                 } else{
