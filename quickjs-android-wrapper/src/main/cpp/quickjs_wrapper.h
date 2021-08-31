@@ -38,6 +38,7 @@ public:
     jclass booleanClass;
     jclass integerClass;
     jclass doubleClass;
+    jclass stringClass;
     jclass jsObjectClass;
     jclass jsArrayClass;
     jclass jsFunctionClass;

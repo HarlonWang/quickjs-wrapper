@@ -30,6 +30,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     booleanClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
     integerClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
     doubleClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Double")));
+    stringClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/String")));
     jsObjectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObject")));
     jsArrayClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
     jsFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
@@ -54,6 +55,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(doubleClass);
     jniEnv->DeleteGlobalRef(integerClass);
     jniEnv->DeleteGlobalRef(booleanClass);
+    jniEnv->DeleteGlobalRef(stringClass);
     jniEnv->DeleteGlobalRef(jsObjectClass);
     jniEnv->DeleteGlobalRef(jsArrayClass);
     jniEnv->DeleteGlobalRef(jsFunctionClass);
@@ -281,25 +283,17 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
 void
 QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) {
     auto classType = env->GetObjectClass(value);
-    const auto typeName = getName(env, classType);
-    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "call args type=%s", typeName.c_str());
-
-    if (!typeName.empty() && typeName[0] == '[') {
-        throwJavaException(env, "java/lang/RuntimeException",
-                           "Unsupported Java type with Array!");
-        return;
-    }
 
     JSValue propValue;
-    if (typeName == "java.lang.String") {
+    if (env->IsAssignableFrom(classType, stringClass)) {
         const auto s = env->GetStringUTFChars(static_cast<jstring>(value), JNI_FALSE);
         propValue = JS_NewString(context, s);
         env->ReleaseStringUTFChars(static_cast<jstring>(value), s);
-    } else if (typeName == "java.lang.Double" || typeName == "double") {
+    } else if (env->IsAssignableFrom(classType, doubleClass)) {
         propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
-    } else if (typeName == "java.lang.Integer" || typeName == "int") {
+    } else if (env->IsAssignableFrom(classType, integerClass)) {
         propValue = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
-    } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
+    } else if (env->IsAssignableFrom(classType, booleanClass)) {
         propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else {
         if (env->IsInstanceOf(value, jsCallFunctionClass)) {
@@ -314,6 +308,7 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
                     jsClassId = 0;
                     throwJavaException(env, "java/lang/NullPointerException",
                                        "Failed to allocate JavaScript proxy class");
+                    return;
                 }
             }
 
@@ -328,6 +323,7 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
         } else if(env->IsInstanceOf(value, jsObjectClass)) {
             propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
         } else {
+            const auto typeName = getName(env, classType);
             // Throw an exception for unsupported argument type.
             throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                                typeName.c_str());
@@ -364,28 +360,22 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
     }
 
     auto classType = env->GetObjectClass(value);
-    const auto typeName = getName(env, classType);
-
-    if (!typeName.empty() && typeName[0] == '[') {
-        throwJavaException(env, "java/lang/RuntimeException",
-                           "Unsupported Java type with Array!");
-        return JS_EXCEPTION;
-    }
 
     JSValue result;
-    if (typeName == "java.lang.String") {
+    if (env->IsAssignableFrom(classType, stringClass)) {
         const auto s = env->GetStringUTFChars(static_cast<jstring>(value), JNI_FALSE);
         result = JS_NewString(context, s);
         env->ReleaseStringUTFChars(static_cast<jstring>(value), s);
-    } else if (typeName == "java.lang.Double" || typeName == "double") {
+    } else if (env->IsAssignableFrom(classType, doubleClass)) {
         result = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
-    } else if (typeName == "java.lang.Integer" || typeName == "int") {
+    } else if (env->IsAssignableFrom(classType, integerClass)) {
         result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
-    } else if (typeName == "java.lang.Boolean" || typeName == "boolean") {
+    } else if (env->IsAssignableFrom(classType, booleanClass)) {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
         result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
     } else {
+        const auto typeName = getName(env, classType);
         // Throw an exception for unsupported argument type.
         throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                            typeName.c_str());

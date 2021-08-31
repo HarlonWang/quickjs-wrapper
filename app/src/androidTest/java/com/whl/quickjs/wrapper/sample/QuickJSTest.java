@@ -107,7 +107,7 @@ public class QuickJSTest {
             context.call(func, globalObject, new int[]{1, 2});
             fail();
         } catch (Exception e) {
-            assertEquals("java.lang.RuntimeException: Unsupported Java type with Array!", e.toString());
+            assertTrue(e.toString().contains("Unsupported Java type"));
         }
 
     }
