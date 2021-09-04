@@ -230,7 +230,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
         jobject arg = env->GetObjectArrayElement(args, numArgs);
         auto jsArg = toJSValue(env, arg);
-        if (jsArg == JS_EXCEPTION) {
+        if (JS_IsException(jsArg)) {
             return nullptr;
         }
 
