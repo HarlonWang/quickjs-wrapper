@@ -74,11 +74,6 @@ SetProperties
                 return "call back";
             }
         });
-        assertEquals("hello test", context.evaluate("stringValue;"));
-        assertEquals(123, context.evaluate("intValue;"));
-        assertEquals(123.11, context.evaluate("doubleValue;"));
-        assertEquals(true, context.evaluate("booleanValue;"));
-        assertEquals("call back", context.evaluate("functionValue();"));
 
 JSArray
 
@@ -88,7 +83,6 @@ JSArray
                 "\n" +
                 "test(3);");
         assertEquals(3, ret.get(2));
-            
 
 JSFunction
         
@@ -100,7 +94,6 @@ JSFunction
         assertEquals("hello, 1string123.11true", context.call(func, globalObject, 1, "string", 123.11, true));
 
 more usage case, can look [QuickJSTest.java](https://github.com/HarlonWang/quickjs-android-wrapper/blob/main/quickjs-android-wrapper/src/androidTest/java/com/whl/quickjs/wrapper/QuickJSTest.java)
-                
 
 ## Thanks
 
