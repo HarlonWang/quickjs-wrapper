@@ -6,6 +6,7 @@ Simple to use JavaScript for Android with QuickJS engine.
         repositories {
           mavenCentral()
         }
+        
         dependencies {
           implementation 'wang.harlon.quickjs:wrapper:0.0.2'
         }
@@ -23,7 +24,7 @@ Simple to use JavaScript for Android with QuickJS engine.
 
 ### Supported Java Types
 Currently, the following Java types are supported with JavaScript:
-- `boolean` and `Boolean`
+- `boolean`
 - `int` when calling JavaScript from Java.
 - `double`
 - `String`
