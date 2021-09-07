@@ -77,9 +77,9 @@ public:
     jobject parseJSON(JNIEnv*, jobject, jstring);
 
     // JS --> bytecode
-    const char* compile(const char *script, int eval_flag = JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_TYPE_GLOBAL) const;
+    jbyteArray compile(JNIEnv*, jstring) const;
     // bytecode --> result
-    JSValue execute(const char *script) const;
+    jobject execute(JNIEnv*, jobject, jbyteArray);
 };
 
 string getName(JNIEnv* env, jobject javaClass);

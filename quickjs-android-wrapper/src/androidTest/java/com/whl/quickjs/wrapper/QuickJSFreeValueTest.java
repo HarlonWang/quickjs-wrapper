@@ -1,21 +1,14 @@
 package com.whl.quickjs.wrapper;
 
 import android.util.Log;
-
-import com.whl.quickjs.wrapper.JSCallFunction;
-import com.whl.quickjs.wrapper.JSFunction;
-import com.whl.quickjs.wrapper.JSObject;
-import com.whl.quickjs.wrapper.QuickJSContext;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class JSFreeValueTest {
+public class QuickJSFreeValueTest {
 
-    private static final String TAG = "JSFreeValueTest";
     private QuickJSContext context;
 
     @Before

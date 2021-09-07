@@ -108,4 +108,17 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_parseJSON(JNIEnv *env, jobject thiz,
                                                       jstring json) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->parseJSON(env, thiz, json);
+}extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_compile(JNIEnv *env, jobject thiz, jlong context,
+                                                    jstring source_code) {
+
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->compile(env, source_code);
+}extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_execute(JNIEnv *env, jobject thiz, jlong context,
+                                                    jbyteArray bytecode) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->execute(env, thiz, bytecode);
 }

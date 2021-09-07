@@ -416,6 +416,62 @@ jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
     return result;
 }
 
+jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source) const {
+    const auto sourceCode = env->GetStringUTFChars(source, 0);
+    auto compiled = JS_Eval(context, sourceCode, strlen(sourceCode), "compile.js", JS_EVAL_FLAG_COMPILE_ONLY);
+    env->ReleaseStringUTFChars(source, sourceCode);
+
+    if (JS_IsException(compiled)) {
+        // TODO throwJsException(env, compiled);
+        return nullptr;
+    }
+
+    size_t bufferLength = 0;
+    auto buffer = JS_WriteObject(context, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+
+    auto result = buffer && bufferLength > 0 ? env->NewByteArray(bufferLength) : nullptr;
+    if (result) {
+        env->SetByteArrayRegion(result, 0, bufferLength, reinterpret_cast<const jbyte*>(buffer));
+    } else {
+        // TODO throwJsException(env, compiled);
+    }
+
+    JS_FreeValue(context, compiled);
+    js_free(context, buffer);
+
+    return result;
+}
+
+jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) {
+    const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
+    const auto bufferLength = env->GetArrayLength(byteCode);
+    const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+    auto obj = JS_ReadObject(context, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
+    env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
+
+    if (JS_IsException(obj)) {
+        // TODO throwJsException(env, obj);
+        return nullptr;
+    }
+
+    if (JS_ResolveModule(context, obj)) {
+        // TODO throwJsExceptionFmt(env, this, "Failed to resolve JS module");
+        return nullptr;
+    }
+
+    auto val = JS_EvalFunction(context, obj);
+    jobject result;
+    if (!JS_IsException(val)) {
+        result = toJavaObject(env, thiz, val);
+    } else {
+        result = nullptr;
+        // TODO throwJsException(env, val);
+    }
+    JS_FreeValue(context, val);
+
+    return result;
+}
+
 string getName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
     const auto method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");

@@ -1,13 +1,6 @@
 package com.whl.quickjs.wrapper;
 
 import android.util.Log;
-
-import com.whl.quickjs.wrapper.JSArray;
-import com.whl.quickjs.wrapper.JSCallFunction;
-import com.whl.quickjs.wrapper.JSFunction;
-import com.whl.quickjs.wrapper.JSObject;
-import com.whl.quickjs.wrapper.QuickJSContext;
-
 import org.junit.Test;
 
 import static org.junit.Assert.*;

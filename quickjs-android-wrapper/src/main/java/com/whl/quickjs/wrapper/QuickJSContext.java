@@ -87,6 +87,14 @@ public class QuickJSContext {
         return parseJSON(context, json);
     }
 
+    public byte[] compile(String sourceCode) {
+        return compile(context, sourceCode);
+    }
+
+    public Object execute(byte[] code) {
+        return execute(context, code);
+    }
+
     private native long createContext();
     private native void destroyContext(long context);
     private native Object evaluate(long context, String script, String fileName);
@@ -102,4 +110,6 @@ public class QuickJSContext {
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);
     private native JSObject parseJSON(long context, String json);
+    private native byte[] compile(long context, String sourceCode);
+    private native Object execute(long context, byte[] bytecode);
 }
