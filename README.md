@@ -96,6 +96,12 @@ JSFunction
 
 more usage case, can look `src/androidTest/QuickJSTest.java`
 
+Compile ByteCode
+
+    byte[] code = context.compile("'hello, world!'.toUpperCase();");
+    context.execute(code);
+
+
 ## Reference
 
 - [quickjs-java](https://github.com/cashapp/quickjs-java)
