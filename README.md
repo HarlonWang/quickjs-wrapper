@@ -94,7 +94,7 @@ JSFunction
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, 1string123.11true", context.call(func, globalObject, 1, "string", 123.11, true));
 
-more usage case, can look [QuickJSTest.java](https://github.com/HarlonWang/quickjs-android-wrapper/blob/main/quickjs-android-wrapper/src/androidTest/java/com/whl/quickjs/wrapper/QuickJSTest.java)
+more usage case, can look `src/androidTest/QuickJSTest.java`
 
 ## Reference
 
