@@ -96,7 +96,7 @@ JSFunction
 
 more usage case, can look [QuickJSTest.java](https://github.com/HarlonWang/quickjs-android-wrapper/blob/main/quickjs-android-wrapper/src/androidTest/java/com/whl/quickjs/wrapper/QuickJSTest.java)
 
-## Thanks
+## Reference
 
 - [quickjs-java](https://github.com/cashapp/quickjs-java)
 - [quack](https://github.com/koush/quack)
