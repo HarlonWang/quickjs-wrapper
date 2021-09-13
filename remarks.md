@@ -33,3 +33,5 @@
                         return null;
                     }
                 });
+                
+- String/Atom 内存泄漏问题：虽然调用了 JSCString 的释放方法，但是因为其所在的对象是 GlobalObject，无法被释放，导致一直会被持有，这里需要进一步优化.
