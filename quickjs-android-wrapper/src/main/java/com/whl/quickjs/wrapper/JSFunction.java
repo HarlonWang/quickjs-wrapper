@@ -2,13 +2,15 @@ package com.whl.quickjs.wrapper;
 
 public class JSFunction extends JSObject{
 
-    public JSFunction(QuickJSContext context, long pointer) {
+    private final long objPointer;
+
+    public JSFunction(QuickJSContext context, long objPointer, long pointer) {
         super(context, pointer);
+        this.objPointer = objPointer;
     }
 
-    // todo getContext().call();
-//    public Object call() {
-//        return null;
-//    }
+    public Object call(Object... args) {
+        return getContext().call(this, objPointer, args);
+    }
 
 }

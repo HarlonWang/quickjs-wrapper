@@ -78,6 +78,10 @@ public class QuickJSContext {
         return call(context, func.getPointer(), thisObj.getPointer(), args);
     }
 
+    Object call(JSObject func, long objPointer, Object... args) {
+        return call(context, func.getPointer(), objPointer, args);
+    }
+
     public void hold(JSObject jsObj) {
         jsObj.dupValue();
         nativeCleaner.register(jsObj, jsObj.getPointer());

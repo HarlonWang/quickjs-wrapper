@@ -47,7 +47,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 
     jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
+    jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)V");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
@@ -80,7 +80,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     JS_FreeRuntime(runtime);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& value, bool hold){
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold){
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -117,9 +117,10 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& va
         }
 
         case JS_TAG_OBJECT: {
+            auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
             if (JS_IsFunction(context, value)) {
-                result = env->NewObject(jsFunctionClass, jsFunctionInit, thiz, value_ptr);
+                result = env->NewObject(jsFunctionClass, jsFunctionInit, thiz, obj_ptr, value_ptr);
             } else if (JS_IsArray(context, value)) {
                 result = env->NewObject(jsArrayClass, jsArrayInit, thiz, value_ptr);
             } else {
@@ -158,7 +159,10 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
     env->ReleaseStringUTFChars(script, c_script);
     env->ReleaseStringUTFChars(file_name, c_file_name);
 
-    return toJavaObject(env, thiz, result);
+    JSValue global = getGlobalObject();
+    jobject jsObj = toJavaObject(env, thiz, global, result);
+    JS_FreeValue(context, global);
+    return jsObj;
 }
 
 JSValue QuickJSWrapper::evaluate(const char *script, const char *file_name, int eval_flag) const {
@@ -220,7 +224,7 @@ jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstr
 
     env->ReleaseStringUTFChars(name, propsName);
 
-    return toJavaObject(env, thiz, propsValue);
+    return toJavaObject(env, thiz, jsObject, propsValue);
 }
 
 jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj,
@@ -253,7 +257,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         }
     }
 
-    return toJavaObject(env, thiz, funcRet);
+    return toJavaObject(env, thiz, jsObj, funcRet);
 }
 
 jstring QuickJSWrapper::stringify(JNIEnv *env, jlong value) const {
@@ -277,7 +281,7 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     JSValue child = JS_GetPropertyUint32(context, jsObj, index);
 
-    return toJavaObject(env, thiz, child);
+    return toJavaObject(env, thiz, jsObj, child);
 }
 
 void
@@ -342,7 +346,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
-        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, toJavaObject(jniEnv, thiz, argv[i], false));
+        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, toJavaObject(jniEnv, thiz, this_val, argv[i], false));
     }
 
     auto funcClass = jniEnv->GetObjectClass(func_value);
@@ -411,7 +415,8 @@ void QuickJSWrapper::freeDupValue(jlong value) const {
 jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
     const char *c_json = env->GetStringUTFChars(json, JNI_FALSE);
     auto jsonObj = JS_ParseJSON(context, c_json, strlen(c_json), "parseJSON.js");
-    jobject result = toJavaObject(env, thiz, jsonObj);
+    JSValue jsObj = JS_UNDEFINED;
+    jobject result = toJavaObject(env, thiz, jsObj, jsonObj);
     env->ReleaseStringUTFChars(json, c_json);
     return result;
 }
@@ -462,7 +467,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
     auto val = JS_EvalFunction(context, obj);
     jobject result;
     if (!JS_IsException(val)) {
-        result = toJavaObject(env, thiz, val);
+        result = toJavaObject(env, thiz, obj, val);
     } else {
         result = nullptr;
         // TODO throwJsException(env, val);

@@ -58,8 +58,8 @@ public class QuickJSFreeValueTest {
         user.setProperty("name", "Jack");
 
         JSFunction function = (JSFunction) context.getGlobalObject().getProperty("test");
-        JSObject result1 = (JSObject) context.call(function, context.getGlobalObject());
-        JSObject result2 = (JSObject) context.call(function, context.getGlobalObject());
+        JSObject result1 = (JSObject) function.call();
+        JSObject result2 = (JSObject) function.call();
 
         String name = (String) result1.getProperty("name");
         assertEquals("hello", name);

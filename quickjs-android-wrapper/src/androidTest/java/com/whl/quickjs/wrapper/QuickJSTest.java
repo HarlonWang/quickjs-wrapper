@@ -52,7 +52,7 @@ public class QuickJSTest {
         assertEquals("hi Jack", globalObject.getProperty("stringValue"));
         assertEquals(true, globalObject.getProperty("booleanValue"));
         JSFunction function = (JSFunction) globalObject.getProperty("testFunc");
-        assertEquals("hello, yonglan-whl", context.call(function, globalObject, "yonglan-whl"));
+        assertEquals("hello, yonglan-whl", function.call("yonglan-whl"));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class QuickJSTest {
                 "}");
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
-        assertEquals("hello, 1string123.11true", context.call(func, globalObject, 1, "string", 123.11, true));
+        assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class QuickJSTest {
                 "}");
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
-        assertEquals("hello, undefined-13", context.call(func, globalObject, null, -1, 3));
+        assertEquals("hello, undefined-13", func.call(null, -1, 3));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class QuickJSTest {
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         try {
-            context.call(func, globalObject, new int[]{1, 2});
+            func.call(new int[]{1, 2});
             fail();
         } catch (Exception e) {
             assertTrue(e.toString().contains("Unsupported Java type"));
@@ -188,7 +188,7 @@ public class QuickJSTest {
 
         JSObject jsObj = (JSObject) context.evaluate("render();");
         JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
-        context.call(jsFunction, jsObj);
+        jsFunction.call();
     }
 
     @Test
