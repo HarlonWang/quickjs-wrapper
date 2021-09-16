@@ -117,9 +117,9 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
         }
 
         case JS_TAG_OBJECT: {
-            auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
             if (JS_IsFunction(context, value)) {
+                auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
                 result = env->NewObject(jsFunctionClass, jsFunctionInit, thiz, obj_ptr, value_ptr);
             } else if (JS_IsArray(context, value)) {
                 result = env->NewObject(jsArrayClass, jsArrayInit, thiz, value_ptr);
