@@ -24,7 +24,24 @@ private:
     int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
     JSValue call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const;
     const char* stringify(JSValue &value) const;
+
+    /**
+     * 将 JSValue 转为 Java 类型
+     * @param env
+     * @param thiz
+     * @param this_obj 所属的对象
+     * @param value
+     * @param hold
+     * @return
+     */
     jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold = true);
+
+    /**
+     * 将 Java 类型转为 JSValue
+     * @param env
+     * @param value
+     * @return
+     */
     JSValue toJSValue(JNIEnv *env, jobject value) const;
 
 public:
