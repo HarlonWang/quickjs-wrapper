@@ -8,7 +8,7 @@ Simple to use JavaScript for Android with QuickJS engine.
         }
         
         dependencies {
-          implementation 'wang.harlon.quickjs:wrapper:0.0.3'
+          implementation 'wang.harlon.quickjs:wrapper:0.0.4'
         }
 
 ## Usage
@@ -59,7 +59,7 @@ GetProperties
         assertEquals("hi Jack", globalObject.getProperty("stringValue"));
         assertEquals(true, globalObject.getProperty("booleanValue"));
         JSFunction function = (JSFunction) globalObject.getProperty("testFunc");
-        assertEquals("hello, yonglan-whl", context.call(function, globalObject, "yonglan-whl"));
+        assertEquals("hello, yonglan-whl", function.call("yonglan-whl"));
                 
 
 SetProperties
@@ -92,7 +92,7 @@ JSFunction
                 "}");
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
-        assertEquals("hello, 1string123.11true", context.call(func, globalObject, 1, "string", 123.11, true));
+        assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
 
 more usage case, can look `src/androidTest/QuickJSTest.java`
 
