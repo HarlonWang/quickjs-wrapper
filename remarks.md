@@ -34,4 +34,6 @@
                     }
                 });
                 
+- globalObject 的引用计数默认是 2，暂时未弄清楚具体逻辑，目前的释放逻辑是每次 getGlobalObject 后都会 Free 下。待后续优化
+                
 - String/Atom 内存泄漏问题：虽然调用了 JSCString 的释放方法，但是因为其所在的对象是 GlobalObject，无法被释放，导致一直会被持有，这里需要进一步优化.
