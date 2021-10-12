@@ -121,4 +121,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_execute(JNIEnv *env, jobject thiz, j
                                                     jbyteArray bytecode) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->execute(env, thiz, bytecode);
+}extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_evaluateModule(JNIEnv *env, jobject thiz, jlong context,
+                                                           jstring script, jstring file_name) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->evaluateModule(env, thiz, script, file_name);
 }

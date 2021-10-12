@@ -99,9 +99,16 @@ public class QuickJSContext {
         return execute(context, code);
     }
 
+    public Object evaluateModule(String script, String moduleName) {
+        return evaluateModule(context, script, moduleName);
+    }
+
+    // context
     private native long createContext();
     private native void destroyContext(long context);
+
     private native Object evaluate(long context, String script, String fileName);
+    private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
     private native Object call(long context, long func, long thisObj, Object[] args);
 
@@ -113,7 +120,11 @@ public class QuickJSContext {
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);
+
+    // JSON.parse
     private native JSObject parseJSON(long context, String json);
+
+    // bytecode
     private native byte[] compile(long context, String sourceCode);
     private native Object execute(long context, byte[] bytecode);
 }

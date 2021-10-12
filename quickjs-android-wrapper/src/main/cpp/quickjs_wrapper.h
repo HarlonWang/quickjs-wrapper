@@ -62,6 +62,7 @@ public:
     jclass jsArrayClass;
     jclass jsFunctionClass;
     jclass jsCallFunctionClass;
+    jclass jsModuleClass;
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
@@ -75,6 +76,8 @@ public:
     jmethodID jsObjectInit;
     jmethodID jsArrayInit;
     jmethodID jsFunctionInit;
+    jmethodID jsGetModuleScript;
+    jmethodID jsConvertModuleName;
 
     QuickJSWrapper(JNIEnv *env);
     ~QuickJSWrapper();
@@ -97,6 +100,8 @@ public:
     jbyteArray compile(JNIEnv*, jstring) const;
     // bytecode --> result
     jobject execute(JNIEnv*, jobject, jbyteArray);
+
+    jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
 };
 
 string getName(JNIEnv* env, jobject javaClass);
