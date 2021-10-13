@@ -20,7 +20,13 @@ public class QuickJSModuleTest {
 
         ConsoleLogHelper.initConsole(context);
 
-        context.evaluateModule("import {name} from './a.js';\n console.log(name);", "test.js");
+        context.evaluateModule("import {name, age} from './a.js';\n" +
+                "\n" +
+                "function onCreate() {\n" +
+                "\tconsole.log('年龄：' + age);\n" +
+                "}\n" +
+                "\n" +
+                "console.log('性别：' + name); onCreate();");
     }
 
 

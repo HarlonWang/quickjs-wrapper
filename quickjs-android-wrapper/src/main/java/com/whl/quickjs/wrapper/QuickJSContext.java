@@ -102,6 +102,10 @@ public class QuickJSContext {
     public Object evaluateModule(String script, String moduleName) {
         return evaluateModule(context, script, moduleName);
     }
+    
+    public Object evaluateModule(String script) {
+        return evaluateModule(script, UNDEFINED);
+    }
 
     // context
     private native long createContext();
