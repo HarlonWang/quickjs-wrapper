@@ -19,11 +19,54 @@ static void jsFinalizer(JSRuntime *rt, JSValue val) {
     }
 }
 
+static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
+                                            const char *module_name, void *opaque) {
+    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
+    auto env = wrapper->jniEnv;
+
+    jobject result = env->CallStaticObjectMethod(wrapper->jsModuleClass, wrapper->jsConvertModuleName,
+                                                    env->NewStringUTF(module_base_name),
+                                                    env->NewStringUTF(module_name));
+    if (result == nullptr) {
+        return nullptr;
+    }
+    return (char *) env->GetStringUTFChars((jstring) result, nullptr);
+}
+
+static JSModuleDef *
+jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
+    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
+    auto env = wrapper->jniEnv;
+    auto arg = env->NewStringUTF(module_name);
+
+    auto result = env->CallStaticObjectMethod(wrapper->jsModuleClass, wrapper->jsGetModuleScript, arg);
+    const auto script = env->GetStringUTFChars(static_cast<jstring>(result), JNI_FALSE);
+
+    int scriptLen = env->GetStringUTFLength((jstring) result);
+
+    if (script == nullptr) {
+        return nullptr;
+    }
+
+    JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
+                               JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+    void *m = JS_VALUE_GET_PTR(func_val);
+    JS_FreeValue(ctx, func_val);
+    return (JSModuleDef *) m;
+}
+
+
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jniEnv = env;
     runtime = JS_NewRuntime();
+
+    // init ES6Module
+    JS_SetModuleLoaderFunc(runtime, jsModuleNormalizeFunc, jsModuleLoaderFunc, nullptr);
+
     context = JS_NewContext(runtime);
+
     JS_SetRuntimeOpaque(runtime, this);
+
     jsClassId = 0;
 
     objectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
@@ -35,6 +78,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jsArrayClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
     jsFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
     jsCallFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
+    jsModuleClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSModule")));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -48,6 +92,9 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)V");
+    jsConvertModuleName = jniEnv->GetStaticMethodID(jsModuleClass, "convertModuleName",
+                                              "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+    jsGetModuleScript = jniEnv->GetStaticMethodID(jsModuleClass, "getModuleScript", "(Ljava/lang/String;)Ljava/lang/String;");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
@@ -60,6 +107,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsArrayClass);
     jniEnv->DeleteGlobalRef(jsFunctionClass);
     jniEnv->DeleteGlobalRef(jsCallFunctionClass);
+    jniEnv->DeleteGlobalRef(jsModuleClass);
 
     map<jlong, JSValue>::iterator i;
     for (i = values.begin(); i != values.end(); ++i) {
@@ -475,6 +523,22 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
     JS_FreeValue(context, val);
 
     return result;
+}
+
+jobject
+QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name) {
+    const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
+    const char *c_file_name = env->GetStringUTFChars(file_name, JNI_FALSE);
+
+    JSValue result = evaluate(c_script, c_file_name, JS_EVAL_TYPE_MODULE);
+
+    env->ReleaseStringUTFChars(script, c_script);
+    env->ReleaseStringUTFChars(file_name, c_file_name);
+
+    JSValue global = getGlobalObject();
+    jobject jsObj = toJavaObject(env, thiz, global, result);
+    JS_FreeValue(context, global);
+    return jsObj;
 }
 
 string getName(JNIEnv* env, jobject javaClass) {
