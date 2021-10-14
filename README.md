@@ -101,6 +101,27 @@ Compile ByteCode
     byte[] code = context.compile("'hello, world!'.toUpperCase();");
     context.execute(code);
 
+ESModule
+
+        JSModule.setModuleLoader(new JSModule.Loader() {
+            @Override
+            public String getModuleScript(String moduleName) {
+                return "export var name = 'Hello world';\n" +
+                        "export var age = 18;";
+            }
+        });
+        QuickJSContext context = QuickJSContext.create();
+
+        ConsoleLogHelper.initConsole(context);
+
+        context.evaluateModule("import {name, age} from './a.js';\n" +
+                "\n" +
+                "function onCreate() {\n" +
+                "\tconsole.log('年龄：' + age);\n" +
+                "}\n" +
+                "\n" +
+                "console.log('性别：' + name); onCreate();");
+
 
 ## Reference
 
