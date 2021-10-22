@@ -31,6 +31,36 @@ public class JSObject {
         context.setProperty(this, name, value);
     }
 
+    public String getStringProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof String ? (String) value : null;
+    }
+
+    public Integer getIntProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof Integer ? (Integer) value : null;
+    }
+
+    public Boolean getBooleanProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    public JSObject getJSObjectProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof JSObject ? (JSObject) value : null;
+    }
+
+    public JSFunction getJSFunctionProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof JSFunction ? (JSFunction) value : null;
+    }
+
+    public JSArray getJSArrayProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof JSArray ? (JSArray) value : null;
+    }
+
     public void release() {
         checkReleased();
 
