@@ -211,4 +211,15 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testFlat() {
+        QuickJSContext context = QuickJSContext.create();
+        ConsoleLogHelper.initConsole(context);
+        context.evaluate("let a = [1,[2,3]];  \n" +
+                "a = a.flat();\n" +
+                "console.log(a);");
+
+        context.destroyContext();
+    }
+
 }
