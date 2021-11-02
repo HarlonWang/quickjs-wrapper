@@ -222,4 +222,19 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testClass() {
+        QuickJSContext context = QuickJSContext.create();
+        ConsoleLogHelper.initConsole(context);
+        context.evaluate("class User {\n" +
+                "\tconstructor() {\n" +
+                "\t\tthis.name = \"HarlonWang\";\n" +
+                "\t}\n" +
+                "}\n" +
+                "\n" +
+                "var user = new User();\n" +
+                "console.log(user.name);");
+        context.destroyContext();
+    }
+
 }
