@@ -237,4 +237,19 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testGetOwnPropertyNames() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("var a = {age: 1, ff: () => {}};");
+        JSArray array = context.getGlobalObject().getJSObjectProperty("a").getOwnPropertyNames();
+        for (int i = 0; i < ((JSArray) array).length(); i++) {
+            String item = (String) ((JSArray) array).get(i);
+            if (i == 0) {
+                assertEquals("age", item);
+            } else {
+                assertEquals("ff", item);
+            }
+        }
+    }
+
 }

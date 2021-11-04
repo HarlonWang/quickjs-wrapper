@@ -61,6 +61,11 @@ public class JSObject {
         return value instanceof JSArray ? (JSArray) value : null;
     }
 
+    public JSArray getOwnPropertyNames() {
+        JSFunction getOwnPropertyNames = (JSFunction) context.evaluate("Object.getOwnPropertyNames");
+        return (JSArray) getOwnPropertyNames.call(this);
+    }
+
     public void release() {
         checkReleased();
 
