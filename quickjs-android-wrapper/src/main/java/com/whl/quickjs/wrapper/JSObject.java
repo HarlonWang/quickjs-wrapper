@@ -86,6 +86,10 @@ public class JSObject {
         context.freeDupValue(this);
     }
 
+    public void hold() {
+        context.hold(this);
+    }
+
     @Override
     public String toString() {
         checkReleased();
