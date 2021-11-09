@@ -74,7 +74,7 @@ public class JSObject {
     }
 
     /**
-     * Release with @freeDupValue
+     * Need use {@link #freeDupValue()} released.
      */
     public void dupValue() {
         checkReleased();
