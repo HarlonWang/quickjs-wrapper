@@ -246,9 +246,9 @@ const char * QuickJSWrapper::stringify(JSValue &value) const {
 
 JSValue QuickJSWrapper::checkNotException(JSValue &value) const {
     if (JS_IsException(value)) {
-        JSValue exception = JS_GetException(context);
-        const char* excStr = JS_ToCString(context, exception);
-        throw runtime_error(excStr);
+        const char* error = js_std_dump_error(context);
+        throwJavaException(jniEnv, "android/util/AndroidRuntimeException",
+                           error);
     }
 
     return value;
@@ -561,4 +561,39 @@ void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt
     vsnprintf(msg, sizeof(msg), fmt, args);
     va_end (args);
     env->ThrowNew(env->FindClass(exceptionClass), msg);
+}
+
+static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
+{
+    const char *str;
+
+    str = JS_ToCString(ctx, val);
+    if (str) {
+        return str;
+    } else {
+        return "[exception]";
+    }
+}
+
+const char* js_std_dump_error(JSContext *ctx) {
+    JSValue exception_val;
+
+    exception_val = JS_GetException(ctx);
+
+    JSValue val;
+    bool is_error;
+    is_error = JS_IsError(ctx, exception_val);
+    string jsException = js_dump_obj(ctx, exception_val);
+    if (is_error) {
+        val = JS_GetPropertyStr(ctx, exception_val, "stack");
+        if (!JS_IsUndefined(val)) {
+            jsException += "\n";
+            jsException += js_dump_obj(ctx, val);
+        }
+        JS_FreeValue(ctx, val);
+    }
+
+    JS_FreeValue(ctx, exception_val);
+    const char* errorStr = jsException.c_str();
+    return errorStr;
 }

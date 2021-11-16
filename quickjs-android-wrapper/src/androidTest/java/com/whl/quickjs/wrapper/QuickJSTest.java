@@ -252,4 +252,11 @@ public class QuickJSTest {
         }
     }
 
+    @Test
+    public void testDumpStackError() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("var a = 1; a();");
+        context.destroyContext();
+    }
+
 }

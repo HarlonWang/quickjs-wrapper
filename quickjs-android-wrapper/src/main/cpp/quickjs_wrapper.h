@@ -106,6 +106,7 @@ public:
 
 string getName(JNIEnv* env, jobject javaClass);
 void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
+const char* js_std_dump_error(JSContext *ctx);
 
 typedef struct {
     QuickJSWrapper *wrapper;
