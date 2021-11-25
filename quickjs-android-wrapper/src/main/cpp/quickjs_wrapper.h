@@ -102,6 +102,8 @@ public:
     jobject execute(JNIEnv*, jobject, jbyteArray);
 
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
+
+    jint executePendingJob() const;
 };
 
 string getName(JNIEnv* env, jobject javaClass);

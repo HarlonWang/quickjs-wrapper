@@ -541,6 +541,11 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     return jsObj;
 }
 
+jint QuickJSWrapper::executePendingJob() const {
+    JSContext *jobCtx;
+    return JS_ExecutePendingJob(runtime, &jobCtx);
+}
+
 string getName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
     const auto method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");

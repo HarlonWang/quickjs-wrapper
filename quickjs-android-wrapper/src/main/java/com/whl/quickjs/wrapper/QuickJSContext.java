@@ -107,6 +107,10 @@ public class QuickJSContext {
         return evaluateModule(script, UNDEFINED);
     }
 
+    public int executePendingJob() {
+        return executePendingJob(context);
+    }
+
     // context
     private native long createContext();
     private native void destroyContext(long context);
@@ -131,4 +135,7 @@ public class QuickJSContext {
     // bytecode
     private native byte[] compile(long context, String sourceCode);
     private native Object execute(long context, byte[] bytecode);
+
+    // Promise
+    private native int executePendingJob(long context);
 }

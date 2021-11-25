@@ -1,5 +1,6 @@
 package com.whl.quickjs.wrapper;
 
+import android.util.AndroidRuntimeException;
 import android.util.Log;
 import org.junit.Test;
 
@@ -256,6 +257,66 @@ public class QuickJSTest {
     public void testDumpStackError() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("var a = 1; a();");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromise() {
+        QuickJSContext context = QuickJSContext.create();
+        ConsoleLogHelper.initConsole(context);
+        context.evaluate("const promiseA = new Promise( (resolutionFunc,rejectionFunc) => {\n" +
+                "    resolutionFunc(777);\n" +
+                "});\n" +
+                "// 这时，\"promiseA\" 已经被敲定了。\n" +
+                "promiseA.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n" +
+                "console.log(\"immediate logging\");\n" +
+                "\n" +
+                "// produces output in this order:\n" +
+                "// immediate logging\n" +
+                "// asynchronous logging has val: 777\n" +
+                "\n" +
+                "\n" +
+                "const promiseB = new Promise( (resolutionFunc,rejectionFunc) => {\n" +
+                "    resolutionFunc(888);\n" +
+                "});\n" +
+                "\n" +
+                "promiseB.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n");
+
+        int err;
+        for(;;) {
+            err = context.executePendingJob();
+            if (err <= 0) {
+                if (err < 0) {
+                    throw new AndroidRuntimeException("Promise execute exception!");
+                }
+                break;
+            }
+        }
+
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromise2() {
+        QuickJSContext context = QuickJSContext.create();
+        ConsoleLogHelper.initConsole(context);
+        context.evaluate("    var defer =\n" +
+                "        'function' == typeof Promise\n" +
+                "            ? Promise.resolve().then.bind(Promise.resolve())\n" +
+                "            : setTimeout;\n" +
+                "    defer(() => {console.log('哈哈');});");
+
+        int err;
+        for(;;) {
+            err = context.executePendingJob();
+            if (err <= 0) {
+                if (err < 0) {
+                    throw new AndroidRuntimeException("Promise execute exception!");
+                }
+                break;
+            }
+        }
+
         context.destroyContext();
     }
 
