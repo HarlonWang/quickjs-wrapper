@@ -13,6 +13,8 @@ Simple to use JavaScript for Android with QuickJS engine.
 
 ## Usage
 
+more usage case, can look `src/androidTest/QuickJSTest.java`
+
 ### Create QuickJSContext
 
         QuickJSContext context = QuickJSContext.create();
@@ -93,8 +95,6 @@ JSFunction
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
-
-more usage case, can look `src/androidTest/QuickJSTest.java`
 
 Compile ByteCode
 
