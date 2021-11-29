@@ -18,8 +18,6 @@ public class QuickJSModuleTest {
         });
         QuickJSContext context = QuickJSContext.create();
 
-        ConsoleLogHelper.initConsole(context);
-
         context.evaluateModule("import {name, age} from './a.js';\n" +
                 "\n" +
                 "function onCreate() {\n" +

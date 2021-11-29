@@ -55,6 +55,40 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     return (JSModuleDef *) m;
 }
 
+static JSValue js_print(JSContext *ctx, JSValueConst this_val,
+                        int argc, JSValueConst *argv)
+{
+    int i;
+    string str;
+    size_t len;
+
+    for(i = 0; i < argc; i++) {
+        if (i != 0)
+            str += ' ';
+        const char *arg_str = JS_ToCStringLen(ctx, &len, argv[i]);
+        if (!arg_str)
+            return JS_EXCEPTION;
+        str += arg_str;
+        JS_FreeCString(ctx, arg_str);
+    }
+    __android_log_print(ANDROID_LOG_DEBUG, "tiny-console", "%s", str.c_str());
+    return JS_UNDEFINED;
+}
+
+static void js_std_add_helpers(JSContext *ctx)
+{
+    JSValue global_obj, console;
+
+    /* XXX: should these global definitions be enumerable? */
+    global_obj = JS_GetGlobalObject(ctx);
+
+    console = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, console, "log",
+                      JS_NewCFunction(ctx, js_print, "log", 1));
+    JS_SetPropertyStr(ctx, global_obj, "console", console);
+
+    JS_FreeValue(ctx, global_obj);
+}
 
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jniEnv = env;
@@ -66,6 +100,8 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     context = JS_NewContext(runtime);
 
     JS_SetRuntimeOpaque(runtime, this);
+
+    js_std_add_helpers(context);
 
     jsClassId = 0;
 

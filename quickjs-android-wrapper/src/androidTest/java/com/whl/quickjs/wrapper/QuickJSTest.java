@@ -215,7 +215,6 @@ public class QuickJSTest {
     @Test
     public void testFlat() {
         QuickJSContext context = QuickJSContext.create();
-        ConsoleLogHelper.initConsole(context);
         context.evaluate("let a = [1,[2,3]];  \n" +
                 "a = a.flat();\n" +
                 "console.log(a);");
@@ -226,7 +225,6 @@ public class QuickJSTest {
     @Test
     public void testClass() {
         QuickJSContext context = QuickJSContext.create();
-        ConsoleLogHelper.initConsole(context);
         context.evaluate("class User {\n" +
                 "\tconstructor() {\n" +
                 "\t\tthis.name = \"HarlonWang\";\n" +
@@ -256,14 +254,17 @@ public class QuickJSTest {
     @Test
     public void testDumpStackError() {
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("var a = 1; a();");
+        try {
+            context.evaluate("var a = 1; a();");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("not a function"));
+        }
         context.destroyContext();
     }
 
     @Test
     public void testPromise() {
         QuickJSContext context = QuickJSContext.create();
-        ConsoleLogHelper.initConsole(context);
         context.evaluate("const promiseA = new Promise( (resolutionFunc,rejectionFunc) => {\n" +
                 "    resolutionFunc(777);\n" +
                 "});\n" +
@@ -299,7 +300,6 @@ public class QuickJSTest {
     @Test
     public void testPromise2() {
         QuickJSContext context = QuickJSContext.create();
-        ConsoleLogHelper.initConsole(context);
         context.evaluate("    var defer =\n" +
                 "        'function' == typeof Promise\n" +
                 "            ? Promise.resolve().then.bind(Promise.resolve())\n" +
@@ -323,7 +323,7 @@ public class QuickJSTest {
     @Test
     public void testProxy() {
         QuickJSContext context = QuickJSContext.create();
-        ConsoleLogHelper.initConsole(context);
+
         context.evaluate("const handler = {\n" +
                 "    get: function(obj, prop) {\n" +
                 "        return prop in obj ? obj[prop] : 37;\n" +
