@@ -320,4 +320,24 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testProxy() {
+        QuickJSContext context = QuickJSContext.create();
+        ConsoleLogHelper.initConsole(context);
+        context.evaluate("const handler = {\n" +
+                "    get: function(obj, prop) {\n" +
+                "        return prop in obj ? obj[prop] : 37;\n" +
+                "    }\n" +
+                "};\n" +
+                "\n" +
+                "const p = new Proxy({}, handler);\n" +
+                "p.a = 1;\n" +
+                "p.b = undefined;\n" +
+                "\n" +
+                "console.log(p.a, p.b);      // 1, undefined\n" +
+                "console.log('c' in p, p.c); // false, 37");
+
+        context.destroyContext();
+    }
+
 }
