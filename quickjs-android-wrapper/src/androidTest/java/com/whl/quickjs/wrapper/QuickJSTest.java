@@ -198,7 +198,7 @@ public class QuickJSTest {
         context.evaluate("var test = {count: 0};");
         context.getGlobalObject().setProperty("test1", context.getGlobalObject().getProperty("test"));
 
-        assertEquals("{\"count\":0}", context.getGlobalObject().getProperty("test1").toString());
+        assertEquals("{\"count\":0}", context.getGlobalObject().getJSObjectProperty("test1").stringify());
     }
 
     @Test

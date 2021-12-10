@@ -48,7 +48,7 @@ public class QuickJSFreeValueTest {
                 "\n" +
                 "test();");
 
-        String result = evaluate.toString();
+        String result = evaluate.stringify();
 
         assertEquals("{\"name\":\"hello\",\"age\":12,\"sex\":\"男\"}", result);
 

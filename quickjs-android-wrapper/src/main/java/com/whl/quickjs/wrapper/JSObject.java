@@ -93,6 +93,10 @@ public class JSObject {
     @Override
     public String toString() {
         checkReleased();
+        return (String) getJSFunctionProperty("toString").call();
+    }
+
+    public String stringify() {
         return context.stringify(this);
     }
 
