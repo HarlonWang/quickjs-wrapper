@@ -8,7 +8,7 @@ Simple to use JavaScript for Android with QuickJS engine.
         }
         
         dependencies {
-          implementation 'wang.harlon.quickjs:wrapper:0.0.9'
+          implementation 'wang.harlon.quickjs:wrapper:0.0.10'
         }
 
 ## Usage
