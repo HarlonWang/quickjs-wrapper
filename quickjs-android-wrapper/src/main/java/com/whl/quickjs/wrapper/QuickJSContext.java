@@ -1,5 +1,7 @@
 package com.whl.quickjs.wrapper;
 
+import android.util.AndroidRuntimeException;
+
 public class QuickJSContext {
 
     static {
@@ -11,6 +13,22 @@ public class QuickJSContext {
 
     public static QuickJSContext create() {
         return new QuickJSContext();
+    }
+
+    /**
+     * 处理 Promise 等异步任务的消息循环队列
+     */
+    private static void executePendingJobLoop(QuickJSContext context) {
+        int err;
+        for(;;) {
+            err = context.executePendingJob();
+            if (err <= 0) {
+                if (err < 0) {
+                    throw new AndroidRuntimeException("Promise execute exception!");
+                }
+                break;
+            }
+        }
     }
 
     private final long context;
@@ -30,7 +48,11 @@ public class QuickJSContext {
     }
 
     public Object evaluate(String script, String fileName) {
-        return evaluate(context, script, fileName);
+        Object obj = evaluate(context, script, fileName);
+
+        executePendingJobLoop(this);
+
+        return obj;
     }
 
     public JSObject getGlobalObject() {
@@ -74,12 +96,12 @@ public class QuickJSContext {
         return get(context, jsArray.getPointer(), index);
     }
 
-    public Object call(JSObject func, JSObject thisObj, Object... args) {
-        return call(context, func.getPointer(), thisObj.getPointer(), args);
-    }
-
     Object call(JSObject func, long objPointer, Object... args) {
-        return call(context, func.getPointer(), objPointer, args);
+        Object obj = call(context, func.getPointer(), objPointer, args);
+
+        executePendingJobLoop(this);
+
+        return obj;
     }
 
     public void hold(JSObject jsObj) {
