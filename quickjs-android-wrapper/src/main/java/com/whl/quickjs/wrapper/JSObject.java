@@ -93,7 +93,9 @@ public class JSObject {
     @Override
     public String toString() {
         checkReleased();
-        return (String) getJSFunctionProperty("toString").call();
+        // return (String) getJSFunctionProperty("toString").call();
+        // easy to show JSObject info with stringify.
+        return stringify();
     }
 
     public String stringify() {
