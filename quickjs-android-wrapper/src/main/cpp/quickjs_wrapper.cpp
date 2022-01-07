@@ -430,7 +430,9 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
-        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, toJavaObject(jniEnv, thiz, this_val, argv[i], false));
+        auto java_arg = toJavaObject(jniEnv, thiz, this_val, argv[i], false);
+        jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, java_arg);
+        jniEnv->DeleteLocalRef(java_arg);
     }
 
     auto funcClass = jniEnv->GetObjectClass(func_value);
