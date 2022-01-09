@@ -442,9 +442,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jniEnv->DeleteLocalRef(funcClass);
     jniEnv->DeleteLocalRef(javaArgs);
 
-    auto js_result = toJSValue(jniEnv, result);
-    jniEnv->DeleteLocalRef(result);
-    return js_result;
+    return toJSValue(jniEnv, result);
 }
 
 JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
@@ -474,6 +472,9 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
                            typeName.c_str());
         result = JS_EXCEPTION;
     }
+
+    env->DeleteLocalRef(classType);
+    env->DeleteLocalRef(value);
 
     return result;
 }
