@@ -323,7 +323,6 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         }
 
         arguments.push_back(jsArg);
-        env->DeleteLocalRef(arg);
     }
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
