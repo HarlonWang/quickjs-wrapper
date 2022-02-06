@@ -10,7 +10,8 @@ public class QuickJSTest {
 
     @Test
     public void createQuickJSContextTest() {
-        QuickJSContext.create();
+        QuickJSContext context = QuickJSContext.create();
+        context.destroyContext();
     }
 
     @Test
@@ -34,6 +35,8 @@ public class QuickJSTest {
         assertEquals(123, context.evaluate("123;"));
         assertEquals(1.23, context.evaluate("1.23;"));
         assertEquals("hello wrapper", context.evaluate("\"hello wrapper\";"));
+
+        context.destroyContext();
     }
 
     @Test
@@ -54,6 +57,8 @@ public class QuickJSTest {
         assertEquals(true, globalObject.getProperty("booleanValue"));
         JSFunction function = (JSFunction) globalObject.getProperty("testFunc");
         assertEquals("hello, yonglan-whl", function.call("yonglan-whl"));
+
+        context.destroyContext();
     }
 
     @Test
@@ -65,6 +70,8 @@ public class QuickJSTest {
                 "\n" +
                 "test(3);");
         assertEquals(3, ret.get(2));
+
+        context.destroyContext();
     }
 
     @Test
@@ -76,6 +83,8 @@ public class QuickJSTest {
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
+
+        context.destroyContext();
     }
 
     @Test
@@ -87,6 +96,8 @@ public class QuickJSTest {
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, undefined-13", func.call(null, -1, 3));
+
+        context.destroyContext();
     }
 
     @Test
@@ -104,6 +115,7 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("Unsupported Java type"));
         }
 
+        context.destroyContext();
     }
 
     @Test
@@ -149,6 +161,8 @@ public class QuickJSTest {
         });
 
         context.evaluate("console.log(123)");
+
+        context.destroyContext();
     }
 
     @Test
@@ -190,6 +204,8 @@ public class QuickJSTest {
         JSObject jsObj = (JSObject) context.evaluate("render();");
         JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
         jsFunction.call();
+
+        context.destroyContext();
     }
 
     @Test
@@ -199,6 +215,7 @@ public class QuickJSTest {
         context.getGlobalObject().setProperty("test1", context.getGlobalObject().getProperty("test"));
 
         assertEquals("{\"count\":0}", context.getGlobalObject().getJSObjectProperty("test1").stringify());
+        context.destroyContext();
     }
 
     @Test
@@ -209,6 +226,42 @@ public class QuickJSTest {
         JSObject result = context.parseJSON(text);
         assertEquals("270", result.getProperty("leadsId"));
 
+        context.getGlobalObject().setProperty("test", result);
+        Log.d("__quickjs__", "123------------------" + context.getGlobalObject().getJSObjectProperty("test").stringify());
+
+
+        context.destroyContext();
+    }
+
+    @Test
+    public void jsonParseTest2() {
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+
+        QuickJSContext context = QuickJSContext.create();
+        JSFunction log = (JSFunction) context.evaluate("console.log");
+        JSObject jsonObj = context.parseJSON(text);
+        log.call(jsonObj);
+
+        context.destroyContext();
+    }
+
+    @Test
+    public void jsonParseTest3() {
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+        QuickJSContext context = QuickJSContext.create();
+        JSObject a = (JSObject) context.evaluate("var a = {}; a;");
+        a.setProperty("test", context.parseJSON(text));
+        context.evaluate("console.log(a.test.leadsId);");
+        context.destroyContext();
+    }
+
+    @Test
+    public void jsonParseTest4() {
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+        QuickJSContext context = QuickJSContext.create();
+        JSObject a = (JSObject) context.evaluate("var a = {b: {}}; a;");
+        a.getJSObjectProperty("b").setProperty("test", context.parseJSON(text));
+        context.evaluate("console.log(a.b.test.leadsId);");
         context.destroyContext();
     }
 
@@ -249,6 +302,8 @@ public class QuickJSTest {
                 assertEquals("ff", item);
             }
         }
+
+        context.destroyContext();
     }
 
     @Test

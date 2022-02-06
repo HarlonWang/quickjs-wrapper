@@ -74,6 +74,12 @@ public class QuickJSContext {
 
     public void setProperty(JSObject jsObj, String name, Object value) {
         setProperty(context, jsObj.getPointer(), name, value);
+
+        // Value 为 JSObject 类型，需要手动增加引用计数，不然 QuickJS 垃圾回收会报
+        // assertion "p->ref_count > 0" 的错误。
+        if (value instanceof JSObject) {
+            ((JSObject) value).dupValue();
+        }
     }
 
     public void freeValue(JSObject jsObj) {
@@ -104,6 +110,11 @@ public class QuickJSContext {
         return obj;
     }
 
+    /**
+     * Automatically manage the release of objects，
+     * the hold method is equivalent to call the
+     * dupValue and freeDupValue methods with NativeCleaner.
+     */
     public void hold(JSObject jsObj) {
         jsObj.dupValue();
         nativeCleaner.register(jsObj, jsObj.getPointer());
