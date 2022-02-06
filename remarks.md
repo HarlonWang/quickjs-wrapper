@@ -6,7 +6,7 @@
 ## 常见错误：
 - fault addr 0x18 in tid 22363：一般是 JSValue 已经被 FreeValue，再次调用就会报这个错误
 
-- list_empty(&rt->gc_obj_list)" failed：一般是使用的 JSValue 没有被 FreeValue 导致
+- list_empty(&rt->gc_obj_list)" failed：一般是使用的 JSValue 没有被 FreeValue 导致，可以打开 `quickjs.c` 里的 `DUMP_LEAKS` 开关查看没有释放的泄漏对象
 
 - TypeError: not a function" failed：一般是该 function 对象被释放后，再次调用的时候就会报这个错
 
