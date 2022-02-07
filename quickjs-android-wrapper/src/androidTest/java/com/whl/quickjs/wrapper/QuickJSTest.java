@@ -266,6 +266,23 @@ public class QuickJSTest {
     }
 
     @Test
+    public void jsonParseTest5() {
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+        QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("test", new JSCallFunction() {
+            @Override
+            public Object call(Object... args) {
+                JSObject obj = context.parseJSON(text);
+                obj.dupValue();
+                return obj;
+            }
+        });
+
+        context.evaluate("var a = test(); console.log(a);");
+        context.destroyContext();
+    }
+
+    @Test
     public void testFlat() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("let a = [1,[2,3]];  \n" +

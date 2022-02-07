@@ -114,6 +114,23 @@ public class QuickJSContext {
         nativeCleaner.register(jsObj, jsObj.getPointer());
     }
 
+    /**
+     * 1. 返回结果作为参数被 JSFunction 调用，无需关注引用，会自动释放，示例代码如下：
+     *    jsFunc.call(parseJSON(json));
+     *
+     * 2. 返回结果作为属性对象，需要引用计数加1，如果是在 setProperty() 方法里使用，已自动处理，无需关注，示例代码如下：
+     *    JSObject obj = parseJSON(json);
+     *    globalObj.setProperty(name, obj);
+     *
+     * 3. 返回结果作为一个JS层方法调用并返回时，需要手动引用计数加1，示例代码如下：
+     *        globalObj.setProperty(name, new JSCallFunction() {
+     *             public Object call(Object... args) {
+     *                 JSObject obj = context.parseJSON(text);
+     *                 obj.dupValue();
+     *                 return obj;
+     *             }
+     *         });
+     */
     public JSObject parseJSON(String json) {
         return parseJSON(context, json);
     }
