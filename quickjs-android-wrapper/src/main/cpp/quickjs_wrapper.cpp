@@ -409,6 +409,8 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
             }
         } else if(env->IsInstanceOf(value, jsObjectClass)) {
             propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
+            // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。
+            JS_DupValue(context, propValue);
         } else {
             const auto typeName = getName(env, classType);
             // Throw an exception for unsupported argument type.
