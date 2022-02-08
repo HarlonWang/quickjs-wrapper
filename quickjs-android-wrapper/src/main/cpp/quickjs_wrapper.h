@@ -17,7 +17,7 @@ using namespace std;
 
 class QuickJSWrapper {
 private:
-    JSValue checkNotException(JSValue &value) const;
+    JSValue checkJSException(JSValue &value) const;
     JSValue evaluate(const char *script, const char *file_name = "undefined.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;
     JSValue getGlobalObject() const;
     JSValue getProperty(JSValue &this_obj, const char *propName) const;
@@ -104,6 +104,8 @@ public:
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
 
     jint executePendingJob() const;
+
+    void throwJSException(const JSValue& value) const;
 };
 
 string getName(JNIEnv* env, jobject javaClass);

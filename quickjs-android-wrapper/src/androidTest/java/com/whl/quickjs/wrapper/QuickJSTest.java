@@ -412,4 +412,14 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testQuickJSException() {
+        QuickJSContext context = QuickJSContext.create();
+        context.setExceptionHandler(error -> Log.d("QuickJSException", error));
+
+        context.evaluate("console.log(a);");
+
+        context.destroyContext();
+    }
+
 }

@@ -251,17 +251,17 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
 
 JSValue QuickJSWrapper::evaluate(const char *script, const char *file_name, int eval_flag) const {
     JSValue val = JS_Eval(context, script, strlen(script), file_name, eval_flag);
-    return checkNotException(val);
+    return checkJSException(val);
 }
 
 JSValue QuickJSWrapper::getGlobalObject() const {
     JSValue val = JS_GetGlobalObject(context);
-    return checkNotException(val);
+    return checkJSException(val);
 }
 
 JSValue QuickJSWrapper::getProperty(JSValue &this_obj, const char *propName) const {
     JSValue val = JS_GetPropertyStr(context, this_obj, propName);
-    return checkNotException(val);
+    return checkJSException(val);
 }
 
 int QuickJSWrapper::setProperty(JSValue &this_obj, const char *propName, JSValue &val) const {
@@ -270,21 +270,19 @@ int QuickJSWrapper::setProperty(JSValue &this_obj, const char *propName, JSValue
 
 JSValue QuickJSWrapper::call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const {
     JSValue val = JS_Call(context, func_obj, this_obj, argc, argv);
-    return checkNotException(val);
+    return checkJSException(val);
 }
 
 const char * QuickJSWrapper::stringify(JSValue &value) const {
     JSValue obj = JS_JSONStringify(context, value, JS_UNDEFINED, JS_UNDEFINED);
-    auto result = JS_ToCString(context, checkNotException(obj));
+    auto result = JS_ToCString(context, checkJSException(obj));
     JS_FreeValue(context, obj);
     return result;
 }
 
-JSValue QuickJSWrapper::checkNotException(JSValue &value) const {
+JSValue QuickJSWrapper::checkJSException(JSValue &value) const {
     if (JS_IsException(value)) {
-        const char* error = js_std_dump_error(context);
-        throwJavaException(jniEnv, "android/util/AndroidRuntimeException",
-                           error);
+        throwJSException(value);
     }
 
     return value;
@@ -506,6 +504,11 @@ void QuickJSWrapper::freeDupValue(jlong value) const {
 jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
     const char *c_json = env->GetStringUTFChars(json, JNI_FALSE);
     auto jsonObj = JS_ParseJSON(context, c_json, strlen(c_json), "parseJSON.js");
+    if (JS_IsException(jsonObj)) {
+        throwJSException(jsonObj);
+        return nullptr;
+    }
+
     JSValue jsObj = JS_UNDEFINED;
     jobject result = toJavaObject(env, thiz, jsObj, jsonObj);
     env->ReleaseStringUTFChars(json, c_json);
@@ -518,7 +521,7 @@ jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source) const {
     env->ReleaseStringUTFChars(source, sourceCode);
 
     if (JS_IsException(compiled)) {
-        // TODO throwJsException(env, compiled);
+        throwJSException(compiled);
         return nullptr;
     }
 
@@ -529,7 +532,7 @@ jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source) const {
     if (result) {
         env->SetByteArrayRegion(result, 0, bufferLength, reinterpret_cast<const jbyte*>(buffer));
     } else {
-        // TODO throwJsException(env, compiled);
+        throwJSException(compiled);
     }
 
     JS_FreeValue(context, compiled);
@@ -546,7 +549,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
     env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
 
     if (JS_IsException(obj)) {
-        // TODO throwJsException(env, obj);
+        throwJSException(obj);
         return nullptr;
     }
 
@@ -561,7 +564,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
         result = toJavaObject(env, thiz, obj, val);
     } else {
         result = nullptr;
-        // TODO throwJsException(env, val);
+        throwJSException(val);
     }
     JS_FreeValue(context, val);
 
@@ -587,6 +590,12 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
 jint QuickJSWrapper::executePendingJob() const {
     JSContext *jobCtx;
     return JS_ExecutePendingJob(runtime, &jobCtx);
+}
+
+void QuickJSWrapper::throwJSException(const JSValue &value) const {
+    const char* error = js_std_dump_error(context);
+    throwJavaException(jniEnv, "com/whl/quickjs/wrapper/QuickJSException",
+                       error);
 }
 
 string getName(JNIEnv* env, jobject javaClass) {
