@@ -1,5 +1,5 @@
 # QuickJS Android Wrapper
-Simple to use JavaScript for Android with QuickJS engine.
+QuickJS wrapper for Android.
 
 ## Download
 
