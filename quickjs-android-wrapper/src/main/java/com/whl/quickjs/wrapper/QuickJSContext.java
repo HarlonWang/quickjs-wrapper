@@ -212,6 +212,12 @@ public class QuickJSContext {
         return writer.toString();
     }
 
+    public void throwJSException(String error) {
+        // throw $error;
+        String errorScript = "throw " + "\"" + error + "\"" + ";";
+        evaluate(errorScript);
+    }
+
     // context
     private native long createContext();
     private native void destroyContext(long context);
