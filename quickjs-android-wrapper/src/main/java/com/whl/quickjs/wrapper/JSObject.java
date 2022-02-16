@@ -66,6 +66,10 @@ public class JSObject {
         return (JSArray) getOwnPropertyNames.call(this);
     }
 
+    /**
+     * JSObject 确定不再使用后，调用该方法可主动释放对 JS 对象的引用。
+     * 注意：该方法不能调用多次以及释放后不能再被使用对应的 JS 对象。
+     */
     public void release() {
         checkReleased();
 
@@ -74,13 +78,18 @@ public class JSObject {
     }
 
     /**
-     * Need use {@link #freeDupValue()} released.
+     * Native 层注册的 JS 方法里的对象需要在其他地方使用，
+     * 调用该方法进行计数加一增加引用，不然 JS 方法执行完会被回收掉。
+     * 注意：不再使用的时候，调用对应的 {@link #freeDupValue()} 方法进行计数减一。
      */
     public void dupValue() {
         checkReleased();
         context.dupValue(this);
     }
 
+    /**
+     * 引用计数减一，对应 {@link #dupValue()}
+     */
     public void freeDupValue() {
         checkReleased();
         context.freeDupValue(this);
