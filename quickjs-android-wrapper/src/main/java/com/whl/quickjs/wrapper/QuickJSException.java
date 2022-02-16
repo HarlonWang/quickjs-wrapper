@@ -5,4 +5,8 @@ package com.whl.quickjs.wrapper;
  */
 public class QuickJSException extends Exception {
 
+    public QuickJSException(String message) {
+        super(message);
+    }
+
 }
