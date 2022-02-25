@@ -8,7 +8,7 @@ QuickJS wrapper for Android.
         }
         
         dependencies {
-          implementation 'wang.harlon.quickjs:wrapper:0.0.17'
+          implementation 'wang.harlon.quickjs:wrapper:0.0.18'
         }
 
 ## Usage
