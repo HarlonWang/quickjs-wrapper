@@ -269,14 +269,7 @@ public class QuickJSTest {
     public void jsonParseTest5() {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
         QuickJSContext context = QuickJSContext.create();
-        context.getGlobalObject().setProperty("test", new JSCallFunction() {
-            @Override
-            public Object call(Object... args) {
-                JSObject obj = context.parseJSON(text);
-                obj.dupValue();
-                return obj;
-            }
-        });
+        context.getGlobalObject().setProperty("test", (JSCallFunction) args -> context.parseJSON(text));
 
         context.evaluate("var a = test(); console.log(a);");
         context.destroyContext();
@@ -419,6 +412,35 @@ public class QuickJSTest {
 
         context.evaluate("console.log(a);");
 
+        context.destroyContext();
+    }
+
+    @Test
+    public void testReturnParseJSON() {
+        QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("test", (JSCallFunction) args -> context.parseJSON("{}"));
+        context.evaluate("test();test();test();");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testCreateNewJSObject() {
+        QuickJSContext context = QuickJSContext.create();
+        JSObject jsObject = context.createNewJSObject();
+        jsObject.setProperty("name", context.createNewJSObject());
+        JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
+        Object result = function.call(jsObject);
+        Log.d("quickjs", result.toString());
+        context.destroyContext();
+    }
+
+    @Test
+    public void testCreateNewJSArray() {
+        QuickJSContext context = QuickJSContext.create();
+        JSArray jsArray = context.createNewJSArray();
+        JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
+        Object result = function.call(jsArray);
+        Log.d("quickjs", result.toString());
         context.destroyContext();
     }
 
