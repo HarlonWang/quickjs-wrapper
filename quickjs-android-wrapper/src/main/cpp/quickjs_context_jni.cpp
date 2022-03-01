@@ -133,4 +133,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_executePendingJob(JNIEnv *env, jobje
                                                               jlong context) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->executePendingJob();
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_set(JNIEnv *env, jobject thiz, jlong context,
+                                                jlong this_obj, jobject value, jint index) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    wrapper->set(env, thiz, this_obj, value, index);
 }

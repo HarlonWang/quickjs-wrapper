@@ -134,6 +134,10 @@ public class QuickJSContext {
         return get(context, jsArray.getPointer(), index);
     }
 
+    public void set(JSArray jsArray, Object value, int index) {
+        set(context, jsArray.getPointer(), value, index);
+    }
+
     Object call(JSObject func, long objPointer, Object... args) {
         Object obj = null;
         try {
@@ -223,6 +227,7 @@ public class QuickJSContext {
     private native String stringify(long context, long objValue) throws QuickJSException;
     private native int length(long context, long objValue);
     private native Object get(long context, long objValue, int index);
+    private native void set(long context, long objValue, Object value, int index);
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);

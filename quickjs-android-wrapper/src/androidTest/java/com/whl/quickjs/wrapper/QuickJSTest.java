@@ -430,7 +430,7 @@ public class QuickJSTest {
         jsObject.setProperty("name", context.createNewJSObject());
         JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
         Object result = function.call(jsObject);
-        Log.d("quickjs", result.toString());
+        assertEquals("{\"name\":{}}", result.toString());
         context.destroyContext();
     }
 
@@ -438,9 +438,11 @@ public class QuickJSTest {
     public void testCreateNewJSArray() {
         QuickJSContext context = QuickJSContext.create();
         JSArray jsArray = context.createNewJSArray();
+        jsArray.set(11, 0);
+        jsArray.set("222", 1);
         JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
         Object result = function.call(jsArray);
-        Log.d("quickjs", result.toString());
+        assertEquals("[11,\"222\"]", result.toString());
         context.destroyContext();
     }
 

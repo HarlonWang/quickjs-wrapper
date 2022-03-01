@@ -90,6 +90,7 @@ public:
     jstring stringify(JNIEnv *env, jlong value) const;
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
+    void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
     JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);
     void freeValue(jlong);
     void dupValue(jlong) const;

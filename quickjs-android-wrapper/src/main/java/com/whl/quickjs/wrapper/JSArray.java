@@ -16,4 +16,9 @@ public class JSArray extends JSObject{
         return getContext().get(this, index);
     }
 
+    public void set(Object value, int index) {
+        checkReleased();
+        getContext().set(this, value, index);
+    }
+
 }
