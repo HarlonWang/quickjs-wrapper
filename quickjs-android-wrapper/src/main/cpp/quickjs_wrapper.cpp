@@ -40,7 +40,7 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     auto arg = env->NewStringUTF(module_name);
 
     auto result = env->CallStaticObjectMethod(wrapper->jsModuleClass, wrapper->jsGetModuleScript, arg);
-    const auto script = env->GetStringUTFChars(static_cast<jstring>(result), JNI_FALSE);
+    const auto script = env->GetStringUTFChars((jstring)(result), JNI_FALSE);
 
     int scriptLen = env->GetStringUTFLength((jstring) result);
 
@@ -105,16 +105,16 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 
     jsClassId = 0;
 
-    objectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
-    booleanClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
-    integerClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
-    doubleClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Double")));
-    stringClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/String")));
-    jsObjectClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObject")));
-    jsArrayClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
-    jsFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
-    jsCallFunctionClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
-    jsModuleClass = static_cast<jclass>(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSModule")));
+    objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
+    booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
+    integerClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
+    doubleClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Double")));
+    stringClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/String")));
+    jsObjectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObject")));
+    jsArrayClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
+    jsFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
+    jsCallFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
+    jsModuleClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSModule")));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -377,9 +377,9 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
 
     JSValue propValue;
     if (env->IsAssignableFrom(classType, stringClass)) {
-        const auto s = env->GetStringUTFChars(static_cast<jstring>(value), JNI_FALSE);
+        const auto s = env->GetStringUTFChars((jstring)(value), JNI_FALSE);
         propValue = JS_NewString(context, s);
-        env->ReleaseStringUTFChars(static_cast<jstring>(value), s);
+        env->ReleaseStringUTFChars((jstring)(value), s);
     } else if (env->IsAssignableFrom(classType, doubleClass)) {
         propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
     } else if (env->IsAssignableFrom(classType, integerClass)) {
@@ -466,9 +466,9 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
 
     JSValue result;
     if (env->IsAssignableFrom(classType, stringClass)) {
-        const auto s = env->GetStringUTFChars(static_cast<jstring>(value), JNI_FALSE);
+        const auto s = env->GetStringUTFChars((jstring)(value), JNI_FALSE);
         result = JS_NewString(context, s);
-        env->ReleaseStringUTFChars(static_cast<jstring>(value), s);
+        env->ReleaseStringUTFChars((jstring)(value), s);
     } else if (env->IsAssignableFrom(classType, doubleClass)) {
         result = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
     } else if (env->IsAssignableFrom(classType, integerClass)) {
@@ -614,7 +614,7 @@ void QuickJSWrapper::throwJSException(const JSValue &value) const {
 string getName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
     const auto method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
-    auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
+    auto javaString = (jstring)(env->CallObjectMethod(javaClass, method));
     const auto s = env->GetStringUTFChars(javaString, nullptr);
 
     std::string str(s);
