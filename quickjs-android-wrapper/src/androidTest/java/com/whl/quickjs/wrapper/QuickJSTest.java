@@ -28,35 +28,43 @@ public class QuickJSTest {
     }
 
     @Test
-    public void evalReturnTypeTest() {
+    public void setPropertyTest() {
         QuickJSContext context = QuickJSContext.create();
-        assertEquals(true, context.evaluate("true;"));
-        assertEquals(false, context.evaluate("false;"));
-        assertEquals(123, context.evaluate("123;"));
-        assertEquals(1.23, context.evaluate("1.23;"));
-        assertEquals("hello wrapper", context.evaluate("\"hello wrapper\";"));
+        JSObject globalObj = context.getGlobalObject();
+        JSObject obj1 = context.createNewJSObject();
+        obj1.setProperty("stringProperty", "hello");
+        obj1.setProperty("intProperty", 1);
+        obj1.setProperty("doubleProperty", 0.1);
+        obj1.setProperty("booleanProperty", true);
+        obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
+        globalObj.setProperty("obj1", obj1);
+
+        assertEquals("hello", context.evaluate("obj1.stringProperty;"));
+        assertEquals(1, context.evaluate("obj1.intProperty;"));
+        assertEquals(0.1, context.evaluate("obj1.doubleProperty;"));
+        assertEquals(true, context.evaluate("obj1.booleanProperty;"));
+        assertEquals("HarlonWang", context.evaluate("obj1.functionProperty(\"Harlon\");"));
 
         context.destroyContext();
     }
 
     @Test
-    public void getPropertiesTest() {
+    public void getPropertyTest() {
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("var intValue = 1;\n" +
-                "var doubleValue = 1.23;\n" +
-                "var stringValue = \"hi Jack\";\n" +
-                "var booleanValue = true;\n" +
-                "\n" +
-                "function testFunc(name) {\n" +
-                "\treturn \"hello, \" + name;\n" +
+        context.evaluate("var obj1 = {\n" +
+                "\tstringProperty: 'hello',\n" +
+                "\tintProperty: 1,\n" +
+                "\tdoubleProperty: 0.1,\n" +
+                "\tbooleanProperty: true,\n" +
+                "\tfunctionProperty: (name) => { return name + 'Wang'; }\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
-        assertEquals(1, globalObject.getProperty("intValue"));
-        assertEquals(1.23, globalObject.getProperty("doubleValue"));
-        assertEquals("hi Jack", globalObject.getProperty("stringValue"));
-        assertEquals(true, globalObject.getProperty("booleanValue"));
-        JSFunction function = (JSFunction) globalObject.getProperty("testFunc");
-        assertEquals("hello, yonglan-whl", function.call("yonglan-whl"));
+        JSObject obj1 = globalObject.getJSObjectProperty("obj1");
+        assertEquals("hello", obj1.getProperty("stringProperty"));
+        assertEquals(1, obj1.getProperty("intProperty"));
+        assertEquals(0.1, obj1.getProperty("doubleProperty"));
+        assertEquals(true, obj1.getProperty("booleanProperty"));
+        assertEquals("HarlonWang", obj1.getJSFunctionProperty("functionProperty").call("Harlon"));
 
         context.destroyContext();
     }
@@ -114,30 +122,6 @@ public class QuickJSTest {
         } catch (Exception e) {
             assertTrue(e.toString().contains("Unsupported Java type"));
         }
-
-        context.destroyContext();
-    }
-
-    @Test
-    public void setPropertiesTest() {
-        QuickJSContext context = QuickJSContext.create();
-        JSObject globalObj = context.getGlobalObject();
-        globalObj.setProperty("stringValue", "hello test");
-        globalObj.setProperty("intValue", 123);
-        globalObj.setProperty("doubleValue", 123.11);
-        globalObj.setProperty("booleanValue", true);
-        globalObj.setProperty("functionValue", new JSCallFunction() {
-            @Override
-            public Object call(Object... args) {
-                System.out.println("arg = " + args.length);
-                return "call back";
-            }
-        });
-        assertEquals("hello test", context.evaluate("stringValue;"));
-        assertEquals(123, context.evaluate("intValue;"));
-        assertEquals(123.11, context.evaluate("doubleValue;"));
-        assertEquals(true, context.evaluate("booleanValue;"));
-        assertEquals("call back", context.evaluate("functionValue();"));
 
         context.destroyContext();
     }

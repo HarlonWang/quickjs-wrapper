@@ -9,22 +9,19 @@ public class QuickJSModuleTest {
 
     @Test
     public void testModule() {
-        JSModule.setModuleLoader(new JSModule.Loader() {
-            @Override
-            public String getModuleScript(String moduleName) {
-                return "export var name = 'Hello world';\n" +
+        JSModule.setModuleLoader(moduleName -> {
+            if (moduleName.equals("a.js")) {
+                return "export var name = 'Jack';\n" +
                         "export var age = 18;";
             }
+
+            return null;
         });
         QuickJSContext context = QuickJSContext.create();
-
         context.evaluateModule("import {name, age} from './a.js';\n" +
                 "\n" +
-                "function onCreate() {\n" +
-                "\tconsole.log('年龄：' + age);\n" +
-                "}\n" +
-                "\n" +
-                "console.log('性别：' + name); onCreate();");
+                "console.log('name：' + name);\n" +
+                "console.log('age：' + age);");
     }
 
 
