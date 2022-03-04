@@ -1,17 +1,15 @@
 # QuickJS For Android
-QuickJS wrapper for Android.
+Android 下的 QuickJS Binding 库
 
-## [中文说明](README-CN.md)
+## 特性
+- 支持 Java 和 JavaScript 类型互转
+- 支持 Promise 异步执行
+- 支持字节码编译和执行
+- 支持模块加载执行
+- 内置 `console.log` 实现
+- 统一的 JavaScript 异常处理
 
-## Feature
-- Java types are supported with JavaScript
-- Support promise execute
-- Compile bytecode 
-- ESModule
-- `console.log` implement
-- JavaScript exception handler
-
-## Download
+## 依赖
 
 ```Groovy
 repositories {
@@ -23,7 +21,7 @@ dependencies {
 }
 ```
 
-## Usage
+## 使用
 
 ### Create QuickJSContext
 
@@ -38,18 +36,18 @@ QuickJSContext context = QuickJSContext.create();
 context.evaluate("var a = 1 + 2;");
 ```
 
-### Supported Java Types
-Currently, the following Java types are supported with JavaScript:
+### 支持的 Java 类型
+以下的 Java 类型可以直接转换到 JavaScript 中使用:
 - `boolean`
-- `int` when calling JavaScript from Java.
+- `int` 
 - `double`
 - `String`
-- `null`
-- `JSObject` represents a JavaScript object
-- `JSFunction` represents a JavaScript function
-- `JSArray` represents a JavaScript Array
+- `null` 
+- `JSObject` 代表一个 JavaScript 对象
+- `JSFunction` 代表一个 JavaScript 方法
+- `JSArray` 代表一个 JavaScript 数组
                 
-### Set Property
+### 属性设置
 Java
 
 ```java
@@ -75,7 +73,7 @@ obj1.booleanProperty; // true
 obj1.functionProperty('Harlon'); // HarlonWang
 ```                
 
-### Get Property
+### 属性获取
 JavaScript
 
 ```JavaScript
@@ -99,14 +97,14 @@ obj1.getProperty("booleanProperty"); // true
 obj1.getJSFunctionProperty("functionProperty").call("Harlon"); // HarlonWang
 ```
 
-### Compile ByteCode
+### 编译和执行字节码
 
 ```Java
 byte[] code = context.compile("'hello, world!'.toUpperCase();");
 context.execute(code);
 ```
 
-### ESModule
+### ESModule 模块加载和执行
 Java
 ```Java
 JSModule.setModuleLoader(new JSModule.Loader() {
@@ -125,10 +123,10 @@ console.log('name：' + name); // Jack
 console.log('age：' + age); // 18
 ```
 
-## Concurrency
-JavaScript runtimes are single threaded. All execution in the JavaScript runtime is guaranteed thread safe, by way of Java synchronization.
+## 同步
+所有的 JavaScript 代码执行都是单线程，基于创建时的线程决定，不支持多线程切换。
 
-## Reference
+## 参考
 
 - [quickjs-java](https://github.com/cashapp/quickjs-java)
 - [quack](https://github.com/koush/quack)
