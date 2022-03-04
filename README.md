@@ -115,6 +115,8 @@ console.log('name：' + name); // Jack
 console.log('age：' + age); // 18
 ```
 
+## Concurrency
+JavaScript runtimes are single threaded. All execution in the JavaScript runtime is gauranteed thread safe, by way of Java synchronization.
 
 ## Reference
 
