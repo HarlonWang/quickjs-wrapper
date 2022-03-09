@@ -430,4 +430,13 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testFormatToString() {
+        QuickJSContext context = QuickJSContext.create();
+        String result = (String) context.evaluate("__format_string(this);");
+        assertEquals(result, "{ console: { log: function log() }, __format_string: function __format_string() }");
+        assertEquals(context.getGlobalObject().toString(), "{ console: { log: function log() }, __format_string: function __format_string() }");
+        context.destroyContext();
+    }
+
 }

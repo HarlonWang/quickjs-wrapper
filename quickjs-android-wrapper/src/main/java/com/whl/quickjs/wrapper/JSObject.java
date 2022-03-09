@@ -125,9 +125,13 @@ public class JSObject {
     @Override
     public String toString() {
         checkReleased();
-        // return (String) getJSFunctionProperty("toString").call();
-        // easy to show JSObject info with stringify.
-        return stringify();
+
+        Object formatString = context.evaluate("__format_string;");
+        if (formatString instanceof JSFunction) {
+            return (String) ((JSFunction) formatString).call(this);
+        }
+
+        return super.toString();
     }
 
     public String stringify() {

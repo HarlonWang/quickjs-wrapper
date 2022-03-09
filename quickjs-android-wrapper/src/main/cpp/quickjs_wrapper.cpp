@@ -55,8 +55,8 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     return (JSModuleDef *) m;
 }
 
-static JSValue js_print(JSContext *ctx, JSValueConst this_val,
-                        int argc, JSValueConst *argv)
+static JSValue js_c_func_print(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     int i;
     string str;
@@ -71,12 +71,11 @@ static JSValue js_print(JSContext *ctx, JSValueConst this_val,
         str += arg_str;
         JS_FreeCString(ctx, arg_str);
     }
-    __android_log_print(ANDROID_LOG_DEBUG, "tiny-console", "%s", str.c_str());
+    __android_log_print(ANDROID_LOG_DEBUG, "qjs-console", "%s", str.c_str());
     return JS_UNDEFINED;
 }
 
-static void js_std_add_helpers(JSContext *ctx)
-{
+static void js_print_init(JSContext *ctx) {
     JSValue global_obj, console;
 
     /* XXX: should these global definitions be enumerable? */
@@ -84,10 +83,85 @@ static void js_std_add_helpers(JSContext *ctx)
 
     console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, console, "log",
-                      JS_NewCFunction(ctx, js_print, "log", 1));
+                      JS_NewCFunction(ctx, js_c_func_print, "log", 1));
     JS_SetPropertyStr(ctx, global_obj, "console", console);
 
     JS_FreeValue(ctx, global_obj);
+}
+
+static void js_format_string_init(JSContext *ctx) {
+    const char* format_string_script = R"lit(function __format_string(a) {
+    var stack = [];
+    var string = '';
+
+    function format_rec(a) {
+        var n, i, keys, key, type;
+
+        type = typeof(a);
+        if (type === "object") {
+            if (a === null) {
+                string += a;
+            } else if (stack.indexOf(a) >= 0) {
+                string += "[circular]";
+            } else {
+                stack.push(a);
+                if (Array.isArray(a)) {
+                    n = a.length;
+                    string += "[ ";
+                    for(i = 0; i < n; i++) {
+                        if (i !== 0)
+                            string += ", ";
+                        if (i in a) {
+                            format_rec(a[i]);
+                        } else {
+                            string += "<empty>";
+                        }
+                        if (i > 20) {
+                            string += "...";
+                            break;
+                        }
+                    }
+                    string += " ]";
+                } else {
+                    keys = Object.keys(a);
+                    n = keys.length;
+                    string += "{ ";
+                    for(i = 0; i < n; i++) {
+                        if (i !== 0)
+                            string += ", ";
+                        key = keys[i];
+                        string = string + key + ": ";
+                        format_rec(a[key]);
+                    }
+                    string += " }";
+                }
+                stack.pop(a);
+            }
+        } else if (type === "string") {
+            if (a.length > 79)
+                a = a.substring(0, 75) + "...\"";
+            string += a;
+        } else if (type === "number") {
+            string += a.toString();
+        } else if (type === "symbol") {
+            string += String(a);
+        } else if (type === "function") {
+            string = string + "function " + a.name + "()";
+        } else {
+            string += a;
+        }
+    }
+    format_rec(a);
+
+    return string;
+})lit";
+    JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
+}
+
+static void js_std_add_helpers(JSContext *ctx)
+{
+    js_print_init(ctx);
+    js_format_string_init(ctx);
 }
 
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
