@@ -24,13 +24,13 @@ dependencies {
 
 ## 使用
 
-### Create QuickJSContext
+### 创建 JSContext
 
 ```Java
 QuickJSContext context = QuickJSContext.create();
 ```
 
-### Evaluating JavaScript
+### 执行 JavaScript
 
 ```Java
 QuickJSContext context = QuickJSContext.create();
