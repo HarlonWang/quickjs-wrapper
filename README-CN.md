@@ -5,7 +5,7 @@ Android 下的 QuickJS Binding 库
 - 支持 Java 和 JavaScript 类型互转
 - 支持 Promise 异步执行
 - 支持字节码编译和执行
-- 支持模块加载执行
+- 支持模块加载执行（import, export）
 - 内置 `console.log` 实现
 - 统一的 JavaScript 异常处理
 
