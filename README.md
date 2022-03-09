@@ -19,9 +19,10 @@ repositories {
 }
         
 dependencies {
-  implementation 'wang.harlon.quickjs:wrapper:0.0.18'
+  implementation 'wang.harlon.quickjs:wrapper:latest.version'
 }
 ```
+[See here for the latest version](https://search.maven.org/search?q=wang.harlon)
 
 ## Usage
 
