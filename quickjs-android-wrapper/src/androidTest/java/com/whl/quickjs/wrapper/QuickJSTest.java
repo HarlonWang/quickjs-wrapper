@@ -196,7 +196,7 @@ public class QuickJSTest {
     public void setPropertyWithJSObjectTest() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("var test = {count: 0};");
-        context.getGlobalObject().setProperty("test1", context.getGlobalObject().getProperty("test"));
+        context.getGlobalObject().setProperty("test1", (JSObject) context.getGlobalObject().getProperty("test"));
 
         assertEquals("{\"count\":0}", context.getGlobalObject().getJSObjectProperty("test1").stringify());
         context.destroyContext();

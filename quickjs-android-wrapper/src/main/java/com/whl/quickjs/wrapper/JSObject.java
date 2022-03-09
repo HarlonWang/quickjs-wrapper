@@ -1,7 +1,5 @@
 package com.whl.quickjs.wrapper;
 
-import android.util.AndroidRuntimeException;
-
 public class JSObject {
 
     private final QuickJSContext context;
@@ -27,7 +25,27 @@ public class JSObject {
         return context.getProperty(this, name);
     }
 
-    public void setProperty(String name, Object value) {
+    public void setProperty(String name, String value) {
+        context.setProperty(this, name, value);
+    }
+
+    public void setProperty(String name, int value) {
+        context.setProperty(this, name, value);
+    }
+
+    public void setProperty(String name, JSObject value) {
+        context.setProperty(this, name, value);
+    }
+
+    public void setProperty(String name, boolean value) {
+        context.setProperty(this, name, value);
+    }
+
+    public void setProperty(String name, double value) {
+        context.setProperty(this, name, value);
+    }
+
+    public void setProperty(String name, JSCallFunction value) {
         context.setProperty(this, name, value);
     }
 
@@ -44,6 +62,11 @@ public class JSObject {
     public Boolean getBooleanProperty(String name) {
         Object value = getProperty(name);
         return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    public Double getDoubleProperty(String name) {
+        Object value = getProperty(name);
+        return value instanceof Double ? (Double) value : null;
     }
 
     public JSObject getJSObjectProperty(String name) {
@@ -113,7 +136,7 @@ public class JSObject {
 
     final void checkReleased() {
         if (isReleased) {
-            throw new AndroidRuntimeException("This JSObject was Released, Can not call this!");
+            throw new NullPointerException("This JSObject was Released, Can not call this!");
         }
     }
 
