@@ -47,9 +47,18 @@ public class QuickJSContext {
         }
     };
     private ExceptionHandler exceptionHandler;
+    private final long currentThreadId;
 
     private QuickJSContext() {
         context = createContext();
+        currentThreadId = Thread.currentThread().getId();
+    }
+
+    private void checkSameThread() {
+        boolean isSameThread = currentThreadId == Thread.currentThread().getId();
+        if (!isSameThread) {
+            throw new AndroidRuntimeException("Must be call same thread in QuickJSContext!");
+        }
     }
 
     public Object evaluate(String script) {
@@ -57,6 +66,8 @@ public class QuickJSContext {
     }
 
     public Object evaluate(String script, String fileName) {
+        checkSameThread();
+
         Object obj = null;
         try {
             obj = evaluate(context, script, fileName);
@@ -74,15 +85,20 @@ public class QuickJSContext {
     }
 
     public JSObject getGlobalObject() {
+        checkSameThread();
         return getGlobalObject(context);
     }
 
     public void destroyContext() {
+        checkSameThread();
+
         nativeCleaner.forceClean();
         destroyContext(context);
     }
 
     public String stringify(JSObject jsObj) {
+        checkSameThread();
+
         try {
             return stringify(context, jsObj.getPointer());
         } catch (QuickJSException e) {
@@ -97,6 +113,8 @@ public class QuickJSContext {
     }
 
     public Object getProperty(JSObject jsObj, String name) {
+        checkSameThread();
+
         try {
             return getProperty(context, jsObj.getPointer(), name);
         } catch (QuickJSException e) {
@@ -111,34 +129,44 @@ public class QuickJSContext {
     }
 
     public void setProperty(JSObject jsObj, String name, Object value) {
+        checkSameThread();
+
         setProperty(context, jsObj.getPointer(), name, value);
     }
 
     public void freeValue(JSObject jsObj) {
+        checkSameThread();
         freeValue(context, jsObj.getPointer());
     }
 
     public void dupValue(JSObject jsObj) {
+        checkSameThread();
         dupValue(context, jsObj.getPointer());
     }
 
     public void freeDupValue(JSObject jsObj) {
+        checkSameThread();
         freeDupValue(context, jsObj.getPointer());
     }
 
     public int length(JSArray jsArray) {
+        checkSameThread();
         return length(context, jsArray.getPointer());
     }
 
     public Object get(JSArray jsArray, int index) {
+        checkSameThread();
         return get(context, jsArray.getPointer(), index);
     }
 
     public void set(JSArray jsArray, Object value, int index) {
+        checkSameThread();
         set(context, jsArray.getPointer(), value, index);
     }
 
     Object call(JSObject func, long objPointer, Object... args) {
+        checkSameThread();
+
         Object obj = null;
         try {
             obj = call(context, func.getPointer(), objPointer, args);
@@ -161,6 +189,8 @@ public class QuickJSContext {
      * dupValue and freeDupValue methods with NativeCleaner.
      */
     public void hold(JSObject jsObj) {
+        checkSameThread();
+
         jsObj.dupValue();
         nativeCleaner.register(jsObj, jsObj.getPointer());
     }
@@ -174,14 +204,17 @@ public class QuickJSContext {
     }
 
     public JSObject parseJSON(String json) {
+        checkSameThread();
         return parseJSON(context, json);
     }
 
     public byte[] compile(String sourceCode) {
+        checkSameThread();
         return compile(context, sourceCode);
     }
 
     public Object execute(byte[] code) {
+        checkSameThread();
         return execute(context, code);
     }
 
@@ -190,10 +223,12 @@ public class QuickJSContext {
     }
     
     public Object evaluateModule(String script) {
+        checkSameThread();
         return evaluateModule(script, UNDEFINED);
     }
 
     public int executePendingJob() {
+        checkSameThread();
         return executePendingJob(context);
     }
 
@@ -208,6 +243,8 @@ public class QuickJSContext {
     }
 
     public void throwJSException(String error) {
+        checkSameThread();
+
         // throw $error;
         String errorScript = "throw " + "\"" + error + "\"" + ";";
         evaluate(errorScript);
