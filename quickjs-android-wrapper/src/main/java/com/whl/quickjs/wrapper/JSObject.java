@@ -100,24 +100,6 @@ public class JSObject {
         isReleased = true;
     }
 
-    /**
-     * Native 层注册的 JS 方法里的对象需要在其他地方使用，
-     * 调用该方法进行计数加一增加引用，不然 JS 方法执行完会被回收掉。
-     * 注意：不再使用的时候，调用对应的 {@link #freeDupValue()} 方法进行计数减一。
-     */
-    public void dupValue() {
-        checkReleased();
-        context.dupValue(this);
-    }
-
-    /**
-     * 引用计数减一，对应 {@link #dupValue()}
-     */
-    public void freeDupValue() {
-        checkReleased();
-        context.freeDupValue(this);
-    }
-
     public void hold() {
         context.hold(this);
     }
