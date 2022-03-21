@@ -57,7 +57,7 @@ public class QuickJSContext {
     private void checkSameThread() {
         boolean isSameThread = currentThreadId == Thread.currentThread().getId();
         if (!isSameThread) {
-            throw new AndroidRuntimeException("Must be call same thread in QuickJSContext!");
+            throw new AndroidRuntimeException("Must be call same thread in QuickJSContext.create!");
         }
     }
 
