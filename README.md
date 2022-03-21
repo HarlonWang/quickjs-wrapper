@@ -22,7 +22,7 @@ dependencies {
   implementation 'wang.harlon.quickjs:wrapper:latest.version'
 }
 ```
-[See here for the latest version](https://search.maven.org/search?q=wang.harlon)
+[See here for the latest version](https://search.maven.org/search?q=g:wang.harlon.quickjs)
 
 ## Usage
 
