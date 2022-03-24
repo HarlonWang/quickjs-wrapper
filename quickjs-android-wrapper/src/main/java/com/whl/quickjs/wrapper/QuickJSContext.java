@@ -213,7 +213,17 @@ public class QuickJSContext {
 
     public JSObject parseJSON(String json) {
         checkSameThread();
-        return parseJSON(context, json);
+        try {
+            return parseJSON(context, json);
+        } catch (QuickJSException e) {
+            if (exceptionHandler != null) {
+                exceptionHandler.handle(writerToString(e));
+            } else {
+                e.printStackTrace();
+            }
+        }
+        
+        return null;
     }
 
     public byte[] compile(String sourceCode) {
@@ -278,7 +288,7 @@ public class QuickJSContext {
     private native void freeDupValue(long context, long objValue);
 
     // JSON.parse
-    private native JSObject parseJSON(long context, String json);
+    private native JSObject parseJSON(long context, String json) throws QuickJSException;
 
     // bytecode
     private native byte[] compile(long context, String sourceCode);
