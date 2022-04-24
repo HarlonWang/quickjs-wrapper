@@ -447,54 +447,57 @@ void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject valu
 
 void
 QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) {
-    auto classType = env->GetObjectClass(value);
-
     JSValue propValue;
-    if (env->IsAssignableFrom(classType, stringClass)) {
-        const auto s = env->GetStringUTFChars((jstring)(value), JNI_FALSE);
-        propValue = JS_NewString(context, s);
-        env->ReleaseStringUTFChars((jstring)(value), s);
-    } else if (env->IsAssignableFrom(classType, doubleClass)) {
-        propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
-    } else if (env->IsAssignableFrom(classType, integerClass)) {
-        propValue = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
-    } else if (env->IsAssignableFrom(classType, booleanClass)) {
-        propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
+    if (value == nullptr) {
+        propValue = JS_UNDEFINED;
     } else {
-        if (env->IsInstanceOf(value, jsCallFunctionClass)) {
-            if (jsClassId == 0) {
-                JS_NewClassID(&jsClassId);
-                JSClassDef classDef;
-                memset(&classDef, 0, sizeof(JSClassDef));
-                classDef.class_name = "WrapperJSCallProxy";
-                classDef.finalizer = jsFinalizer;
-                classDef.call = jsCall;
-                if (JS_NewClass(runtime, jsClassId, &classDef)) {
-                    jsClassId = 0;
-                    throwJavaException(env, "java/lang/NullPointerException",
-                                       "Failed to allocate JavaScript proxy class");
-                    return;
-                }
-            }
-
-            if (jsClassId != 0) {
-                propValue = JS_NewObjectClass(context, jsClassId);
-                auto *funcProxy = new QuickJSFunctionProxy;
-                funcProxy->wrapper = this;
-                funcProxy->value = env->NewGlobalRef(value);
-                funcProxy->thiz = env->NewGlobalRef(thiz);
-                JS_SetOpaque(propValue, (void *) funcProxy);
-            }
-        } else if(env->IsInstanceOf(value, jsObjectClass)) {
-            propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
-            // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。
-            JS_DupValue(context, propValue);
+        auto classType = env->GetObjectClass(value);
+        if (env->IsAssignableFrom(classType, stringClass)) {
+            const auto s = env->GetStringUTFChars((jstring)(value), JNI_FALSE);
+            propValue = JS_NewString(context, s);
+            env->ReleaseStringUTFChars((jstring)(value), s);
+        } else if (env->IsAssignableFrom(classType, doubleClass)) {
+            propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
+        } else if (env->IsAssignableFrom(classType, integerClass)) {
+            propValue = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
+        } else if (env->IsAssignableFrom(classType, booleanClass)) {
+            propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
         } else {
-            const auto typeName = getName(env, classType);
-            // Throw an exception for unsupported argument type.
-            throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
-                               typeName.c_str());
-            return;
+            if (env->IsInstanceOf(value, jsCallFunctionClass)) {
+                if (jsClassId == 0) {
+                    JS_NewClassID(&jsClassId);
+                    JSClassDef classDef;
+                    memset(&classDef, 0, sizeof(JSClassDef));
+                    classDef.class_name = "WrapperJSCallProxy";
+                    classDef.finalizer = jsFinalizer;
+                    classDef.call = jsCall;
+                    if (JS_NewClass(runtime, jsClassId, &classDef)) {
+                        jsClassId = 0;
+                        throwJavaException(env, "java/lang/NullPointerException",
+                                           "Failed to allocate JavaScript proxy class");
+                        return;
+                    }
+                }
+
+                if (jsClassId != 0) {
+                    propValue = JS_NewObjectClass(context, jsClassId);
+                    auto *funcProxy = new QuickJSFunctionProxy;
+                    funcProxy->wrapper = this;
+                    funcProxy->value = env->NewGlobalRef(value);
+                    funcProxy->thiz = env->NewGlobalRef(thiz);
+                    JS_SetOpaque(propValue, (void *) funcProxy);
+                }
+            } else if(env->IsInstanceOf(value, jsObjectClass)) {
+                propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
+                // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。
+                JS_DupValue(context, propValue);
+            } else {
+                const auto typeName = getName(env, classType);
+                // Throw an exception for unsupported argument type.
+                throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
+                                   typeName.c_str());
+                return;
+            }
         }
     }
 

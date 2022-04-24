@@ -37,6 +37,7 @@ public class QuickJSTest {
         obj1.setProperty("doubleProperty", 0.1);
         obj1.setProperty("booleanProperty", true);
         obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
+        obj1.setProperty("nullProperty", (String) null);
         globalObj.setProperty("obj1", obj1);
 
         assertEquals("hello", context.evaluate("obj1.stringProperty;"));
@@ -44,6 +45,7 @@ public class QuickJSTest {
         assertEquals(0.1, context.evaluate("obj1.doubleProperty;"));
         assertEquals(true, context.evaluate("obj1.booleanProperty;"));
         assertEquals("HarlonWang", context.evaluate("obj1.functionProperty(\"Harlon\");"));
+        assertNull(context.evaluate("obj1.nullProperty;"));
 
         context.destroyContext();
     }
@@ -56,6 +58,7 @@ public class QuickJSTest {
                 "\tintProperty: 1,\n" +
                 "\tdoubleProperty: 0.1,\n" +
                 "\tbooleanProperty: true,\n" +
+                "\tnullProperty: null,\n" +
                 "\tfunctionProperty: (name) => { return name + 'Wang'; }\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
@@ -64,6 +67,7 @@ public class QuickJSTest {
         assertEquals(1, obj1.getProperty("intProperty"));
         assertEquals(0.1, obj1.getProperty("doubleProperty"));
         assertEquals(true, obj1.getProperty("booleanProperty"));
+        assertNull(obj1.getProperty("nullProperty"));
         assertEquals("HarlonWang", obj1.getJSFunctionProperty("functionProperty").call("Harlon"));
 
         context.destroyContext();
