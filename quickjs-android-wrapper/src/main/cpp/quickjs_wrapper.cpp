@@ -3,20 +3,38 @@
 //
 #include "quickjs_wrapper.h"
 
-static JSValue jsCall(JSContext *ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst *argv, int flags) {
-    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
-    auto funcCall = static_cast<QuickJSFunctionProxy *>(JS_GetOpaque(func_obj, wrapper->jsClassId));
-    return funcCall->wrapper->jsFuncCall(funcCall->value, funcCall->thiz, this_val, argc, argv);
-}
+static JSClassID js_func_callback_class_id;
 
-static void jsFinalizer(JSRuntime *rt, JSValue val) {
+typedef struct {
+    jobject value;
+    jobject thiz;
+} JSFuncCallback;
+
+static void js_func_callback_finalizer(JSRuntime *rt, JSValue val) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(rt));
     if (wrapper) {
-        auto funcCall = static_cast<QuickJSFunctionProxy *>(JS_GetOpaque(val, wrapper->jsClassId));
-        wrapper->jniEnv->DeleteGlobalRef(funcCall->value);
-        wrapper->jniEnv->DeleteGlobalRef(funcCall->thiz);
-        delete funcCall;
+        auto *jsFc = reinterpret_cast<JSFuncCallback *>(JS_GetOpaque2(wrapper->context, val, js_func_callback_class_id));
+        if (jsFc) {
+            wrapper->jniEnv->DeleteGlobalRef(jsFc->thiz);
+            wrapper->jniEnv->DeleteGlobalRef(jsFc->value);
+            delete jsFc;
+        }
     }
+}
+
+static JSClassDef js_func_callback_class = {
+        "JSFuncCallback",
+        .finalizer = js_func_callback_finalizer,
+};
+
+static JSValue jsFnCallback(JSContext *ctx,
+                            JSValueConst this_obj,
+                            int argc, JSValueConst *argv,
+                            int magic, JSValue *func_data) {
+
+    auto *jsFc = reinterpret_cast<JSFuncCallback *>(JS_GetOpaque2(ctx, func_data[0], js_func_callback_class_id));
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
+    return wrapper->jsFuncCall(jsFc->value, jsFc->thiz, this_obj, argc, argv);
 }
 
 static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
@@ -158,6 +176,12 @@ static void js_format_string_init(JSContext *ctx) {
     JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
 }
 
+static void js_func_callback_init(JSContext *ctx) {
+    // JSFuncCallback class
+    JS_NewClassID(&js_func_callback_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_func_callback_class_id, &js_func_callback_class);
+}
+
 static void js_std_add_helpers(JSContext *ctx)
 {
     js_print_init(ctx);
@@ -174,10 +198,9 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     context = JS_NewContext(runtime);
 
     JS_SetRuntimeOpaque(runtime, this);
+    js_func_callback_init(context);
 
     js_std_add_helpers(context);
-
-    jsClassId = 0;
 
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
@@ -464,29 +487,18 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
             propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
         } else {
             if (env->IsInstanceOf(value, jsCallFunctionClass)) {
-                if (jsClassId == 0) {
-                    JS_NewClassID(&jsClassId);
-                    JSClassDef classDef;
-                    memset(&classDef, 0, sizeof(JSClassDef));
-                    classDef.class_name = "WrapperJSCallProxy";
-                    classDef.finalizer = jsFinalizer;
-                    classDef.call = jsCall;
-                    if (JS_NewClass(runtime, jsClassId, &classDef)) {
-                        jsClassId = 0;
-                        throwJavaException(env, "java/lang/NullPointerException",
-                                           "Failed to allocate JavaScript proxy class");
-                        return;
-                    }
-                }
+                // 这里的 obj 是用来获取 JSFuncCallback 对象的
+                JSValue obj = JS_NewObjectClass(context, js_func_callback_class_id);
+                propValue = JS_NewCFunctionData(context, jsFnCallback, 1, 0, 1, &obj);
+                // 因为 JS_NewCFunctionData 有 dupValue obj，这里需要对 obj 计数减一，保持计数平衡
+                JS_FreeValue(context, obj);
 
-                if (jsClassId != 0) {
-                    propValue = JS_NewObjectClass(context, jsClassId);
-                    auto *funcProxy = new QuickJSFunctionProxy;
-                    funcProxy->wrapper = this;
-                    funcProxy->value = env->NewGlobalRef(value);
-                    funcProxy->thiz = env->NewGlobalRef(thiz);
-                    JS_SetOpaque(propValue, (void *) funcProxy);
-                }
+                auto *jsFc = new JSFuncCallback;
+                jsFc->value = env->NewGlobalRef(value);
+                jsFc->thiz = env->NewGlobalRef(thiz);
+
+                JS_SetOpaque(obj, jsFc);
+
             } else if(env->IsInstanceOf(value, jsObjectClass)) {
                 propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
                 // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。

@@ -51,8 +51,6 @@ public:
 
     map<jlong, JSValue> values;
 
-    JSClassID jsClassId;
-
     jclass objectClass;
     jclass booleanClass;
     jclass integerClass;
@@ -112,11 +110,5 @@ public:
 string getName(JNIEnv* env, jobject javaClass);
 void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
 const char* js_std_dump_error(JSContext *ctx);
-
-typedef struct {
-    QuickJSWrapper *wrapper;
-    jobject value;
-    jobject thiz;
-} QuickJSFunctionProxy;
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H
