@@ -19,6 +19,12 @@ public class QuickJSContext {
         return new QuickJSContext();
     }
 
+    public static QuickJSContext create(int maxStackSize) {
+        QuickJSContext context = create();
+        context.setMaxStackSize(maxStackSize);
+        return context;
+    }
+
     /**
      * 处理 Promise 等异步任务的消息循环队列
      */
