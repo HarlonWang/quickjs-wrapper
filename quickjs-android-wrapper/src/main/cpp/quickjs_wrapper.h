@@ -105,6 +105,8 @@ public:
     jint executePendingJob() const;
 
     void throwJSException(const JSValue& value) const;
+
+    void setMaxStackSize(jint stack_size) const;
 };
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

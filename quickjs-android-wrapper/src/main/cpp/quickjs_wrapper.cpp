@@ -762,3 +762,7 @@ void QuickJSWrapper::throwJSException(const JSValue &value) const {
     throwJavaException(jniEnv, "com/whl/quickjs/wrapper/QuickJSException",
                        error);
 }
+
+void QuickJSWrapper::setMaxStackSize(jint stack_size) const {
+    JS_SetMaxStackSize(runtime, stack_size);
+}

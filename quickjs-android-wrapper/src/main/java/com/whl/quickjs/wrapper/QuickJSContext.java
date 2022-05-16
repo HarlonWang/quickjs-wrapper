@@ -268,6 +268,11 @@ public class QuickJSContext {
         evaluate(errorScript);
     }
 
+    public void setMaxStackSize(int maxStackSize) {
+        checkSameThread();
+        setMaxStackSize(context, maxStackSize);
+    }
+
     // context
     private native long createContext();
     private native void destroyContext(long context);
@@ -296,4 +301,7 @@ public class QuickJSContext {
 
     // Promise
     private native int executePendingJob(long context);
+
+    // The default is 1024 * 256, and 0 means unlimited.
+    private native void setMaxStackSize(long context, int size);
 }
