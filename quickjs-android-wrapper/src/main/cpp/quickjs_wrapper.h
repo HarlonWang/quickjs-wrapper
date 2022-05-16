@@ -107,8 +107,4 @@ public:
     void throwJSException(const JSValue& value) const;
 };
 
-string getName(JNIEnv* env, jobject javaClass);
-void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
-const char* js_std_dump_error(JSContext *ctx);
-
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

@@ -80,7 +80,7 @@ public class QuickJSPerformanceTest {
     public void testWithLargeJSObjectArgs() {
         context.evaluate("var start = new Date().getTime();\n" +
                 "var obj = {};\n" +
-                "for(var i = 0; i < 10000000; i++){\n" +
+                "for(var i = 0; i < 100000; i++){\n" +
                 "  obj[`key-${i}`] = `如何通过js创建一个很大内存的对象？`\n" +
                 "}\n" +
                 "\n" +

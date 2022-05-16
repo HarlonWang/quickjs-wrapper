@@ -3,6 +3,66 @@
 //
 #include "quickjs_wrapper.h"
 
+// util
+static string getJavaName(JNIEnv* env, jobject javaClass) {
+    auto classType = env->GetObjectClass(javaClass);
+    const auto method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
+    auto javaString = (jstring)(env->CallObjectMethod(javaClass, method));
+    const auto s = env->GetStringUTFChars(javaString, nullptr);
+
+    std::string str(s);
+    env->ReleaseStringUTFChars(javaString, s);
+    env->DeleteLocalRef(javaString);
+    env->DeleteLocalRef(classType);
+    return str;
+}
+
+static void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
+    char msg[512];
+    va_list args;
+    va_start (args, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, args);
+    va_end (args);
+    env->ThrowNew(env->FindClass(exceptionClass), msg);
+}
+
+static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
+{
+    const char *str;
+
+    str = JS_ToCString(ctx, val);
+    if (str) {
+        return str;
+    } else {
+        return "[exception]";
+    }
+}
+
+static const char* js_std_dump_error(JSContext *ctx) {
+    JSValue exception_val;
+
+    exception_val = JS_GetException(ctx);
+
+    JSValue val;
+    bool is_error;
+    is_error = JS_IsError(ctx, exception_val);
+    string jsException = js_dump_obj(ctx, exception_val);
+    if (is_error) {
+        val = JS_GetPropertyStr(ctx, exception_val, "stack");
+        if (!JS_IsUndefined(val)) {
+            jsException += "\n";
+            jsException += js_dump_obj(ctx, val);
+        }
+        JS_FreeValue(ctx, val);
+    }
+
+    JS_FreeValue(ctx, exception_val);
+    const char* errorStr = jsException.c_str();
+    return errorStr;
+}
+
+
+// js function callback
 static JSClassID js_func_callback_class_id;
 
 typedef struct {
@@ -37,6 +97,13 @@ static JSValue jsFnCallback(JSContext *ctx,
     return wrapper->jsFuncCall(jsFc->value, jsFc->thiz, this_obj, argc, argv);
 }
 
+static void js_func_callback_init(JSContext *ctx) {
+    // JSFuncCallback class
+    JS_NewClassID(&js_func_callback_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_func_callback_class_id, &js_func_callback_class);
+}
+
+// js module
 static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
                                             const char *module_name, void *opaque) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
@@ -73,6 +140,7 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     return (JSModuleDef *) m;
 }
 
+// js print
 static JSValue js_c_func_print(JSContext *ctx, JSValueConst this_val,
                                int argc, JSValueConst *argv)
 {
@@ -107,6 +175,7 @@ static void js_print_init(JSContext *ctx) {
     JS_FreeValue(ctx, global_obj);
 }
 
+// js format string
 static void js_format_string_init(JSContext *ctx) {
     const char* format_string_script = R"lit(function __format_string(a) {
     var stack = [];
@@ -174,12 +243,6 @@ static void js_format_string_init(JSContext *ctx) {
     return string;
 })lit";
     JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
-}
-
-static void js_func_callback_init(JSContext *ctx) {
-    // JSFuncCallback class
-    JS_NewClassID(&js_func_callback_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_func_callback_class_id, &js_func_callback_class);
 }
 
 static void js_std_add_helpers(JSContext *ctx)
@@ -504,7 +567,7 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
                 // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。
                 JS_DupValue(context, propValue);
             } else {
-                const auto typeName = getName(env, classType);
+                const auto typeName = getJavaName(env, classType);
                 // Throw an exception for unsupported argument type.
                 throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                                    typeName.c_str());
@@ -567,7 +630,7 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
         result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
     } else {
-        const auto typeName = getName(env, classType);
+        const auto typeName = getJavaName(env, classType);
         // Throw an exception for unsupported argument type.
         throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                            typeName.c_str());
@@ -698,61 +761,4 @@ void QuickJSWrapper::throwJSException(const JSValue &value) const {
     const char* error = js_std_dump_error(context);
     throwJavaException(jniEnv, "com/whl/quickjs/wrapper/QuickJSException",
                        error);
-}
-
-string getName(JNIEnv* env, jobject javaClass) {
-    auto classType = env->GetObjectClass(javaClass);
-    const auto method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
-    auto javaString = (jstring)(env->CallObjectMethod(javaClass, method));
-    const auto s = env->GetStringUTFChars(javaString, nullptr);
-
-    std::string str(s);
-    env->ReleaseStringUTFChars(javaString, s);
-    env->DeleteLocalRef(javaString);
-    env->DeleteLocalRef(classType);
-    return str;
-}
-
-void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
-    char msg[512];
-    va_list args;
-    va_start (args, fmt);
-    vsnprintf(msg, sizeof(msg), fmt, args);
-    va_end (args);
-    env->ThrowNew(env->FindClass(exceptionClass), msg);
-}
-
-static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
-{
-    const char *str;
-
-    str = JS_ToCString(ctx, val);
-    if (str) {
-        return str;
-    } else {
-        return "[exception]";
-    }
-}
-
-const char* js_std_dump_error(JSContext *ctx) {
-    JSValue exception_val;
-
-    exception_val = JS_GetException(ctx);
-
-    JSValue val;
-    bool is_error;
-    is_error = JS_IsError(ctx, exception_val);
-    string jsException = js_dump_obj(ctx, exception_val);
-    if (is_error) {
-        val = JS_GetPropertyStr(ctx, exception_val, "stack");
-        if (!JS_IsUndefined(val)) {
-            jsException += "\n";
-            jsException += js_dump_obj(ctx, val);
-        }
-        JS_FreeValue(ctx, val);
-    }
-
-    JS_FreeValue(ctx, exception_val);
-    const char* errorStr = jsException.c_str();
-    return errorStr;
 }

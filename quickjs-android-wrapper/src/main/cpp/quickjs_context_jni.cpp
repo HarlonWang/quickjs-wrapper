@@ -16,12 +16,6 @@ JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, jlong context, jstring script,
                                                      jstring file_name) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    if (!wrapper) {
-        throwJavaException(env, "java/lang/NullPointerException",
-                           "Null QuickJS wrapper - did you destroy your QuickJS?");
-        return nullptr;
-    }
-
     return wrapper->evaluate(env, thiz, script, file_name);
 }
 
