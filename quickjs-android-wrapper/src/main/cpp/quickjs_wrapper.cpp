@@ -308,11 +308,6 @@ QuickJSWrapper::~QuickJSWrapper() {
     map<jlong, JSValue>::iterator i;
     for (i = values.begin(); i != values.end(); ++i) {
         JSValue item = i->second;
-
-//        auto text = stringify(item);
-//        __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "free value=%s", text);
-//        JS_FreeCString(context, text);
-
         JS_FreeValue(context, item);
     }
     values.clear();
@@ -375,10 +370,6 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
                 if (values.count(value_ptr) == 0) {
                     values.insert(pair<jlong, JSValue>(value_ptr, value));
                 } else{
-//                    auto text = stringify(value);
-//                    __android_log_print(ANDROID_LOG_DEBUG, "quickjs-native-wrapper", "insert value=%s", text);
-//                    JS_FreeCString(context, text);
-
                     JS_FreeValue(context, value);
                 }
             }
