@@ -225,8 +225,6 @@ static void js_format_string_init(JSContext *ctx) {
                 stack.pop(a);
             }
         } else if (type === "string") {
-            if (a.length > 79)
-                a = a.substring(0, 75) + "...\"";
             string += a;
         } else if (type === "number") {
             string += a.toString();
