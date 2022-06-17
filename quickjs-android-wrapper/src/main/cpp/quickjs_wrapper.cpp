@@ -188,6 +188,8 @@ static void js_format_string_init(JSContext *ctx) {
         if (type === "object") {
             if (a === null) {
                 string += a;
+            } else if(a instanceof Error) {
+                string += a.toString();
             } else if (stack.indexOf(a) >= 0) {
                 string += "[circular]";
             } else {
