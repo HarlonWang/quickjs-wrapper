@@ -443,6 +443,14 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testNotAFunction() {
+        QuickJSContext context = QuickJSContext.create();
+        context.setExceptionHandler(error -> assertTrue(error.contains("'a' is not a function")));
+        context.evaluate("var a = 1; a();");
+        context.destroyContext();
+    }
+
     // todo fix
     @Test
     public void testJSArraySetParseJSON() {
