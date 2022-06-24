@@ -6732,10 +6732,10 @@ static JSValue JS_ThrowTypeErrorNotASymbol(JSContext *ctx)
     return JS_ThrowTypeError(ctx, "not a symbol");
 }
 
-static JSValue JS_ThrowCallErrorNotFunction(JSContext *ctx, JSAtom name)
+static JSValue JS_ThrowTypeErrorNotAFunction(JSContext *ctx, JSAtom name)
 {
     char buf[ATOM_GET_STR_BUF_SIZE];
-    return JS_ThrowReferenceError(ctx, "'%s' is not a function",
+    return JS_ThrowTypeError(ctx, "'%s' is not a function",
                                   JS_AtomGetStr(ctx, buf, sizeof(buf), name));
 }
 
@@ -16655,7 +16655,7 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
                         pc -= 6;
                         if(*pc == OP_get_var) {
                             pc++;
-                            JS_ThrowCallErrorNotFunction(ctx, get_u32(pc));
+                            JS_ThrowTypeErrorNotAFunction(ctx, get_u32(pc));
                             goto exception;
                         }
                     }
