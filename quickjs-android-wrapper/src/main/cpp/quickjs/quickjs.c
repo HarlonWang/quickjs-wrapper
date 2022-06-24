@@ -16646,7 +16646,6 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
             has_call_argc:
                 call_argv = sp - call_argc;
                 sf->cur_pc = pc;
-
                 JSValue fun_obj = call_argv[-1];
                 // When the call is not a function, an exception is thrown with the name.
                 if (!JS_IsFunction(ctx, fun_obj)) {
@@ -16660,7 +16659,6 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
                         }
                     }
                 }
-
                 ret_val = JS_CallInternal(ctx, fun_obj, JS_UNDEFINED,
                                           JS_UNDEFINED, call_argc, call_argv, 0);
                 if (unlikely(JS_IsException(ret_val)))
