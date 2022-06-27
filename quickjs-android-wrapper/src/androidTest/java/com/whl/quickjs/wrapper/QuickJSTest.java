@@ -451,6 +451,14 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testNotAFunctionInPromise() {
+        QuickJSContext context = QuickJSContext.create();
+        context.setExceptionHandler(error -> assertTrue(error.contains("'[object Object]' is not a function")));
+        context.evaluate("new Promise({name: 'a'});");
+        context.destroyContext();
+    }
+
     // todo fix
     @Test
     public void testJSArraySetParseJSON() {

@@ -35970,7 +35970,13 @@ static int check_function(JSContext *ctx, JSValueConst obj)
 {
     if (likely(JS_IsFunction(ctx, obj)))
         return 0;
-    JS_ThrowTypeError(ctx, "not a function");
+    JSAtom atom = JS_ValueToAtom(ctx, obj);
+    if (atom == JS_ATOM_NULL) {
+        JS_ThrowTypeError(ctx, "not a function");
+    } else {
+        JS_ThrowTypeErrorNotAFunction(ctx, atom);
+    }
+    JS_FreeAtom(ctx, atom);
     return -1;
 }
 
