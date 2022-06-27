@@ -6,10 +6,13 @@ QuickJS wrapper for Android.
 ## Feature
 - Java types are supported with JavaScript
 - Support promise execute
-- Compile bytecode 
-- ESModule (import, export)
 - `console.log` implement
 - JavaScript exception handler
+- Optimize not a function with its name when type error
+
+Experimental Features Stability not guaranteed.
+- Compile bytecode
+- ESModule (import, export)
 
 ## Download
 
