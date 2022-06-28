@@ -39,24 +39,28 @@ static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
 }
 
 static const char* js_std_dump_error(JSContext *ctx) {
-    JSValue exception_val;
-
-    exception_val = JS_GetException(ctx);
+    JSValue error = JS_GetException(ctx);
 
     JSValue val;
     bool is_error;
-    is_error = JS_IsError(ctx, exception_val);
-    string jsException = js_dump_obj(ctx, exception_val);
+    is_error = JS_IsError(ctx, error);
+    string jsException;
     if (is_error) {
-        val = JS_GetPropertyStr(ctx, exception_val, "stack");
+        JSValue message = JS_GetPropertyStr(ctx, error, "message");
+        jsException = JS_ToCString(ctx, message);
+        JS_FreeValue(ctx, message);
+
+        val = JS_GetPropertyStr(ctx, error, "stack");
         if (!JS_IsUndefined(val)) {
             jsException += "\n";
             jsException += js_dump_obj(ctx, val);
         }
         JS_FreeValue(ctx, val);
+    } else {
+        jsException = js_dump_obj(ctx, error);
     }
 
-    JS_FreeValue(ctx, exception_val);
+    JS_FreeValue(ctx, error);
     const char* errorStr = jsException.c_str();
     return errorStr;
 }
