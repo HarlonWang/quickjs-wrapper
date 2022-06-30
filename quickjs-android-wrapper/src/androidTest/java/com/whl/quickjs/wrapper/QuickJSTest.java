@@ -2,6 +2,8 @@ package com.whl.quickjs.wrapper;
 
 import android.util.AndroidRuntimeException;
 import android.util.Log;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -139,7 +141,7 @@ public class QuickJSTest {
             @Override
             public Object call(Object... args) {
                 StringBuilder b = new StringBuilder();
-                for (Object o: args) {
+                for (Object o : args) {
                     b.append(o == null ? "null" : o.toString());
                 }
 
@@ -163,7 +165,7 @@ public class QuickJSTest {
             @Override
             public Object call(Object... args) {
                 StringBuilder b = new StringBuilder();
-                for (Object o: args) {
+                for (Object o : args) {
                     b.append(o == null ? "null" : o.toString());
                 }
 
@@ -337,7 +339,7 @@ public class QuickJSTest {
                 "promiseB.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n");
 
         int err;
-        for(;;) {
+        for (; ; ) {
             err = context.executePendingJob();
             if (err <= 0) {
                 if (err < 0) {
@@ -360,7 +362,7 @@ public class QuickJSTest {
                 "    defer(() => {console.log('哈哈');});");
 
         int err;
-        for(;;) {
+        for (; ; ) {
             err = context.executePendingJob();
             if (err <= 0) {
                 if (err < 0) {
@@ -471,6 +473,31 @@ public class QuickJSTest {
             return jsArray;
         });
         context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testSetJavaObjectApi() {
+        QuickJSContext context = QuickJSContext.create();
+
+        TestJava testJava1 = new TestJava();
+        context.setJavaObjectApi(context.getGlobalObject(), "test1", testJava1);
+        Object test1 = context.evaluate("test1.test1('arg1');");
+        Assert.assertEquals(1, test1);
+        Object test2 = context.evaluate("test1.test2('arg1',18);");
+        Assert.assertEquals(1, test2);
+        Object test3 = context.evaluate("test1.testArray(['arg1',18]);");
+        Assert.assertEquals(1, test3);
+        Object test4 = context.evaluate("test1.testObject({'arg1':'a','arg2':18});");
+        Assert.assertEquals(1, test4);
+        Object testAll= context.evaluate("test1.testAll({'arg1':'a','arg2':18},[1,2,3],18,'name');");
+        Assert.assertEquals(1, test4);
+
+        TestJava testJava2 = new TestJava();
+        context.getGlobalObject().setJavaObjectApi("test2", testJava2);
+        Object test5 = context.evaluate("test2.testObject({'arg1':'a','arg2':18});");
+        Assert.assertEquals(1, test5);
+
         context.destroyContext();
     }
 

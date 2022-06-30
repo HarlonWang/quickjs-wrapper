@@ -49,6 +49,10 @@ public class JSObject {
         context.setProperty(this, name, value);
     }
 
+    public void setJavaObjectApi(String name, Object value) {
+        context.setJavaObjectApi(this, name, value);
+    }
+
     public String getStringProperty(String name) {
         Object value = getProperty(name);
         return value instanceof String ? (String) value : null;

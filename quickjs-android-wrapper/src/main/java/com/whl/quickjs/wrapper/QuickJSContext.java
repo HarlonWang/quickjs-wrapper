@@ -5,6 +5,10 @@ import android.util.AndroidRuntimeException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class QuickJSContext {
 
@@ -54,6 +58,7 @@ public class QuickJSContext {
     };
     private ExceptionHandler exceptionHandler;
     private final long currentThreadId;
+    private final List<JSCallFunction> jsCallFunctions = new ArrayList<>();
 
     private QuickJSContext() {
         context = createContext();
@@ -97,7 +102,7 @@ public class QuickJSContext {
 
     public void destroyContext() {
         checkSameThread();
-
+        jsCallFunctions.clear();
         nativeCleaner.forceClean();
         destroyContext(context);
     }
@@ -138,6 +143,42 @@ public class QuickJSContext {
         checkSameThread();
 
         setProperty(context, jsObj.getPointer(), name, value);
+    }
+
+    public void setJavaObjectApi(JSObject rootObject, String name, Object javaObject) {
+        checkSameThread();
+        JSObject jsObject = createNewJSObject();
+        setProperty(context, rootObject.getPointer(), name, jsObject);
+        for (Method method : javaObject.getClass().getMethods()) {
+            if (method.isAnnotationPresent(JSJavaApi.class)) {
+                MyJSCallFunction function = new MyJSCallFunction(javaObject, method);
+                jsCallFunctions.add(function);
+                jsObject.setProperty(method.getName(), function);
+            }
+        }
+        jsObject.release();
+    }
+
+    private static class MyJSCallFunction implements JSCallFunction {
+        private final Method method;
+        private final Object javaObject;
+
+        public MyJSCallFunction(Object javaObject, Method method) {
+            this.javaObject = javaObject;
+            this.method = method;
+        }
+
+        @Override
+        public Object call(Object... args) {
+            try {
+                return method.invoke(javaObject, args);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 
     public void freeValue(JSObject jsObj) {
@@ -228,7 +269,7 @@ public class QuickJSContext {
                 e.printStackTrace();
             }
         }
-        
+
         return null;
     }
 
@@ -245,7 +286,7 @@ public class QuickJSContext {
     public Object evaluateModule(String script, String moduleName) {
         return evaluateModule(context, script, moduleName);
     }
-    
+
     public Object evaluateModule(String script) {
         checkSameThread();
         return evaluateModule(script, UNDEFINED);
