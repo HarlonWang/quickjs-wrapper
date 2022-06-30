@@ -58,7 +58,6 @@ public class QuickJSContext {
     };
     private ExceptionHandler exceptionHandler;
     private final long currentThreadId;
-    private final List<JSCallFunction> jsCallFunctions = new ArrayList<>();
 
     private QuickJSContext() {
         context = createContext();
@@ -102,7 +101,7 @@ public class QuickJSContext {
 
     public void destroyContext() {
         checkSameThread();
-        jsCallFunctions.clear();
+
         nativeCleaner.forceClean();
         destroyContext(context);
     }
@@ -151,9 +150,7 @@ public class QuickJSContext {
         setProperty(context, rootObject.getPointer(), name, jsObject);
         for (Method method : javaObject.getClass().getMethods()) {
             if (method.isAnnotationPresent(JSJavaApi.class)) {
-                MyJSCallFunction function = new MyJSCallFunction(javaObject, method);
-                jsCallFunctions.add(function);
-                jsObject.setProperty(method.getName(), function);
+                jsObject.setProperty(method.getName(), new MyJSCallFunction(javaObject, method));
             }
         }
         jsObject.release();
