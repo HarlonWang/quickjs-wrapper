@@ -141,7 +141,7 @@ public class QuickJSTest {
             @Override
             public Object call(Object... args) {
                 StringBuilder b = new StringBuilder();
-                for (Object o : args) {
+                for (Object o: args) {
                     b.append(o == null ? "null" : o.toString());
                 }
 
@@ -165,7 +165,7 @@ public class QuickJSTest {
             @Override
             public Object call(Object... args) {
                 StringBuilder b = new StringBuilder();
-                for (Object o : args) {
+                for (Object o: args) {
                     b.append(o == null ? "null" : o.toString());
                 }
 
@@ -339,7 +339,7 @@ public class QuickJSTest {
                 "promiseB.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n");
 
         int err;
-        for (; ; ) {
+        for (;;) {
             err = context.executePendingJob();
             if (err <= 0) {
                 if (err < 0) {
@@ -362,7 +362,7 @@ public class QuickJSTest {
                 "    defer(() => {console.log('哈哈');});");
 
         int err;
-        for (; ; ) {
+        for (;;) {
             err = context.executePendingJob();
             if (err <= 0) {
                 if (err < 0) {
