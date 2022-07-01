@@ -16651,9 +16651,54 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
                 if (!JS_IsFunction(ctx, fun_obj)) {
                     // Currently, only call0 is handled.
                     if(opcode == OP_call0) {
-                        pc -= 6;
-                        if(*pc == OP_get_var) {
-                            JS_ThrowTypeErrorNotAFunction(ctx, get_u32(++pc));
+                        if(pc[-2] == OP_set_loc0) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[b->arg_count].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_set_loc1) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[b->arg_count + 1].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_set_loc2) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[b->arg_count + 2].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_set_loc3) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[b->arg_count + 3].var_name);
+                            goto exception;
+                        } else if(pc[-3] == OP_set_loc8) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[pc[-2]].var_name);
+                            goto exception;
+                        } else if(pc[-4] == OP_get_arg) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[pc[-3]].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_arg0) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[0].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_arg1) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[1].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_arg2) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[2].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_arg3) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->vardefs[3].var_name);
+                            goto exception;
+                        } else if(pc[-6] == OP_get_var){
+                            pc -= 5;
+                            JS_ThrowTypeErrorNotAFunction(ctx, get_u32(pc));
+                            goto exception;
+                        } else if(pc[-4] == OP_get_var_ref) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->closure_var[pc[-3]].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_var_ref0) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->closure_var[0].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_var_ref1) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->closure_var[1].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_var_ref2) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->closure_var[2].var_name);
+                            goto exception;
+                        } else if(pc[-2] == OP_get_var_ref3) {
+                            JS_ThrowTypeErrorNotAFunction(ctx, b->closure_var[3].var_name);
                             goto exception;
                         }
                     }
