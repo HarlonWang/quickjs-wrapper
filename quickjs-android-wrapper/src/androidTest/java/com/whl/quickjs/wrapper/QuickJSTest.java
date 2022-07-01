@@ -547,6 +547,14 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testStackOverflowWithStackSize() {
+        QuickJSContext context = QuickJSContext.create(1024);
+        context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
+        context.evaluate("function y(){}");
+        context.destroyContext();
+    }
+
     // todo fix
     @Test
     public void testJSArraySetParseJSON() {
