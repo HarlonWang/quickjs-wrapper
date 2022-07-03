@@ -33143,12 +33143,11 @@ static __exception int js_parse_function_decl2(JSParseState *s,
             goto fail;
         fd->defined_arg_count = 1;
     } else {
-        int parse_skip_error;
         if (s->token.val == '(') {
             int skip_bits;
             /* if there is an '=' inside the parameter list, we
                consider there is a parameter expression inside */
-            parse_skip_error = js_parse_skip_parens_token(s, &skip_bits, FALSE);
+            js_parse_skip_parens_token(s, &skip_bits, FALSE);
             if (skip_bits & SKIP_HAS_ASSIGNMENT)
                 fd->has_parameter_expressions = TRUE;
             if (next_token(s))
@@ -33270,7 +33269,10 @@ static __exception int js_parse_function_decl2(JSParseState *s,
                 // Make a judgment here.
                 // There may be parsing errors in js_parse_skip_parens_token,
                 // so as to avoid the exceptions here covering the actual errors.
-                if(!parse_skip_error) {
+                JSValue error = JS_GetException(ctx);
+                if (!JS_IsNull(error) && JS_IsError(ctx, error)) {
+                    JS_Throw(ctx, error);
+                } else {
                     js_parse_error(s, "missing formal parameter");
                 }
                 goto fail;

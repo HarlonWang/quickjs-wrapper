@@ -555,19 +555,35 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
-    // todo fix
     @Test
-    public void testJSArraySetParseJSON() {
+    public void testMissingFormalParameter() {
         QuickJSContext context = QuickJSContext.create();
-        context.getGlobalObject().setProperty("getData", args -> {
-            JSArray jsArray = context.createNewJSArray();
-            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
-            jsArray.set(jsObject, 0);
-            // jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
-            return jsArray;
-        });
-        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+        context.setExceptionHandler(error -> assertTrue(error.contains("missing formal parameter")));
+        context.evaluate("function y(1){}");
         context.destroyContext();
     }
+
+    @Test
+    public void testStackSizeWithLimited() {
+        QuickJSContext context = QuickJSContext.create(1024 * 512);
+        context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
+        context.evaluate("function y(){y();} y();");
+        context.destroyContext();
+    }
+
+    // todo fix
+//    @Test
+//    public void testJSArraySetParseJSON() {
+//        QuickJSContext context = QuickJSContext.create();
+//        context.getGlobalObject().setProperty("getData", args -> {
+//            JSArray jsArray = context.createNewJSArray();
+//            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+//            jsArray.set(jsObject, 0);
+//            // jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
+//            return jsArray;
+//        });
+//        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+//        context.destroyContext();
+//    }
 
 }
