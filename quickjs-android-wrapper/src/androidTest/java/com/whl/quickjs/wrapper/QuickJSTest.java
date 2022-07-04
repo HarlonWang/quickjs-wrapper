@@ -454,6 +454,94 @@ public class QuickJSTest {
     }
 
     @Test
+    public void testNotAFunction2() {
+        QuickJSContext context = QuickJSContext.create();
+
+        QuickJSContext.ExceptionHandler loc0Assert = error -> assertTrue(error.contains("'b' is not a function"));
+        context.setExceptionHandler(loc0Assert);
+        context.evaluate("function a() {\n" +
+                "\tvar b = {};\n" +
+                "\tb();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler loc1Assert = error -> assertTrue(error.contains("'d' is not a function"));
+        context.setExceptionHandler(loc1Assert);
+        context.evaluate("function a() {\n" +
+                "\tvar b = {}; var d = 1;\n" +
+                "\td();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler loc2Assert = error -> assertTrue(error.contains("'c' is not a function"));
+        context.setExceptionHandler(loc2Assert);
+        context.evaluate("function a() {\n" +
+                "\tvar b = {}; var d = 1; var c = 1;\n" +
+                "\tc();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler loc3Assert = error -> assertTrue(error.contains("'d' is not a function"));
+        context.setExceptionHandler(loc3Assert);
+        context.evaluate("function a() {\n" +
+                "\tvar b = {}; var d = 1; var c = 1;var d = [];\n" +
+                "\td();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler loc8Assert = error -> assertTrue(error.contains("'e' is not a function"));
+        context.setExceptionHandler(loc8Assert);
+        context.evaluate("function a() {\n" +
+                "\tvar b = {}; var d = 1; var c = 1;var d = []; var e = {};\n" +
+                "\te();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler arg0Assert = error -> assertTrue(error.contains("'aa' is not a function"));
+        context.setExceptionHandler(arg0Assert);
+        context.evaluate("function a(aa) {\n" +
+                "\taa();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler arg1Assert = error -> assertTrue(error.contains("'bb' is not a function"));
+        context.setExceptionHandler(arg1Assert);
+        context.evaluate("function a(aa, bb) {\n" +
+                "\tbb();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler arg2Assert = error -> assertTrue(error.contains("'cc' is not a function"));
+        context.setExceptionHandler(arg2Assert);
+        context.evaluate("function a(aa, bb, cc) {\n" +
+                "\tcc();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler arg3Assert = error -> assertTrue(error.contains("'dd' is not a function"));
+        context.setExceptionHandler(arg3Assert);
+        context.evaluate("function a(aa, bb, cc, dd) {\n" +
+                "\tdd();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler argAssert = error -> assertTrue(error.contains("'ee' is not a function"));
+        context.setExceptionHandler(argAssert);
+        context.evaluate("function a(aa, bb, cc, dd, ee) {\n" +
+                "\tee();\n" +
+                "}\n" +
+                "a();");
+
+        QuickJSContext.ExceptionHandler ref0Assert = error -> assertTrue(error.contains("'a' is not a function"));
+        context.setExceptionHandler(ref0Assert);
+        context.evaluate("function test (){var a = {}; function test1 () {a(); } test1();} test();");
+
+        QuickJSContext.ExceptionHandler refAssert = error -> assertTrue(error.contains("'e' is not a function"));
+        context.setExceptionHandler(refAssert);
+        context.evaluate("function test (){var a = {}; var b = 1;var c = 1; var d = 1; var e = 1; function test1 () {b = a; c = a; d = e; c = b;e(); } test1();} test();");
+    }
+
+    @Test
     public void testNotAFunctionInPromise() {
         QuickJSContext context = QuickJSContext.create();
         context.setExceptionHandler(error -> assertTrue(error.contains("'[object Object]' is not a function")));
@@ -461,18 +549,27 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
-    // todo fix
     @Test
-    public void testJSArraySetParseJSON() {
+    public void testStackOverflowWithStackSize() {
+        QuickJSContext context = QuickJSContext.create(1024);
+        context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
+        context.evaluate("function y(){}");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testMissingFormalParameter() {
         QuickJSContext context = QuickJSContext.create();
-        context.getGlobalObject().setProperty("getData", args -> {
-            JSArray jsArray = context.createNewJSArray();
-            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
-            jsArray.set(jsObject, 0);
-            // jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
-            return jsArray;
-        });
-        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+        context.setExceptionHandler(error -> assertTrue(error.contains("missing formal parameter")));
+        context.evaluate("function y(1){}");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testStackSizeWithLimited() {
+        QuickJSContext context = QuickJSContext.create(1024 * 512);
+        context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
+        context.evaluate("function y(){y();} y();");
         context.destroyContext();
     }
 
@@ -500,5 +597,20 @@ public class QuickJSTest {
 
         context.destroyContext();
     }
+
+    // todo fix
+//    @Test
+//    public void testJSArraySetParseJSON() {
+//        QuickJSContext context = QuickJSContext.create();
+//        context.getGlobalObject().setProperty("getData", args -> {
+//            JSArray jsArray = context.createNewJSArray();
+//            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+//            jsArray.set(jsObject, 0);
+//            // jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
+//            return jsArray;
+//        });
+//        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+//        context.destroyContext();
+//    }
 
 }
