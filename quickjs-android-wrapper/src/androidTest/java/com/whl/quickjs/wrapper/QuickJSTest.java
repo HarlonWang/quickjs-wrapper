@@ -1,5 +1,6 @@
 package com.whl.quickjs.wrapper;
 
+import android.text.TextUtils;
 import android.util.AndroidRuntimeException;
 import android.util.Log;
 import org.junit.Test;
@@ -568,6 +569,52 @@ public class QuickJSTest {
         QuickJSContext context = QuickJSContext.create(1024 * 512);
         context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
         context.evaluate("function y(){y();} y();");
+        context.destroyContext();
+    }
+
+    public static class TestJava {
+        @JSMethod
+        public boolean test1(String message) {
+            return TextUtils.equals("arg1", message);
+        }
+
+        @JSMethod
+        public boolean test2(String message, int age) {
+            return TextUtils.equals("arg1", message) && 18 == age;
+        }
+
+        @JSMethod
+        public boolean testArray(JSArray array) {
+            String arg1 = (String) array.get(0);
+            int age = (int) array.get(1);
+            return TextUtils.equals("arg1", arg1) && 18 == age;
+        }
+
+        @JSMethod
+        public boolean testObject(JSObject jsObj) {
+            return TextUtils.equals("{\"arg1\":\"a\",\"arg2\":18}", jsObj.stringify());
+        }
+
+        @JSMethod
+        public boolean testAll(JSObject object, JSArray message, int age, String name) {
+            return TextUtils.equals("{\"arg1\":\"a\",\"arg2\":18},[1,2,3],18,name", object.stringify() + "," + message.stringify() + "," + age + "," + name);
+        }
+    }
+
+    @Test
+    public void testAnnotationMethod() {
+        QuickJSContext context = QuickJSContext.create();
+
+        context.getGlobalObject().setProperty("test1", TestJava.class);
+        assertTrue((boolean) context.evaluate("test1.test1('arg1');"));
+        assertTrue((boolean) context.evaluate("test1.test2('arg1', 18);"));
+        assertTrue((boolean) context.evaluate("test1.testArray(['arg1', 18]);"));
+        assertTrue((boolean) context.evaluate("test1.testObject({'arg1':'a', 'arg2':18});"));
+        assertTrue((boolean) context.evaluate("test1.testAll({'arg1':'a', 'arg2':18}, [1,2,3],18, 'name');"));
+
+        context.getGlobalObject().setProperty("test2", TestJava.class);
+        assertTrue((boolean) context.evaluate("test2.testObject({'arg1':'a', 'arg2':18});"));
+
         context.destroyContext();
     }
 
