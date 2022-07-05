@@ -93,6 +93,15 @@ public class JSObject {
         setProperty(name, jsObj);
     }
 
+    public String getString(String name) {
+        Object value = getProperty(name);
+        return value instanceof String ? (String) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getString(String)}
+     */
+    @Deprecated
     public String getStringProperty(String name) {
         Object value = getProperty(name);
         return value instanceof String ? (String) value : null;
