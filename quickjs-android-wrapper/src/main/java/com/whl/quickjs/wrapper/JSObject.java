@@ -1,5 +1,8 @@
 package com.whl.quickjs.wrapper;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 public class JSObject {
 
     private final QuickJSContext context;
@@ -47,6 +50,47 @@ public class JSObject {
 
     public void setProperty(String name, JSCallFunction value) {
         context.setProperty(this, name, value);
+    }
+
+    /**
+     * Class 添加 {@link JSMethod} 的方法会被注入到 JSContext 中
+     * 注意：该方法暂不支持匿名内部类的注册，因为匿名内部类构造参数不是无参的，newInstance 时会报错
+     * @param name
+     * @param clazz
+     */
+    public void setProperty(String name, Class clazz) {
+        Object javaObj = null;
+        try {
+            javaObj = clazz.newInstance();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+
+        if (javaObj == null) {
+            throw new NullPointerException("The JavaObj cannot be null. An error occurred in newInstance!");
+        }
+
+        JSObject jsObj = context.createNewJSObject();
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            if (method.isAnnotationPresent(JSMethod.class)) {
+                Object finalJavaObj = javaObj;
+                jsObj.setProperty(method.getName(), args -> {
+                    try {
+                        return method.invoke(finalJavaObj, args);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                });
+            }
+        }
+
+        setProperty(name, jsObj);
     }
 
     public String getStringProperty(String name) {
