@@ -98,36 +98,99 @@ public class JSObject {
         return value instanceof String ? (String) value : null;
     }
 
+    public Integer getInteger(String name) {
+        Object value = getProperty(name);
+        return value instanceof Integer ? (Integer) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getInteger(String)}
+     */
+    @Deprecated
     public Integer getIntProperty(String name) {
         Object value = getProperty(name);
         return value instanceof Integer ? (Integer) value : null;
     }
 
+    public Boolean getBoolean(String name) {
+        Object value = getProperty(name);
+        return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getBoolean(String)}
+     */
+    @Deprecated
     public Boolean getBooleanProperty(String name) {
         Object value = getProperty(name);
         return value instanceof Boolean ? (Boolean) value : null;
     }
 
+    public Double getDouble(String name) {
+        Object value = getProperty(name);
+        return value instanceof Double ? (Double) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getDouble(String)}
+     */
+    @Deprecated
     public Double getDoubleProperty(String name) {
         Object value = getProperty(name);
         return value instanceof Double ? (Double) value : null;
     }
 
+    public JSObject getJSObject(String name) {
+        Object value = getProperty(name);
+        return value instanceof JSObject ? (JSObject) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getJSObject(String)}
+     */
+    @Deprecated
     public JSObject getJSObjectProperty(String name) {
         Object value = getProperty(name);
         return value instanceof JSObject ? (JSObject) value : null;
     }
 
+    public JSFunction getJSFunction(String name) {
+        Object value = getProperty(name);
+        return value instanceof JSFunction ? (JSFunction) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getJSFunction(String)}
+     */
+    @Deprecated
     public JSFunction getJSFunctionProperty(String name) {
         Object value = getProperty(name);
         return value instanceof JSFunction ? (JSFunction) value : null;
     }
 
+    public JSArray getJSArray(String name) {
+        Object value = getProperty(name);
+        return value instanceof JSArray ? (JSArray) value : null;
+    }
+
+    /**
+     * See {@link JSObject#getJSArray(String)}
+     */
+    @Deprecated
     public JSArray getJSArrayProperty(String name) {
         Object value = getProperty(name);
         return value instanceof JSArray ? (JSArray) value : null;
     }
 
+    public JSArray getNames() {
+        JSFunction getOwnPropertyNames = (JSFunction) context.evaluate("Object.getOwnPropertyNames");
+        return (JSArray) getOwnPropertyNames.call(this);
+    }
+
+    /**
+     * See {@link JSObject#getNames()}
+     */
+    @Deprecated
     public JSArray getOwnPropertyNames() {
         JSFunction getOwnPropertyNames = (JSFunction) context.evaluate("Object.getOwnPropertyNames");
         return (JSArray) getOwnPropertyNames.call(this);

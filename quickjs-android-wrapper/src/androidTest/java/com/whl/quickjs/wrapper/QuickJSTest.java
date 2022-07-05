@@ -63,13 +63,13 @@ public class QuickJSTest {
                 "\tfunctionProperty: (name) => { return name + 'Wang'; }\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
-        JSObject obj1 = globalObject.getJSObjectProperty("obj1");
+        JSObject obj1 = globalObject.getJSObject("obj1");
         assertEquals("hello", obj1.getProperty("stringProperty"));
         assertEquals(1, obj1.getProperty("intProperty"));
         assertEquals(0.1, obj1.getProperty("doubleProperty"));
         assertEquals(true, obj1.getProperty("booleanProperty"));
         assertNull(obj1.getProperty("nullProperty"));
-        assertEquals("HarlonWang", obj1.getJSFunctionProperty("functionProperty").call("Harlon"));
+        assertEquals("HarlonWang", obj1.getJSFunction("functionProperty").call("Harlon"));
 
         context.destroyContext();
     }
@@ -203,7 +203,7 @@ public class QuickJSTest {
         context.evaluate("var test = {count: 0};");
         context.getGlobalObject().setProperty("test1", (JSObject) context.getGlobalObject().getProperty("test"));
 
-        assertEquals("{\"count\":0}", context.getGlobalObject().getJSObjectProperty("test1").stringify());
+        assertEquals("{\"count\":0}", context.getGlobalObject().getJSObject("test1").stringify());
         context.destroyContext();
     }
 
@@ -216,7 +216,7 @@ public class QuickJSTest {
         assertEquals("270", result.getProperty("leadsId"));
 
         context.getGlobalObject().setProperty("test", result);
-        Log.d("__quickjs__", "123------------------" + context.getGlobalObject().getJSObjectProperty("test").stringify());
+        Log.d("__quickjs__", "123------------------" + context.getGlobalObject().getJSObject("test").stringify());
 
 
         context.destroyContext();
@@ -249,7 +249,7 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
         QuickJSContext context = QuickJSContext.create();
         JSObject a = (JSObject) context.evaluate("var a = {b: {}}; a;");
-        a.getJSObjectProperty("b").setProperty("test", context.parseJSON(text));
+        a.getJSObject("b").setProperty("test", context.parseJSON(text));
         context.evaluate("console.log(a.b.test.leadsId);");
         context.destroyContext();
     }
@@ -292,7 +292,7 @@ public class QuickJSTest {
     public void testGetOwnPropertyNames() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("var a = {age: 1, ff: () => {}};");
-        JSArray array = context.getGlobalObject().getJSObjectProperty("a").getOwnPropertyNames();
+        JSArray array = context.getGlobalObject().getJSObject("a").getNames();
         for (int i = 0; i < ((JSArray) array).length(); i++) {
             String item = (String) ((JSArray) array).get(i);
             if (i == 0) {
