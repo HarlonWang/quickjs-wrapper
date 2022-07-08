@@ -538,6 +538,20 @@ public class QuickJSTest {
         QuickJSContext.ExceptionHandler refAssert = error -> assertTrue(error.contains("'e' is not a function"));
         context.setExceptionHandler(refAssert);
         context.evaluate("function test (){var a = {}; var b = 1;var c = 1; var d = 1; var e = 1; function test1 () {b = a; c = a; d = e; c = b;e(); } test1();} test();");
+
+        QuickJSContext.ExceptionHandler callMethodAssert = error -> assertTrue(error.contains("'navigsateTo' is not a function"));
+        context.setExceptionHandler(callMethodAssert);
+        context.evaluate("var C={index:function(e){\n" +
+                "\tfunction t(){\n" +
+                "\t \tvar e = {router: {}};\n" +
+                "\t\te.router.navigsateTo(\"1\")\n" +
+                "\t}\n" +
+                "\tfor(var n=arguments.length,r=new Array(n>1?n-1:0),o=1;o<n;o++)\n" +
+                "\tr[o-1]=arguments[o]\n" +
+                "\treturn t.apply(null,r);\n" +
+                "}};\n" +
+                "\n" +
+                "C.index();");
     }
 
     @Test

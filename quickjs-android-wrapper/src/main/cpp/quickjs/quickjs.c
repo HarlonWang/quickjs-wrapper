@@ -16646,9 +16646,9 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
             has_call_argc:
                 call_argv = sp - call_argc;
                 sf->cur_pc = pc;
-                JSValue fun_obj = call_argv[-1];
+                JSValue func = call_argv[-1];
                 // When the call is not a function, an exception is thrown and its name.
-                if (!JS_IsFunction(ctx, fun_obj)) {
+                if (!JS_IsFunction(ctx, func)) {
                     // Currently, only call0 is handled.
                     if(opcode == OP_call0) {
                         if(pc[-2] == OP_set_loc0) {
@@ -16703,7 +16703,7 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
                         }
                     }
                 }
-                ret_val = JS_CallInternal(ctx, fun_obj, JS_UNDEFINED,
+                ret_val = JS_CallInternal(ctx, func, JS_UNDEFINED,
                                           JS_UNDEFINED, call_argc, call_argv, 0);
                 if (unlikely(JS_IsException(ret_val)))
                     goto exception;
@@ -16739,7 +16739,19 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
                 pc += 2;
                 call_argv = sp - call_argc;
                 sf->cur_pc = pc;
-                ret_val = JS_CallInternal(ctx, call_argv[-1], call_argv[-2],
+                JSValue func = call_argv[-1];
+                // When the call is not a function, an exception is thrown and its name.
+                if(!JS_IsFunction(ctx, func)) {
+                    // Currently, only call_method is handled.
+                    if(opcode == OP_call_method) {
+                        if(pc[-5] == OP_push_const8 && pc[-10] == OP_get_field2) {
+                            pc -= 9;
+                            JS_ThrowTypeErrorNotAFunction(ctx, get_u32(pc));
+                            goto exception;
+                        }
+                    }
+                }
+                ret_val = JS_CallInternal(ctx, func, call_argv[-2],
                                           JS_UNDEFINED, call_argc, call_argv, 0);
                 if (unlikely(JS_IsException(ret_val)))
                     goto exception;
