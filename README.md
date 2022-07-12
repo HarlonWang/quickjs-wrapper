@@ -16,6 +16,8 @@ Experimental Features Stability not guaranteed.
 
 ## Download
 
+[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper%22)
+
 ```Groovy
 repositories {
   mavenCentral()
@@ -25,7 +27,31 @@ dependencies {
   implementation 'wang.harlon.quickjs:wrapper:latest.version'
 }
 ```
-[See here for the latest version](https://search.maven.org/search?q=g:wang.harlon.quickjs)
+
+### SNAPSHOT 
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=C71A36)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+
+<details>
+ <summary>See how to import the snapshot</summary>
+
+#### Including the SNAPSHOT
+Snapshots of the current development version of Sandwich are available, which track [the latest versions](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/).
+
+To import snapshot versions on your project, add the code snippet below on your gradle file:
+```Gradle
+repositories {
+   maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
+}
+```
+
+Next, add the dependency below to your **module**'s `build.gradle` file:
+```gradle
+dependencies {
+    implementation "wang.harlon.quickjs:wrapper:latest-SNAPSHOT"
+}
+```
+
+</details>
 
 ## Usage
 
