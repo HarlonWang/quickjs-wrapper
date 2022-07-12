@@ -35,7 +35,7 @@ dependencies {
  <summary>See how to import the snapshot</summary>
 
 #### Including the SNAPSHOT
-Snapshots of the current development version of Sandwich are available, which track [the latest versions](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/).
+Snapshots of the current development version of Wrapper are available, which track [the latest versions](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/).
 
 To import snapshot versions on your project, add the code snippet below on your gradle file:
 ```Gradle
