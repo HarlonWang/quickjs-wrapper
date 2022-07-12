@@ -13,6 +13,7 @@ Android 下的 QuickJS Binding 库
 - 支持模块加载执行（import, export）
 
 ## 依赖
+[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper%22)
 
 ```Groovy
 repositories {
@@ -23,7 +24,31 @@ dependencies {
   implementation 'wang.harlon.quickjs:wrapper:latest.version'
 }
 ```
-[最新版本见这里](https://search.maven.org/search?q=g:wang.harlon.quickjs)
+
+### 快照 
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=C71A36)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+
+<details>
+ <summary>如何使用快照</summary>
+
+#### 依赖快照
+可以获得 Wrapper 当前开发版本的快照, 查看 [最新快照版本](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/).
+
+要在项目中导入快照版本，请在 gradle 文件中添加下面的代码片段:
+```Gradle
+repositories {
+   maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
+}
+```
+	
+接下来，将下面的依赖项添加到你的 **module**'s `build.gradle`:
+```gradle
+dependencies {
+    implementation "wang.harlon.quickjs:wrapper:latest-SNAPSHOT"
+}
+```
+
+</details>
 
 ## 使用
 
