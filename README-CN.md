@@ -13,7 +13,7 @@ Android 下的 QuickJS Binding 库
 - 支持模块加载执行（import, export）
 
 ## 依赖
-[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper%22)
+[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper%22)
 
 ```Groovy
 repositories {
@@ -26,7 +26,7 @@ dependencies {
 ```
 
 ### 快照 
-[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=C71A36)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=red)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
 
 <details>
  <summary>如何使用快照</summary>
