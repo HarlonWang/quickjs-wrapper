@@ -26,7 +26,7 @@ dependencies {
 ```
 
 ### 快照 
-[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=red)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=yellowgreen)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
 
 <details>
  <summary>如何使用快照</summary>
