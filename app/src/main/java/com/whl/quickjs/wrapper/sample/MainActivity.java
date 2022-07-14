@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
 
         jsContext = QuickJSContext.create();
         jsContext.evaluate("var text = 'Hello QuickJS';");
-        String text = jsContext.getGlobalObject().getStringProperty("text");
+        String text = jsContext.getGlobalObject().getString("text");
         TextView textView = findViewById(R.id.text);
         textView.setText(text);
     }
