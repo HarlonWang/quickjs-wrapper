@@ -38,6 +38,21 @@ static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
     }
 }
 
+static void try_to_trigger_onerror(JSContext *ctx, JSValueConst *error) {
+    JSValue onerror = JS_GetPropertyStr(ctx, JS_GetGlobalObject(ctx), "onError");
+    if (JS_IsNull(onerror)) {
+        // may be lowercase
+        onerror = JS_GetPropertyStr(ctx, JS_GetGlobalObject(ctx), "onerror");
+    }
+
+    if (JS_IsNull(onerror)) {
+        // do nothing
+        return;
+    }
+
+    JS_Call(ctx, onerror, JS_GetGlobalObject(ctx), 1, error);
+}
+
 static const char* js_std_dump_error(JSContext *ctx) {
     JSValue error = JS_GetException(ctx);
 
@@ -46,6 +61,8 @@ static const char* js_std_dump_error(JSContext *ctx) {
     is_error = JS_IsError(ctx, error);
     string jsException;
     if (is_error) {
+        try_to_trigger_onerror(ctx, &error);
+
         JSValue message = JS_GetPropertyStr(ctx, error, "message");
         jsException = JS_ToCString(ctx, message);
         JS_FreeValue(ctx, message);

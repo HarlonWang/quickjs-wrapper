@@ -670,6 +670,18 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test(expected = QuickJSException.class)
+    public void testOnError() {
+        QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("assertTrue", args -> {
+            assertTrue((Boolean) args[0]);
+            assertEquals("'a' is not defined", args[1]);
+            return null;
+        });
+        context.evaluate("onError = (e) => { assertTrue(e instanceof Error, e.message); }; a();");
+        context.destroyContext();
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {
