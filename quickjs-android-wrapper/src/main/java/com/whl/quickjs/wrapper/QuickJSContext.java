@@ -12,7 +12,7 @@ public class QuickJSContext {
         System.loadLibrary("quickjs-android-wrapper");
     }
 
-    private static final String UNDEFINED = "undefined.js";
+    private static final String UNKNOWN_FILE = "unknown.js";
 
 
     public static QuickJSContext create() {
@@ -68,7 +68,7 @@ public class QuickJSContext {
     }
 
     public Object evaluate(String script) {
-        return evaluate(script, UNDEFINED);
+        return evaluate(script, UNKNOWN_FILE);
     }
 
     public Object evaluate(String script, String fileName) {
@@ -248,7 +248,7 @@ public class QuickJSContext {
     
     public Object evaluateModule(String script) {
         checkSameThread();
-        return evaluateModule(script, UNDEFINED);
+        return evaluateModule(script, UNKNOWN_FILE);
     }
 
     public int executePendingJob() {
