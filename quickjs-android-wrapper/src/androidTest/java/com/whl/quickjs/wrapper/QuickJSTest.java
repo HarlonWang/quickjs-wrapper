@@ -394,13 +394,10 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
-    @Test
+    @Test(expected = QuickJSException.class)
     public void testQuickJSException() {
         QuickJSContext context = QuickJSContext.create();
-        context.setExceptionHandler(error -> Log.d("QuickJSException", error));
-
         context.evaluate("console.log(a);");
-
         context.destroyContext();
     }
 
@@ -447,142 +444,186 @@ public class QuickJSTest {
     @Test
     public void testNotAFunction() {
         QuickJSContext context = QuickJSContext.create();
-        context.setExceptionHandler(error -> assertTrue(error.contains("'a' is not a function")));
-        context.evaluate("var a = 1; a();");
+        try {
+            context.evaluate("var a = 1; a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'a' is not a function"));
+        }
+
         context.destroyContext();
     }
 
     @Test
     public void testNotAFunction2() {
         QuickJSContext context = QuickJSContext.create();
+        try {
+            context.evaluate("function a() {\n" +
+                    "\tvar b = {};\n" +
+                    "\tb();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'b' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler loc0Assert = error -> assertTrue(error.contains("'b' is not a function"));
-        context.setExceptionHandler(loc0Assert);
-        context.evaluate("function a() {\n" +
-                "\tvar b = {};\n" +
-                "\tb();\n" +
-                "}\n" +
-                "a();");
 
-        QuickJSContext.ExceptionHandler loc1Assert = error -> assertTrue(error.contains("'d' is not a function"));
-        context.setExceptionHandler(loc1Assert);
-        context.evaluate("function a() {\n" +
-                "\tvar b = {}; var d = 1;\n" +
-                "\td();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a() {\n" +
+                    "\tvar b = {}; var d = 1;\n" +
+                    "\td();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'d' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler loc2Assert = error -> assertTrue(error.contains("'c' is not a function"));
-        context.setExceptionHandler(loc2Assert);
-        context.evaluate("function a() {\n" +
-                "\tvar b = {}; var d = 1; var c = 1;\n" +
-                "\tc();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a() {\n" +
+                    "\tvar b = {}; var d = 1; var c = 1;\n" +
+                    "\tc();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'c' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler loc3Assert = error -> assertTrue(error.contains("'d' is not a function"));
-        context.setExceptionHandler(loc3Assert);
-        context.evaluate("function a() {\n" +
-                "\tvar b = {}; var d = 1; var c = 1;var d = [];\n" +
-                "\td();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a() {\n" +
+                    "\tvar b = {}; var d = 1; var c = 1;var d = [];\n" +
+                    "\td();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'d' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler loc8Assert = error -> assertTrue(error.contains("'e' is not a function"));
-        context.setExceptionHandler(loc8Assert);
-        context.evaluate("function a() {\n" +
-                "\tvar b = {}; var d = 1; var c = 1;var d = []; var e = {};\n" +
-                "\te();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a() {\n" +
+                    "\tvar b = {}; var d = 1; var c = 1;var d = []; var e = {};\n" +
+                    "\te();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'e' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler arg0Assert = error -> assertTrue(error.contains("'aa' is not a function"));
-        context.setExceptionHandler(arg0Assert);
-        context.evaluate("function a(aa) {\n" +
-                "\taa();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a(aa) {\n" +
+                    "\taa();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'aa' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler arg1Assert = error -> assertTrue(error.contains("'bb' is not a function"));
-        context.setExceptionHandler(arg1Assert);
-        context.evaluate("function a(aa, bb) {\n" +
-                "\tbb();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a(aa, bb) {\n" +
+                    "\tbb();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'bb' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler arg2Assert = error -> assertTrue(error.contains("'cc' is not a function"));
-        context.setExceptionHandler(arg2Assert);
-        context.evaluate("function a(aa, bb, cc) {\n" +
-                "\tcc();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a(aa, bb, cc) {\n" +
+                    "\tcc();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'cc' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler arg3Assert = error -> assertTrue(error.contains("'dd' is not a function"));
-        context.setExceptionHandler(arg3Assert);
-        context.evaluate("function a(aa, bb, cc, dd) {\n" +
-                "\tdd();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a(aa, bb, cc, dd) {\n" +
+                    "\tdd();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'dd' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler argAssert = error -> assertTrue(error.contains("'ee' is not a function"));
-        context.setExceptionHandler(argAssert);
-        context.evaluate("function a(aa, bb, cc, dd, ee) {\n" +
-                "\tee();\n" +
-                "}\n" +
-                "a();");
+        try {
+            context.evaluate("function a(aa, bb, cc, dd, ee) {\n" +
+                    "\tee();\n" +
+                    "}\n" +
+                    "a();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'ee' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler ref0Assert = error -> assertTrue(error.contains("'a' is not a function"));
-        context.setExceptionHandler(ref0Assert);
-        context.evaluate("function test (){var a = {}; function test1 () {a(); } test1();} test();");
+        try {
+            context.evaluate("function test (){var a = {}; function test1 () {a(); } test1();} test();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'a' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler refAssert = error -> assertTrue(error.contains("'e' is not a function"));
-        context.setExceptionHandler(refAssert);
-        context.evaluate("function test (){var a = {}; var b = 1;var c = 1; var d = 1; var e = 1; function test1 () {b = a; c = a; d = e; c = b;e(); } test1();} test();");
+        try {
+            context.evaluate("function test (){var a = {}; var b = 1;var c = 1; var d = 1; var e = 1; function test1 () {b = a; c = a; d = e; c = b;e(); } test1();} test();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'e' is not a function"));
+        }
 
-        QuickJSContext.ExceptionHandler callMethodAssert = error -> assertTrue(error.contains("'navigsateTo' is not a function"));
-        context.setExceptionHandler(callMethodAssert);
-        context.evaluate("var C={index:function(e){\n" +
-                "\tfunction t(){\n" +
-                "\t \tvar e = {router: {}};\n" +
-                "\t\te.router.navigsateTo(\"1\")\n" +
-                "\t}\n" +
-                "\tfor(var n=arguments.length,r=new Array(n>1?n-1:0),o=1;o<n;o++)\n" +
-                "\tr[o-1]=arguments[o]\n" +
-                "\treturn t.apply(null,r);\n" +
-                "}};\n" +
-                "\n" +
-                "C.index();");
+        try {
+            context.evaluate("var C={index:function(e){\n" +
+                    "\tfunction t(){\n" +
+                    "\t \tvar e = {router: {}};\n" +
+                    "\t\te.router.navigsateTo(\"1\")\n" +
+                    "\t}\n" +
+                    "\tfor(var n=arguments.length,r=new Array(n>1?n-1:0),o=1;o<n;o++)\n" +
+                    "\tr[o-1]=arguments[o]\n" +
+                    "\treturn t.apply(null,r);\n" +
+                    "}};\n" +
+                    "\n" +
+                    "C.index();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'navigsateTo' is not a function"));
+        }
+
+        context.destroyContext();
     }
 
     @Test
     public void testNotAFunctionInPromise() {
         QuickJSContext context = QuickJSContext.create();
-        context.setExceptionHandler(error -> assertTrue(error.contains("'[object Object]' is not a function")));
-        context.evaluate("new Promise({name: 'a'});");
+        try {
+            context.evaluate("new Promise({name: 'a'});");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'[object Object]' is not a function"));
+        }
         context.destroyContext();
     }
 
     @Test
     public void testStackOverflowWithStackSize() {
         QuickJSContext context = QuickJSContext.create(1024);
-        context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
-        context.evaluate("function y(){}");
+        try {
+            context.evaluate("function y(){}");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("stack overflow"));
+        }
         context.destroyContext();
     }
 
     @Test
     public void testMissingFormalParameter() {
         QuickJSContext context = QuickJSContext.create();
-        context.setExceptionHandler(error -> assertTrue(error.contains("missing formal parameter")));
-        context.evaluate("function y(1){}");
+        try {
+            context.evaluate("function y(1){}");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("missing formal parameter"));
+        }
         context.destroyContext();
     }
 
     @Test
     public void testStackSizeWithLimited() {
         QuickJSContext context = QuickJSContext.create(1024 * 512);
-        context.setExceptionHandler(error -> assertTrue(error.contains("stack overflow")));
-        context.evaluate("function y(){y();} y();");
+        try {
+            context.evaluate("function y(){y();} y();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("stack overflow"));
+        }
         context.destroyContext();
     }
 

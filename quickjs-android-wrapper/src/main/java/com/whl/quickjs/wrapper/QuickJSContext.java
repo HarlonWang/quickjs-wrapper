@@ -2,10 +2,6 @@ package com.whl.quickjs.wrapper;
 
 import android.util.AndroidRuntimeException;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
-
 public class QuickJSContext {
 
     static {
@@ -41,10 +37,6 @@ public class QuickJSContext {
         }
     }
 
-    public interface ExceptionHandler {
-        void handle(String error);
-    }
-
     private final long context;
     private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
         @Override
@@ -52,7 +44,6 @@ public class QuickJSContext {
             freeDupValue(context, pointer);
         }
     };
-    private ExceptionHandler exceptionHandler;
     private final long currentThreadId;
 
     private QuickJSContext() {
@@ -74,20 +65,10 @@ public class QuickJSContext {
     public Object evaluate(String script, String fileName) {
         checkSameThread();
 
-        Object obj = null;
-        try {
-            obj = evaluate(context, script, fileName);
-        } catch (QuickJSException e) {
-            if (exceptionHandler != null) {
-                exceptionHandler.handle(writerToString(e));
-            } else {
-                e.printStackTrace();
-            }
-        }
-
+        Object result = evaluate(context, script, fileName);
         executePendingJobLoop(this);
 
-        return obj;
+        return result;
     }
 
     public JSObject getGlobalObject() {
@@ -104,34 +85,12 @@ public class QuickJSContext {
 
     public String stringify(JSObject jsObj) {
         checkSameThread();
-
-        try {
-            return stringify(context, jsObj.getPointer());
-        } catch (QuickJSException e) {
-            if (exceptionHandler != null) {
-                exceptionHandler.handle(writerToString(e));
-            } else {
-                e.printStackTrace();
-            }
-        }
-
-        return null;
+        return stringify(context, jsObj.getPointer());
     }
 
     public Object getProperty(JSObject jsObj, String name) {
         checkSameThread();
-
-        try {
-            return getProperty(context, jsObj.getPointer(), name);
-        } catch (QuickJSException e) {
-            if (exceptionHandler != null) {
-                exceptionHandler.handle(writerToString(e));
-            } else {
-                e.printStackTrace();
-            }
-        }
-
-        return null;
+        return getProperty(context, jsObj.getPointer(), name);
     }
 
     public void setProperty(JSObject jsObj, String name, Object value) {
@@ -180,21 +139,9 @@ public class QuickJSContext {
 
     Object call(JSObject func, long objPointer, Object... args) {
         checkSameThread();
-
-        Object obj = null;
-        try {
-            obj = call(context, func.getPointer(), objPointer, args);
-        } catch (QuickJSException e) {
-            if (exceptionHandler != null) {
-                exceptionHandler.handle(writerToString(e));
-            } else {
-                e.printStackTrace();
-            }
-        }
-
+        Object result = call(context, func.getPointer(), objPointer, args);
         executePendingJobLoop(this);
-
-        return obj;
+        return result;
     }
 
     /**
@@ -219,17 +166,7 @@ public class QuickJSContext {
 
     public JSObject parseJSON(String json) {
         checkSameThread();
-        try {
-            return parseJSON(context, json);
-        } catch (QuickJSException e) {
-            if (exceptionHandler != null) {
-                exceptionHandler.handle(writerToString(e));
-            } else {
-                e.printStackTrace();
-            }
-        }
-        
-        return null;
+        return parseJSON(context, json);
     }
 
     public byte[] compile(String sourceCode) {
@@ -256,16 +193,6 @@ public class QuickJSContext {
         return executePendingJob(context);
     }
 
-    public void setExceptionHandler(ExceptionHandler exceptionHandler) {
-        this.exceptionHandler = exceptionHandler;
-    }
-
-    private String writerToString(QuickJSException e) {
-        Writer writer = new StringWriter();
-        e.printStackTrace(new PrintWriter(writer));
-        return writer.toString();
-    }
-
     public void throwJSException(String error) {
         checkSameThread();
 
@@ -283,14 +210,14 @@ public class QuickJSContext {
     private native long createContext();
     private native void destroyContext(long context);
 
-    private native Object evaluate(long context, String script, String fileName) throws QuickJSException;
+    private native Object evaluate(long context, String script, String fileName);
     private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
-    private native Object call(long context, long func, long thisObj, Object[] args) throws QuickJSException;
+    private native Object call(long context, long func, long thisObj, Object[] args);
 
-    private native Object getProperty(long context, long objValue, String name) throws QuickJSException;
+    private native Object getProperty(long context, long objValue, String name);
     private native void setProperty(long context, long objValue, String name, Object value);
-    private native String stringify(long context, long objValue) throws QuickJSException;
+    private native String stringify(long context, long objValue);
     private native int length(long context, long objValue);
     private native Object get(long context, long objValue, int index);
     private native void set(long context, long objValue, Object value, int index);
@@ -299,7 +226,7 @@ public class QuickJSContext {
     private native void freeDupValue(long context, long objValue);
 
     // JSON.parse
-    private native JSObject parseJSON(long context, String json) throws QuickJSException;
+    private native JSObject parseJSON(long context, String json);
 
     // bytecode
     private native byte[] compile(long context, String sourceCode);
