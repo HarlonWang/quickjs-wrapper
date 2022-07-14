@@ -29,7 +29,7 @@ dependencies {
 ```
 
 ### SNAPSHOT 
-[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=red)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=yellowgreen)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
 
 <details>
  <summary>See how to import the snapshot</summary>
