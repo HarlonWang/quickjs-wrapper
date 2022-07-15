@@ -6,6 +6,7 @@ buildscript {
     }
     dependencies {
         classpath "com.android.tools.build:gradle:7.1.3"
+        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.21.0'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -15,6 +16,12 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+subprojects {
+    if (project.name == "quickjs-android-wrapper") {
+        apply plugin: "com.vanniktech.maven.publish"
     }
 }
 
