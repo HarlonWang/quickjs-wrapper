@@ -72,12 +72,9 @@ public class QuickJSFreeValueTest {
 
     @Test
     public void testState() {
-        context.getGlobalObject().setProperty("setState", new JSCallFunction() {
-            @Override
-            public Object call(Object... args) {
-                Log.d("test", args[0].toString());
-                return "test";
-            }
+        context.getGlobalObject().setProperty("setState", args -> {
+            Log.d("test", args[0].toString());
+            return "test";
         });
 
         context.evaluate("setState({age: 12});");

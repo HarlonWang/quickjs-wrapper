@@ -17,19 +17,11 @@ public class QuickJSPerformanceTest {
     public void setup() {
         context = QuickJSContext.create();
         context.getGlobalObject().setProperty("test", args -> null);
-        context.getGlobalObject().setProperty("testString", new JSCallFunction() {
-            @Override
-            public Object call(Object... args) {
-                return args[0];
-            }
-        });
-        context.getGlobalObject().setProperty("testLargeObject", new JSCallFunction() {
-            @Override
-            public Object call(Object... args) {
-                JSObject obj = (JSObject) args[0];
-                Log.d("qjs-console", obj.getStringProperty("key-0"));
-                return obj;
-            }
+        context.getGlobalObject().setProperty("testString", args -> args[0]);
+        context.getGlobalObject().setProperty("testLargeObject", args -> {
+            JSObject obj = (JSObject) args[0];
+            Log.d("qjs-console", obj.getString("key-0"));
+            return obj;
         });
     }
 
