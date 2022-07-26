@@ -18,7 +18,7 @@ using namespace std;
 class QuickJSWrapper {
 private:
     JSValue checkJSException(JSValue &value) const;
-    JSValue evaluate(const char *script, const char *file_name = "undefined.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;
+    JSValue evaluate(const char *script, const char *file_name = "unknown.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;
     JSValue getGlobalObject() const;
     JSValue getProperty(JSValue &this_obj, const char *propName) const;
     int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
