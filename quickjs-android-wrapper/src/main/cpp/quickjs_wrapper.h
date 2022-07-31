@@ -102,8 +102,6 @@ public:
 
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
 
-    jint executePendingJob() const;
-
     void throwJSException(const JSValue& value) const;
 
     void setMaxStackSize(jint stack_size) const;

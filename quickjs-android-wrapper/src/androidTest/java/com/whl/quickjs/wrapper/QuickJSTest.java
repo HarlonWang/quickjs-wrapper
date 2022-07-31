@@ -1,7 +1,6 @@
 package com.whl.quickjs.wrapper;
 
 import android.text.TextUtils;
-import android.util.AndroidRuntimeException;
 import android.util.Log;
 import org.junit.Test;
 
@@ -336,18 +335,6 @@ public class QuickJSTest {
                 "});\n" +
                 "\n" +
                 "promiseB.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n");
-
-        int err;
-        for(;;) {
-            err = context.executePendingJob();
-            if (err <= 0) {
-                if (err < 0) {
-                    throw new AndroidRuntimeException("Promise execute exception!");
-                }
-                break;
-            }
-        }
-
         context.destroyContext();
     }
 
@@ -359,18 +346,6 @@ public class QuickJSTest {
                 "            ? Promise.resolve().then.bind(Promise.resolve())\n" +
                 "            : setTimeout;\n" +
                 "    defer(() => {console.log('哈哈');});");
-
-        int err;
-        for(;;) {
-            err = context.executePendingJob();
-            if (err <= 0) {
-                if (err < 0) {
-                    throw new AndroidRuntimeException("Promise execute exception!");
-                }
-                break;
-            }
-        }
-
         context.destroyContext();
     }
 

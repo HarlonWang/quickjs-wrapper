@@ -21,22 +21,6 @@ public class QuickJSContext {
         return context;
     }
 
-    /**
-     * 处理 Promise 等异步任务的消息循环队列
-     */
-    private static void executePendingJobLoop(QuickJSContext context) {
-        int err;
-        for(;;) {
-            err = context.executePendingJob();
-            if (err <= 0) {
-                if (err < 0) {
-                    throw new AndroidRuntimeException("Promise execute exception!");
-                }
-                break;
-            }
-        }
-    }
-
     private final long context;
     private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
         @Override
@@ -64,11 +48,7 @@ public class QuickJSContext {
 
     public Object evaluate(String script, String fileName) {
         checkSameThread();
-
-        Object result = evaluate(context, script, fileName);
-        executePendingJobLoop(this);
-
-        return result;
+        return evaluate(context, script, fileName);
     }
 
     public JSObject getGlobalObject() {
@@ -139,9 +119,8 @@ public class QuickJSContext {
 
     Object call(JSObject func, long objPointer, Object... args) {
         checkSameThread();
-        Object result = call(context, func.getPointer(), objPointer, args);
-        executePendingJobLoop(this);
-        return result;
+
+        return call(context, func.getPointer(), objPointer, args);
     }
 
     /**
@@ -188,11 +167,6 @@ public class QuickJSContext {
         return evaluateModule(script, UNKNOWN_FILE);
     }
 
-    public int executePendingJob() {
-        checkSameThread();
-        return executePendingJob(context);
-    }
-
     public void throwJSException(String error) {
         checkSameThread();
 
@@ -231,9 +205,6 @@ public class QuickJSContext {
     // bytecode
     private native byte[] compile(long context, String sourceCode);
     private native Object execute(long context, byte[] bytecode);
-
-    // Promise
-    private native int executePendingJob(long context);
 
     // The default is 1024 * 256, and 0 means unlimited.
     private native void setMaxStackSize(long context, int size);

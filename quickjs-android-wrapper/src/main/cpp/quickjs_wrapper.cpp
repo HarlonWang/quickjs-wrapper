@@ -269,6 +269,21 @@ static void js_format_string_init(JSContext *ctx) {
     JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
 }
 
+static void js_std_loop(JSRuntime *rt) {
+    JSContext *ctx1;
+    int err;
+    /* execute the pending jobs */
+    for(;;) {
+        err = JS_ExecutePendingJob(rt, &ctx1);
+        if (err <= 0) {
+            if (err < 0) {
+                js_std_dump_error(ctx1);
+            }
+            break;
+        }
+    }
+}
+
 static void js_std_add_helpers(JSContext *ctx)
 {
     js_print_init(ctx);
@@ -421,6 +436,9 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
     JSValue global = getGlobalObject();
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
+
+    js_std_loop(runtime);
+
     return jsObj;
 }
 
@@ -512,6 +530,8 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
             JS_FreeValue(context, argument);
         }
     }
+
+    js_std_loop(runtime);
 
     return toJavaObject(env, thiz, jsObj, funcRet);
 }
@@ -765,11 +785,6 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
     return jsObj;
-}
-
-jint QuickJSWrapper::executePendingJob() const {
-    JSContext *jobCtx;
-    return JS_ExecutePendingJob(runtime, &jobCtx);
 }
 
 void QuickJSWrapper::throwJSException(const JSValue &value) const {

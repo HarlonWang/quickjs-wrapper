@@ -122,12 +122,6 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_evaluateModule(JNIEnv *env, jobject 
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->evaluateModule(env, thiz, script, file_name);
 }extern "C"
-JNIEXPORT jint JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_executePendingJob(JNIEnv *env, jobject thiz,
-                                                              jlong context) {
-    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->executePendingJob();
-}extern "C"
 JNIEXPORT void JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_set(JNIEnv *env, jobject thiz, jlong context,
                                                 jlong this_obj, jobject value, jint index) {
