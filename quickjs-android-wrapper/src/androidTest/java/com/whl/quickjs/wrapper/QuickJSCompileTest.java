@@ -30,4 +30,13 @@ public class QuickJSCompileTest {
         assertEquals(hello, "HELLO, WORLD!");
     }
 
+    @Test
+    public void testPromise() {
+        byte[] bytes = context.compile("var ret; new Promise((resolve, reject) => { ret = 'resolved'; }); ret;");
+        context.destroyContext();
+        context = QuickJSContext.create();
+        Object ret = context.execute(bytes);
+        assertEquals(ret, "resolved");
+    }
+
 }
