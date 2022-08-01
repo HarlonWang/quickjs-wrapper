@@ -21,7 +21,9 @@ public class QuickJSModuleTest {
         context.evaluateModule("import {name, age} from './a.js';\n" +
                 "\n" +
                 "console.log('name：' + name);\n" +
-                "console.log('age：' + age);");
+                "console.log('age：' + age);\n" +
+                "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { console.log(res); });\n" +
+                "console.log(name);");
     }
 
 

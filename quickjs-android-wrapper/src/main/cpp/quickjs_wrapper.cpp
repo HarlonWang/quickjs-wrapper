@@ -437,13 +437,12 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
 
-    js_std_loop(runtime);
-
     return jsObj;
 }
 
 JSValue QuickJSWrapper::evaluate(const char *script, const char *file_name, int eval_flag) const {
     JSValue val = JS_Eval(context, script, strlen(script), file_name, eval_flag);
+    js_std_loop(runtime);
     return checkJSException(val);
 }
 
