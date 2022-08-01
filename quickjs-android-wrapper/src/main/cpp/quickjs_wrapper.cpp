@@ -461,11 +461,6 @@ int QuickJSWrapper::setProperty(JSValue &this_obj, const char *propName, JSValue
     return JS_SetPropertyStr(context, this_obj, propName, val);
 }
 
-JSValue QuickJSWrapper::call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const {
-    JSValue val = JS_Call(context, func_obj, this_obj, argc, argv);
-    return checkJSException(val);
-}
-
 JSValue QuickJSWrapper::checkJSException(JSValue &value) const {
     if (JS_IsException(value)) {
         throwJSException(value);
@@ -512,7 +507,9 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
 
-    JSValue funcRet = call(jsFunc, jsObj, arguments.size(), arguments.data());
+    JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data());
+
+    checkJSException(ret);
 
     // todo refactor
     // JS_FreeValue(context, jsObj);
@@ -526,7 +523,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
 
     js_std_loop(runtime);
 
-    return toJavaObject(env, thiz, jsObj, funcRet);
+    return toJavaObject(env, thiz, jsObj, ret);
 }
 
 jstring QuickJSWrapper::json_stringify(JNIEnv *env, jlong value) const {

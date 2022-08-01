@@ -22,7 +22,6 @@ private:
     JSValue getGlobalObject() const;
     JSValue getProperty(JSValue &this_obj, const char *propName) const;
     int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
-    JSValue call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const;
 
     /**
      * 将 JSValue 转为 Java 类型
