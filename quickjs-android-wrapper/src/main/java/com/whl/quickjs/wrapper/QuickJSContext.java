@@ -150,7 +150,12 @@ public class QuickJSContext {
 
     public byte[] compile(String sourceCode) {
         checkSameThread();
-        return compile(context, sourceCode);
+        return compile(context, sourceCode, UNKNOWN_FILE);
+    }
+
+    public byte[] compile(String sourceCode, String fileName) {
+        checkSameThread();
+        return compile(context, sourceCode, fileName);
     }
 
     public Object execute(byte[] code) {
@@ -203,7 +208,7 @@ public class QuickJSContext {
     private native JSObject parseJSON(long context, String json);
 
     // bytecode
-    private native byte[] compile(long context, String sourceCode);
+    private native byte[] compile(long context, String sourceCode, String fileName);
     private native Object execute(long context, byte[] bytecode);
 
     // The default is 1024 * 256, and 0 means unlimited.

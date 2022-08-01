@@ -105,10 +105,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_parseJSON(JNIEnv *env, jobject thiz,
 }extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_compile(JNIEnv *env, jobject thiz, jlong context,
-                                                    jstring source_code) {
+                                                    jstring source_code, jstring file_name) {
 
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->compile(env, source_code);
+    return wrapper->compile(env, source_code, file_name);
 }extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_execute(JNIEnv *env, jobject thiz, jlong context,

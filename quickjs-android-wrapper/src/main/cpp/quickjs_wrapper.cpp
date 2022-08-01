@@ -705,10 +705,12 @@ jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
     return result;
 }
 
-jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source) const {
+jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source, jstring file_name) const {
     const auto sourceCode = env->GetStringUTFChars(source, 0);
-    auto compiled = JS_Eval(context, sourceCode, strlen(sourceCode), "compile.js", JS_EVAL_FLAG_COMPILE_ONLY);
+    const auto fileName = env->GetStringUTFChars(file_name, 0);
+    auto compiled = JS_Eval(context, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY);
     env->ReleaseStringUTFChars(source, sourceCode);
+    env->ReleaseStringUTFChars(file_name, fileName);
 
     if (JS_IsException(compiled)) {
         throwJSException(compiled);

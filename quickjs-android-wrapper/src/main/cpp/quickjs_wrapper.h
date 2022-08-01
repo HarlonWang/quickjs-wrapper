@@ -94,7 +94,7 @@ public:
     jobject parseJSON(JNIEnv*, jobject, jstring);
 
     // JS --> bytecode
-    jbyteArray compile(JNIEnv*, jstring) const;
+    jbyteArray compile(JNIEnv*, jstring, jstring) const;
     // bytecode --> result
     jobject execute(JNIEnv*, jobject, jbyteArray);
 

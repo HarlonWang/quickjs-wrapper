@@ -39,4 +39,12 @@ public class QuickJSCompileTest {
         assertEquals(ret, "resolved");
     }
 
+    @Test(expected = QuickJSException.class)
+    public void testThrowErrorWithFileName() {
+        byte[] bytes = context.compile("test;", "test.js");
+        context.destroyContext();
+        context = QuickJSContext.create();
+        context.execute(bytes);
+    }
+
 }
