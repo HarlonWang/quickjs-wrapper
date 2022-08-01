@@ -466,13 +466,6 @@ JSValue QuickJSWrapper::call(JSValue &func_obj, JSValue &this_obj, int argc, JSV
     return checkJSException(val);
 }
 
-const char * QuickJSWrapper::stringify(JSValue &value) const {
-    JSValue obj = JS_JSONStringify(context, value, JS_UNDEFINED, JS_UNDEFINED);
-    auto result = JS_ToCString(context, checkJSException(obj));
-    JS_FreeValue(context, obj);
-    return result;
-}
-
 JSValue QuickJSWrapper::checkJSException(JSValue &value) const {
     if (JS_IsException(value)) {
         throwJSException(value);
@@ -536,9 +529,10 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     return toJavaObject(env, thiz, jsObj, funcRet);
 }
 
-jstring QuickJSWrapper::stringify(JNIEnv *env, jlong value) const {
-    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
-    const char *result = stringify(jsObj);
+jstring QuickJSWrapper::json_stringify(JNIEnv *env, jlong value) const {
+    JSValue obj = JS_JSONStringify(context, JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value)), JS_UNDEFINED, JS_UNDEFINED);
+    auto result = JS_ToCString(context, checkJSException(obj));
+    JS_FreeValue(context, obj);
     jstring string =env->NewStringUTF(result);
     JS_FreeCString(context, result);
     return string;

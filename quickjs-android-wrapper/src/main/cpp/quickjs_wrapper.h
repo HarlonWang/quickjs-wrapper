@@ -23,7 +23,6 @@ private:
     JSValue getProperty(JSValue &this_obj, const char *propName) const;
     int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
     JSValue call(JSValue &func_obj, JSValue &this_obj, int argc, JSValue *argv) const;
-    const char* stringify(JSValue &value) const;
 
     /**
      * 将 JSValue 转为 Java 类型
@@ -85,7 +84,7 @@ public:
     jobject getProperty(JNIEnv*, jobject thiz, jlong value, jstring name);
     void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value);
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
-    jstring stringify(JNIEnv *env, jlong value) const;
+    jstring json_stringify(JNIEnv *env, jlong value) const;
     jint length(JNIEnv *env, jlong value);
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
     void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
