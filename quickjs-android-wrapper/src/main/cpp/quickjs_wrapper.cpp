@@ -181,7 +181,7 @@ static JSValue js_c_func_print(JSContext *ctx, JSValueConst this_val,
         str += arg_str;
         JS_FreeCString(ctx, arg_str);
     }
-    __android_log_print(ANDROID_LOG_DEBUG, "qjs-console", "%s", str.c_str());
+    // __android_log_print(ANDROID_LOG_DEBUG, "qjs-console", "%s", str.c_str());
     return JS_UNDEFINED;
 }
 

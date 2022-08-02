@@ -1,6 +1,5 @@
 #include <jni.h>
 #include <string>
-#include <android/log.h>
 #include "quickjs_wrapper.h"
 #include <vector>
 

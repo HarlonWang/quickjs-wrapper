@@ -1,12 +1,10 @@
 package com.whl.quickjs.wrapper;
 
-import android.util.AndroidRuntimeException;
-
 public class QuickJSContext {
 
-    static {
-        System.loadLibrary("quickjs-android-wrapper");
-    }
+//    static {
+//        System.loadLibrary("quickjs-android-wrapper");
+//    }
 
     private static final String UNKNOWN_FILE = "unknown.js";
 
@@ -38,7 +36,7 @@ public class QuickJSContext {
     private void checkSameThread() {
         boolean isSameThread = currentThreadId == Thread.currentThread().getId();
         if (!isSameThread) {
-            throw new AndroidRuntimeException("Must be call same thread in QuickJSContext.create!");
+            throw new QuickJSException("Must be call same thread in QuickJSContext.create!");
         }
     }
 
