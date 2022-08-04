@@ -48,7 +48,7 @@ JNIEXPORT jstring JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_stringify(JNIEnv *env, jobject thiz, jlong context,
                                                jlong value) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->json_stringify(env, value);
+    return wrapper->jsonStringify(env, value);
 }extern "C"
 JNIEXPORT jint JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_length(JNIEnv *env, jobject thiz, jlong context,

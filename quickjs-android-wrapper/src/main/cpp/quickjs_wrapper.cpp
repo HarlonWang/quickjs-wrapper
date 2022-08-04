@@ -513,7 +513,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     return toJavaObject(env, thiz, jsObj, ret);
 }
 
-jstring QuickJSWrapper::json_stringify(JNIEnv *env, jlong value) const {
+jstring QuickJSWrapper::jsonStringify(JNIEnv *env, jlong value) const {
     JSValue obj = JS_JSONStringify(context, JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value)), JS_UNDEFINED, JS_UNDEFINED);
     if (JS_IsException(obj)){
         throwJSException(env, context);
