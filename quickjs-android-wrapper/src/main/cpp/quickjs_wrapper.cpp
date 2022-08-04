@@ -56,7 +56,7 @@ static void tryToTriggerOnError(JSContext *ctx, JSValueConst *error) {
     JS_FreeValue(ctx, global);
 }
 
-static const char* jsStdDumpError(JSContext *ctx) {
+static string getJSErrorStr(JSContext *ctx) {
     JSValue error = JS_GetException(ctx);
 
     JSValue val;
@@ -81,8 +81,7 @@ static const char* jsStdDumpError(JSContext *ctx) {
     }
 
     JS_FreeValue(ctx, error);
-    const char* errorStr = jsException.c_str();
-    return errorStr;
+    return jsException;
 }
 
 
@@ -270,12 +269,12 @@ static void jsFormatStringInit(JSContext *ctx) {
 }
 
 static void throwJSException(JNIEnv *env, JSContext *ctx) {
-    const char* error = jsStdDumpError(ctx);
+    string error = getJSErrorStr(ctx);
     throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
-                       error);
+                       error.c_str());
 }
 
-static void jsStdLoop(JSRuntime *rt) {
+static void executePendingJobLoop(JSRuntime *rt) {
     JSContext *ctx1;
     int err;
     /* execute the pending jobs */
@@ -283,7 +282,7 @@ static void jsStdLoop(JSRuntime *rt) {
         err = JS_ExecutePendingJob(rt, &ctx1);
         if (err <= 0) {
             if (err < 0) {
-                jsStdDumpError(ctx1);
+                getJSErrorStr(ctx1);
             }
             break;
         }
@@ -442,7 +441,7 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
-    jsStdLoop(runtime);
+    executePendingJobLoop(runtime);
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
@@ -508,7 +507,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         }
     }
 
-    jsStdLoop(runtime);
+    executePendingJobLoop(runtime);
 
     return toJavaObject(env, thiz, jsObj, ret);
 }
@@ -774,7 +773,7 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
         return nullptr;
     }
 
-    jsStdLoop(runtime);
+    executePendingJobLoop(runtime);
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
