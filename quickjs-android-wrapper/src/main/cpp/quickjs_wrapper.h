@@ -17,12 +17,6 @@ using namespace std;
 
 class QuickJSWrapper {
 private:
-    JSValue checkJSException(JSValue &value) const;
-    JSValue evaluate(const char *script, const char *file_name = "unknown.js", int eval_flag = JS_EVAL_TYPE_GLOBAL) const;
-    JSValue getGlobalObject() const;
-    JSValue getProperty(JSValue &this_obj, const char *propName) const;
-    int setProperty(JSValue &this_obj, const char *propName, JSValue &val) const;
-
     /**
      * 将 JSValue 转为 Java 类型
      * @param env
@@ -79,12 +73,12 @@ public:
     ~QuickJSWrapper();
 
     jobject evaluate(JNIEnv*, jobject thiz, jstring script, jstring file_name);
-    jobject getGlobalObject(JNIEnv*, jobject thiz);
+    jobject getGlobalObject(JNIEnv*, jobject thiz) const;
     jobject getProperty(JNIEnv*, jobject thiz, jlong value, jstring name);
-    void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value);
+    void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value) const;
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring json_stringify(JNIEnv *env, jlong value) const;
-    jint length(JNIEnv *env, jlong value);
+    jint length(JNIEnv *env, jlong value) const;
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
     void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
     JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);
@@ -99,8 +93,6 @@ public:
     jobject execute(JNIEnv*, jobject, jbyteArray);
 
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
-
-    void throwJSException(const JSValue& value) const;
 
     void setMaxStackSize(jint stack_size) const;
 };

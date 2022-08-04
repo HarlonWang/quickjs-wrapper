@@ -269,6 +269,12 @@ static void js_format_string_init(JSContext *ctx) {
     JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
 }
 
+static void throwJSException(JNIEnv *env, JSContext *ctx) {
+    const char* error = js_std_dump_error(ctx);
+    throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
+                       error);
+}
+
 static void js_std_loop(JSRuntime *rt) {
     JSContext *ctx1;
     int err;
@@ -428,48 +434,25 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
     const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
     const char *c_file_name = env->GetStringUTFChars(file_name, JNI_FALSE);
 
-    JSValue result = evaluate(c_script, c_file_name);
-
+    JSValue result = JS_Eval(context, c_script, strlen(c_script), c_file_name, JS_EVAL_TYPE_GLOBAL);
     env->ReleaseStringUTFChars(script, c_script);
     env->ReleaseStringUTFChars(file_name, c_file_name);
+    if (JS_IsException(result)) {
+        throwJSException(env, context);
+        return nullptr;
+    }
 
-    JSValue global = getGlobalObject();
+    js_std_loop(runtime);
+
+    JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
 
     return jsObj;
 }
 
-JSValue QuickJSWrapper::evaluate(const char *script, const char *file_name, int eval_flag) const {
-    JSValue val = JS_Eval(context, script, strlen(script), file_name, eval_flag);
-    js_std_loop(runtime);
-    return checkJSException(val);
-}
-
-JSValue QuickJSWrapper::getGlobalObject() const {
-    JSValue val = JS_GetGlobalObject(context);
-    return checkJSException(val);
-}
-
-JSValue QuickJSWrapper::getProperty(JSValue &this_obj, const char *propName) const {
-    JSValue val = JS_GetPropertyStr(context, this_obj, propName);
-    return checkJSException(val);
-}
-
-int QuickJSWrapper::setProperty(JSValue &this_obj, const char *propName, JSValue &val) const {
-    return JS_SetPropertyStr(context, this_obj, propName, val);
-}
-
-JSValue QuickJSWrapper::checkJSException(JSValue &value) const {
-    if (JS_IsException(value)) {
-        throwJSException(value);
-    }
-
-    return value;
-}
-
-jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) {
-    JSValue value = getGlobalObject();
+jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
+    JSValue value = JS_GetGlobalObject(context);
 
     auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
     jobject result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
@@ -482,9 +465,12 @@ jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstr
     JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
 
     const char *propsName = env->GetStringUTFChars(name, JNI_FALSE);
-    JSValue propsValue = getProperty(jsObject, propsName);
-
+    JSValue propsValue = JS_GetPropertyStr(context, jsObject, propsName);;
     env->ReleaseStringUTFChars(name, propsName);
+    if (JS_IsException(propsValue)) {
+        throwJSException(env, context);
+        return nullptr;
+    }
 
     return toJavaObject(env, thiz, jsObject, propsValue);
 }
@@ -507,8 +493,10 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
 
     JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data());
-
-    checkJSException(ret);
+    if (JS_IsException(ret)) {
+        throwJSException(env, context);
+        return nullptr;
+    }
 
     // todo refactor
     // JS_FreeValue(context, jsObj);
@@ -527,17 +515,27 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
 
 jstring QuickJSWrapper::json_stringify(JNIEnv *env, jlong value) const {
     JSValue obj = JS_JSONStringify(context, JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value)), JS_UNDEFINED, JS_UNDEFINED);
-    auto result = JS_ToCString(context, checkJSException(obj));
+    if (JS_IsException(obj)){
+        throwJSException(env, context);
+        return nullptr;
+    }
+
+    auto result = JS_ToCString(context, obj);
     JS_FreeValue(context, obj);
     jstring string =env->NewStringUTF(result);
     JS_FreeCString(context, result);
     return string;
 }
 
-jint QuickJSWrapper::length(JNIEnv *env, jlong value) {
+jint QuickJSWrapper::length(JNIEnv *env, jlong value) const {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
 
-    JSValue length = getProperty(jsObj, "length");
+    JSValue length = JS_GetPropertyStr(context, jsObj, "length");
+    if (JS_IsException(length)) {
+        throwJSException(env, context);
+        return -1;
+    }
+
     JS_FreeValue(context, length);
 
     return JS_VALUE_GET_INT(length);
@@ -557,7 +555,7 @@ void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject valu
 }
 
 void
-QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) {
+QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) const {
     JSValue propValue;
     if (value == nullptr) {
         propValue = JS_UNDEFINED;
@@ -603,7 +601,7 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     const char* propName = env->GetStringUTFChars(name, JNI_FALSE);
-    setProperty(jsObj, propName, propValue);
+    JS_SetPropertyStr(context, jsObj, propName, propValue);
 
     env->ReleaseStringUTFChars(name, propName);
 }
@@ -695,7 +693,7 @@ jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
     const char *c_json = env->GetStringUTFChars(json, JNI_FALSE);
     auto jsonObj = JS_ParseJSON(context, c_json, strlen(c_json), "parseJSON.js");
     if (JS_IsException(jsonObj)) {
-        throwJSException(jsonObj);
+        throwJSException(env, context);
         return nullptr;
     }
 
@@ -706,14 +704,14 @@ jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
 }
 
 jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source, jstring file_name) const {
-    const auto sourceCode = env->GetStringUTFChars(source, 0);
-    const auto fileName = env->GetStringUTFChars(file_name, 0);
+    const auto sourceCode = env->GetStringUTFChars(source, JNI_FALSE);
+    const auto fileName = env->GetStringUTFChars(file_name, JNI_FALSE);
     auto compiled = JS_Eval(context, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY);
     env->ReleaseStringUTFChars(source, sourceCode);
     env->ReleaseStringUTFChars(file_name, fileName);
 
     if (JS_IsException(compiled)) {
-        throwJSException(compiled);
+        throwJSException(env, context);
         return nullptr;
     }
 
@@ -724,7 +722,7 @@ jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source, jstring file_nam
     if (result) {
         env->SetByteArrayRegion(result, 0, bufferLength, reinterpret_cast<const jbyte*>(buffer));
     } else {
-        throwJSException(compiled);
+        throwJSException(env, context);
     }
 
     JS_FreeValue(context, compiled);
@@ -741,7 +739,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
     env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
 
     if (JS_IsException(obj)) {
-        throwJSException(obj);
+        throwJSException(env, context);
         return nullptr;
     }
 
@@ -756,7 +754,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
         result = toJavaObject(env, thiz, obj, val);
     } else {
         result = nullptr;
-        throwJSException(val);
+        throwJSException(env, context);
     }
     JS_FreeValue(context, val);
 
@@ -768,21 +766,20 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     const char *c_script = env->GetStringUTFChars(script, JNI_FALSE);
     const char *c_file_name = env->GetStringUTFChars(file_name, JNI_FALSE);
 
-    JSValue result = evaluate(c_script, c_file_name, JS_EVAL_TYPE_MODULE);
-
+    JSValue result = JS_Eval(context, c_script, strlen(c_script), c_file_name, JS_EVAL_TYPE_MODULE);
     env->ReleaseStringUTFChars(script, c_script);
     env->ReleaseStringUTFChars(file_name, c_file_name);
+    if (JS_IsException(result)) {
+        throwJSException(env, context);
+        return nullptr;
+    }
 
-    JSValue global = getGlobalObject();
+    js_std_loop(runtime);
+
+    JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
     return jsObj;
-}
-
-void QuickJSWrapper::throwJSException(const JSValue &value) const {
-    const char* error = js_std_dump_error(context);
-    throwJavaException(jniEnv, "com/whl/quickjs/wrapper/QuickJSException",
-                       error);
 }
 
 void QuickJSWrapper::setMaxStackSize(jint stack_size) const {
