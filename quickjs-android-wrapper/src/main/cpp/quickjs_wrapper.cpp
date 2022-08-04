@@ -26,7 +26,7 @@ static void throwJavaException(JNIEnv *env, const char *exceptionClass, const ch
     env->ThrowNew(env->FindClass(exceptionClass), msg);
 }
 
-static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
+static const char* jsDumpObj(JSContext *ctx, JSValueConst val)
 {
     const char *str;
 
@@ -38,7 +38,7 @@ static const char* js_dump_obj(JSContext *ctx, JSValueConst val)
     }
 }
 
-static void try_to_trigger_onerror(JSContext *ctx, JSValueConst *error) {
+static void tryToTriggerOnError(JSContext *ctx, JSValueConst *error) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue onerror = JS_GetPropertyStr(ctx, global, "onError");
     if (JS_IsNull(onerror)) {
@@ -56,7 +56,7 @@ static void try_to_trigger_onerror(JSContext *ctx, JSValueConst *error) {
     JS_FreeValue(ctx, global);
 }
 
-static const char* js_std_dump_error(JSContext *ctx) {
+static const char* jsStdDumpError(JSContext *ctx) {
     JSValue error = JS_GetException(ctx);
 
     JSValue val;
@@ -64,7 +64,7 @@ static const char* js_std_dump_error(JSContext *ctx) {
     is_error = JS_IsError(ctx, error);
     string jsException;
     if (is_error) {
-        try_to_trigger_onerror(ctx, &error);
+        tryToTriggerOnError(ctx, &error);
 
         JSValue message = JS_GetPropertyStr(ctx, error, "message");
         jsException = JS_ToCString(ctx, message);
@@ -73,11 +73,11 @@ static const char* js_std_dump_error(JSContext *ctx) {
         val = JS_GetPropertyStr(ctx, error, "stack");
         if (!JS_IsUndefined(val)) {
             jsException += "\n";
-            jsException += js_dump_obj(ctx, val);
+            jsException += jsDumpObj(ctx, val);
         }
         JS_FreeValue(ctx, val);
     } else {
-        jsException = js_dump_obj(ctx, error);
+        jsException = jsDumpObj(ctx, error);
     }
 
     JS_FreeValue(ctx, error);
@@ -94,7 +94,7 @@ typedef struct {
     jobject thiz;
 } JSFuncCallback;
 
-static void js_func_callback_finalizer(JSRuntime *rt, JSValue val) {
+static void jsFuncCallbackFinalizer(JSRuntime *rt, JSValue val) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(rt));
     if (wrapper) {
         auto *jsFc = reinterpret_cast<JSFuncCallback *>(JS_GetOpaque2(wrapper->context, val, js_func_callback_class_id));
@@ -108,7 +108,7 @@ static void js_func_callback_finalizer(JSRuntime *rt, JSValue val) {
 
 static JSClassDef js_func_callback_class = {
         "JSFuncCallback",
-        .finalizer = js_func_callback_finalizer,
+        .finalizer = jsFuncCallbackFinalizer,
 };
 
 static JSValue jsFnCallback(JSContext *ctx,
@@ -121,7 +121,7 @@ static JSValue jsFnCallback(JSContext *ctx,
     return wrapper->jsFuncCall(jsFc->value, jsFc->thiz, this_obj, argc, argv);
 }
 
-static void js_func_callback_init(JSContext *ctx) {
+static void jsFuncCallbackInit(JSContext *ctx) {
     // JSFuncCallback class
     JS_NewClassID(&js_func_callback_class_id);
     JS_NewClass(JS_GetRuntime(ctx), js_func_callback_class_id, &js_func_callback_class);
@@ -165,8 +165,8 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
 }
 
 // js print
-static JSValue js_c_func_print(JSContext *ctx, JSValueConst this_val,
-                               int argc, JSValueConst *argv)
+static JSValue jsCFuncPrint(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     int i;
     string str;
@@ -185,7 +185,7 @@ static JSValue js_c_func_print(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static void js_print_init(JSContext *ctx) {
+static void jsPrintInit(JSContext *ctx) {
     JSValue global_obj, console;
 
     /* XXX: should these global definitions be enumerable? */
@@ -193,14 +193,14 @@ static void js_print_init(JSContext *ctx) {
 
     console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, console, "log",
-                      JS_NewCFunction(ctx, js_c_func_print, "log", 1));
+                      JS_NewCFunction(ctx, jsCFuncPrint, "log", 1));
     JS_SetPropertyStr(ctx, global_obj, "console", console);
 
     JS_FreeValue(ctx, global_obj);
 }
 
 // js format string
-static void js_format_string_init(JSContext *ctx) {
+static void jsFormatStringInit(JSContext *ctx) {
     const char* format_string_script = R"lit(function __format_string(a) {
     var stack = [];
     var string = '';
@@ -270,12 +270,12 @@ static void js_format_string_init(JSContext *ctx) {
 }
 
 static void throwJSException(JNIEnv *env, JSContext *ctx) {
-    const char* error = js_std_dump_error(ctx);
+    const char* error = jsStdDumpError(ctx);
     throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
                        error);
 }
 
-static void js_std_loop(JSRuntime *rt) {
+static void jsStdLoop(JSRuntime *rt) {
     JSContext *ctx1;
     int err;
     /* execute the pending jobs */
@@ -283,17 +283,17 @@ static void js_std_loop(JSRuntime *rt) {
         err = JS_ExecutePendingJob(rt, &ctx1);
         if (err <= 0) {
             if (err < 0) {
-                js_std_dump_error(ctx1);
+                jsStdDumpError(ctx1);
             }
             break;
         }
     }
 }
 
-static void js_std_add_helpers(JSContext *ctx)
+static void jsStdAddHelpers(JSContext *ctx)
 {
-    js_print_init(ctx);
-    js_format_string_init(ctx);
+    jsPrintInit(ctx);
+    jsFormatStringInit(ctx);
 }
 
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
@@ -306,9 +306,9 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     context = JS_NewContext(runtime);
 
     JS_SetRuntimeOpaque(runtime, this);
-    js_func_callback_init(context);
+    jsFuncCallbackInit(context);
 
-    js_std_add_helpers(context);
+    jsStdAddHelpers(context);
 
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
@@ -442,7 +442,7 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
-    js_std_loop(runtime);
+    jsStdLoop(runtime);
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
@@ -508,7 +508,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         }
     }
 
-    js_std_loop(runtime);
+    jsStdLoop(runtime);
 
     return toJavaObject(env, thiz, jsObj, ret);
 }
@@ -774,7 +774,7 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
         return nullptr;
     }
 
-    js_std_loop(runtime);
+    jsStdLoop(runtime);
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
