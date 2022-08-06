@@ -274,19 +274,25 @@ static void throwJSException(JNIEnv *env, JSContext *ctx) {
                        error.c_str());
 }
 
-static void executePendingJobLoop(JSRuntime *rt) {
+static bool executePendingJobLoop(JSRuntime *rt, JNIEnv *env) {
     JSContext *ctx1;
+    bool success = true;
     int err;
     /* execute the pending jobs */
     for(;;) {
         err = JS_ExecutePendingJob(rt, &ctx1);
         if (err <= 0) {
             if (err < 0) {
-                getJSErrorStr(ctx1);
+                success = false;
+                string error = getJSErrorStr(ctx1);
+                throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
+                                   error.c_str());
             }
             break;
         }
     }
+
+    return success;
 }
 
 static void jsStdAddHelpers(JSContext *ctx)
@@ -441,7 +447,9 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
-    executePendingJobLoop(runtime);
+    if (!executePendingJobLoop(runtime, env)) {
+        return nullptr;
+    }
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
@@ -507,7 +515,9 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         }
     }
 
-    executePendingJobLoop(runtime);
+    if (!executePendingJobLoop(runtime, env)) {
+        return nullptr;
+    }
 
     return toJavaObject(env, thiz, jsObj, ret);
 }
@@ -773,7 +783,9 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
         return nullptr;
     }
 
-    executePendingJobLoop(runtime);
+    if (!executePendingJobLoop(runtime, env)) {
+        return nullptr;
+    }
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
