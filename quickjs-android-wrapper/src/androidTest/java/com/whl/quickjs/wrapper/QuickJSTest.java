@@ -2,11 +2,17 @@ package com.whl.quickjs.wrapper;
 
 import android.text.TextUtils;
 import android.util.Log;
+
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 
 public class QuickJSTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void createQuickJSContextTest() {
@@ -654,6 +660,143 @@ public class QuickJSTest {
             return null;
         });
         context.evaluate("onError = (e) => { assertTrue(e instanceof Error, e.message); }; a();");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("'aaa' is not defined");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("new Promise(() => { console.log(aaa); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections2() {
+        QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("assert", args -> {
+            String error = (String) args[0];
+            assertEquals(error, "'aaa' is not defined");
+            return null;
+        });
+        context.evaluate("new Promise(() => { console.log(aaa); }).catch((res) => { assert(res.message); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections3() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("1");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("new Promise((resolve, reject) => { reject(1); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections4() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("1");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("new Promise((resolve, reject) => { reject(1); }); new Promise(() => { console.log(aaa); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections5() {
+        QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("assert", args -> {
+            assertEquals(1, args[0]);
+            return null;
+        });
+        context.evaluate("new Promise((resolve, reject) => { resolve(1); }).then((res) => { assert(res); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections6() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("1");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("new Promise((resolve, reject) => { reject(1); }).then((res) => { console.log(res); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections7() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("'a' is not defined");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("new Promise((resolve, reject) => { reject(1); }).catch((res) => { console.log(a); });");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections8() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("'t2' is not defined");
+
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("(function(){\n" +
+                "    return new Promise((resolve, reject) => {\n" +
+                "        reject(1);\n" +
+                "    });\n" +
+                "})().then((res) => {t0(res);}).catch((res) => {\n" +
+                "    t1(a);\n" +
+                "}).catch((res) => {\n" +
+                "    t2(res);\n" +
+                "});\n");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections9() {
+        QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("assert", args -> {
+            assertEquals(1, args[0]);
+            return null;
+        });
+        context.evaluate("(function(){\n" +
+                "    return new Promise((resolve, reject) => {\n" +
+                "        reject(1);\n" +
+                "    });\n" +
+                "})().then((res) => {\n" +
+                "    t0.log(res);\n" +
+                "}, (res) => {\n" +
+                "    assert(res);\n" +
+                "}).catch((res) => {\n" +
+                "    t1(a);\n" +
+                "}).catch((res) => {\n" +
+                "    t2(res);\n" +
+                "});");
+        context.destroyContext();
+    }
+
+    @Test
+    public void testPromiseUnhandledRejections10() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("'t4' is not defined");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("(function(){\n" +
+                "    return new Promise((resolve, reject) => {\n" +
+                "        reject(1);\n" +
+                "    });\n" +
+                "})().then((res) => {\n" +
+                "    t1.log(res);\n" +
+                "}, (res) => {\n" +
+                "    t2.log(aa);\n" +
+                "}).catch((res) => {\n" +
+                "    t3.log(a);\n" +
+                "}).catch((res) => {\n" +
+                "    t4.log(res);\n" +
+                "});\n");
         context.destroyContext();
     }
 

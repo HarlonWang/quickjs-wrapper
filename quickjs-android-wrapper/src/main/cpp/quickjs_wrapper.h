@@ -8,6 +8,7 @@
 #include <iostream>
 #include <set>
 #include <vector>
+#include <queue>
 using namespace std;
 
 #include "quickjs/quickjs.h"
@@ -26,6 +27,7 @@ public:
     JSContext *context;
 
     map<jlong, JSValue> values;
+    queue<JSValueConst> unhandledRejections;
 
     jclass objectClass;
     jclass booleanClass;

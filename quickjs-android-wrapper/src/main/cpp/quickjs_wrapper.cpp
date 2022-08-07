@@ -2,6 +2,7 @@
 // Created by yonglan.whl on 2021/7/14.
 //
 #include "quickjs_wrapper.h"
+#include "quickjs/cutils.h"
 
 // util
 static string getJavaName(JNIEnv* env, jobject javaClass) {
@@ -56,9 +57,7 @@ static void tryToTriggerOnError(JSContext *ctx, JSValueConst *error) {
     JS_FreeValue(ctx, global);
 }
 
-static string getJSErrorStr(JSContext *ctx) {
-    JSValue error = JS_GetException(ctx);
-
+static string getJSErrorStr(JSContext *ctx, JSValueConst error) {
     JSValue val;
     bool is_error;
     is_error = JS_IsError(ctx, error);
@@ -79,11 +78,15 @@ static string getJSErrorStr(JSContext *ctx) {
     } else {
         jsException = jsDumpObj(ctx, error);
     }
-
-    JS_FreeValue(ctx, error);
     return jsException;
 }
 
+static string getJSErrorStr(JSContext *ctx) {
+    JSValue error = JS_GetException(ctx);
+    string error_str = getJSErrorStr(ctx, error);
+    JS_FreeValue(ctx, error);
+    return error_str;
+}
 
 // js function callback
 static JSClassID js_func_callback_class_id;
@@ -274,7 +277,24 @@ static void throwJSException(JNIEnv *env, JSContext *ctx) {
                        error.c_str());
 }
 
-static bool executePendingJobLoop(JSRuntime *rt, JNIEnv *env) {
+static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) {
+    string error;
+    while (!wrapper->unhandledRejections.empty()) {
+        JSValueConst reason = wrapper->unhandledRejections.front();
+        error += getJSErrorStr(ctx, reason);
+        error += "\n";
+        JS_FreeValue(ctx, reason);
+        wrapper->unhandledRejections.pop();
+    }
+
+    bool is_error = !error.empty();
+    if (is_error) {
+        throwJavaException(wrapper->jniEnv, "com/whl/quickjs/wrapper/QuickJSException", error.c_str());
+    }
+    return is_error;
+}
+
+static bool executePendingJobLoop(JNIEnv *env, JSRuntime *rt, JSContext *ctx) {
     JSContext *ctx1;
     bool success = true;
     int err;
@@ -284,7 +304,7 @@ static bool executePendingJobLoop(JSRuntime *rt, JNIEnv *env) {
         if (err <= 0) {
             if (err < 0) {
                 success = false;
-                string error = getJSErrorStr(ctx1);
+                string error = getJSErrorStr(ctx);
                 throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
                                    error.c_str());
             }
@@ -292,8 +312,25 @@ static bool executePendingJobLoop(JSRuntime *rt, JNIEnv *env) {
         }
     }
 
+    if (success && throwIfUnhandledRejections(reinterpret_cast<QuickJSWrapper *>(JS_GetRuntimeOpaque(rt)), ctx)) {
+        success = false;
+    }
+
     return success;
 }
+
+static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
+                                    JSValueConst reason, BOOL is_handled, void *opaque) {
+    auto unhandledRejections = static_cast<queue<JSValue> *>(opaque);
+    if (!is_handled) {
+        unhandledRejections->push(JS_DupValue(ctx, reason));
+    } else {
+        JSValueConst rej = unhandledRejections->front();
+        JS_FreeValue(ctx, rej);
+        unhandledRejections->pop();
+    }
+}
+
 
 static void jsStdAddHelpers(JSContext *ctx)
 {
@@ -307,6 +344,8 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 
     // init ES6Module
     JS_SetModuleLoaderFunc(runtime, jsModuleNormalizeFunc, jsModuleLoaderFunc, nullptr);
+
+    JS_SetHostPromiseRejectionTracker(runtime, promiseRejectionTracker, &unhandledRejections);
 
     context = JS_NewContext(runtime);
 
@@ -447,7 +486,7 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
-    if (!executePendingJobLoop(runtime, env)) {
+    if (!executePendingJobLoop(env, runtime, context)) {
         return nullptr;
     }
 
@@ -515,7 +554,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         }
     }
 
-    if (!executePendingJobLoop(runtime, env)) {
+    if (!executePendingJobLoop(env, runtime, context)) {
         return nullptr;
     }
 
@@ -783,7 +822,7 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
         return nullptr;
     }
 
-    if (!executePendingJobLoop(runtime, env)) {
+    if (!executePendingJobLoop(env, runtime, context)) {
         return nullptr;
     }
 
