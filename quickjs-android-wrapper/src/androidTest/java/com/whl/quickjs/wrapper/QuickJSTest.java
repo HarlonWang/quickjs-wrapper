@@ -800,6 +800,20 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testPromiseUnhandledRejections11() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("bad");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("new Promise((resolve, reject) => {\n" +
+                "  resolve();\n" +
+                "}).then(() => {\n" +
+                "  throw new Error('bad');\n" +
+                "});");
+        context.destroyContext();
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {
