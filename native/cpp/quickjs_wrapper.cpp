@@ -123,7 +123,7 @@ static JSValue jsFnCallback(JSContext *ctx,
     return wrapper->jsFuncCall(jsFc->value, jsFc->thiz, this_obj, argc, argv);
 }
 
-static void jsFuncCallbackInit(JSContext *ctx) {
+static void initJSFuncCallback(JSContext *ctx) {
     // JSFuncCallback class
     JS_NewClassID(&js_func_callback_class_id);
     JS_NewClass(JS_GetRuntime(ctx), js_func_callback_class_id, &js_func_callback_class);
@@ -166,43 +166,8 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     return (JSModuleDef *) m;
 }
 
-// js print
-static JSValue jsCFuncPrint(JSContext *ctx, JSValueConst this_val,
-                            int argc, JSValueConst *argv)
-{
-    int i;
-    string str;
-    size_t len;
-
-    for(i = 0; i < argc; i++) {
-        if (i != 0)
-            str += ' ';
-        const char *arg_str = JS_ToCStringLen(ctx, &len, argv[i]);
-        if (!arg_str)
-            return JS_EXCEPTION;
-        str += arg_str;
-        JS_FreeCString(ctx, arg_str);
-    }
-    __android_log_print(ANDROID_LOG_DEBUG, "qjs-console", "%s", str.c_str());
-    return JS_UNDEFINED;
-}
-
-static void jsPrintInit(JSContext *ctx) {
-    JSValue global_obj, console;
-
-    /* XXX: should these global definitions be enumerable? */
-    global_obj = JS_GetGlobalObject(ctx);
-
-    console = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, console, "log",
-                      JS_NewCFunction(ctx, jsCFuncPrint, "log", 1));
-    JS_SetPropertyStr(ctx, global_obj, "console", console);
-
-    JS_FreeValue(ctx, global_obj);
-}
-
-// js format string
-static void jsFormatStringInit(JSContext *ctx) {
+// It is usually show object on the console.
+static void initFormatObject(JSContext *ctx) {
     const char* format_string_script = R"lit(function __format_string(a) {
     var stack = [];
     var string = '';
@@ -331,13 +296,6 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     }
 }
 
-
-static void jsStdAddHelpers(JSContext *ctx)
-{
-    jsPrintInit(ctx);
-    jsFormatStringInit(ctx);
-}
-
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     jniEnv = env;
     runtime = JS_NewRuntime();
@@ -350,9 +308,9 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     context = JS_NewContext(runtime);
 
     JS_SetRuntimeOpaque(runtime, this);
-    jsFuncCallbackInit(context);
+    initJSFuncCallback(context);
 
-    jsStdAddHelpers(context);
+    initFormatObject(context);
 
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));

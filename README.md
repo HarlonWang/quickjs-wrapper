@@ -6,7 +6,6 @@ QuickJS wrapper for Android.
 ## Feature
 - Java types are supported with JavaScript
 - Support promise execute
-- `console.log` implement
 - JavaScript exception handler
 - Optimize not a function with its name when type error
 

@@ -13,7 +13,6 @@ using namespace std;
 
 #include "quickjs/quickjs.h"
 #include <jni.h>
-#include <android/log.h>
 #include <map>
 
 class QuickJSWrapper {
