@@ -1,6 +1,6 @@
 package com.whl.quickjs.wrapper;
 
-public class JSArray extends JSObject{
+public class JSArray extends JSObject {
 
     public JSArray(QuickJSContext context, long pointer) {
         super(context, pointer);

@@ -1,6 +1,6 @@
 package com.whl.quickjs.wrapper;
 
-public class JSFunction extends JSObject{
+public class JSFunction extends JSObject {
 
     private final long objPointer;
 

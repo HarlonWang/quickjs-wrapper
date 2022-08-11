@@ -7,19 +7,19 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project(quickjs-android-wrapper)
 
-file(STRINGS "quickjs/VERSION" CONFIG_VERSION)
+file(STRINGS "../../../native/cpp/quickjs/VERSION" CONFIG_VERSION)
 
 add_definitions(-DCONFIG_VERSION=\"${CONFIG_VERSION}\")
 add_definitions(-DCONFIG_BIGNUM)
 
 file(GLOB wrapper_src
-        "*.cpp"
-        "*.h"
+        "../../../native/cpp/*.cpp"
+        "../../../native/cpp/*.h"
         )
 
 file(GLOB quickjs_src
-        "quickjs/*.c"
-        "quickjs/*.h"
+        "../../../native/cpp/quickjs/*.c"
+        "../../../native/cpp/quickjs/*.h"
         )
 
 add_library( # Sets the name of the library.

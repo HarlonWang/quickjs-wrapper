@@ -30,12 +30,14 @@ android {
 
     externalNativeBuild {
         cmake {
-            path file('src/main/cpp/CMakeLists.txt')
+            path file('src/main/CMakeLists.txt')
         }
     }
 }
 
 dependencies {
+    api (project(':java-wrapper'))
+
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
