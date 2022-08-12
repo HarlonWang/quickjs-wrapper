@@ -2,6 +2,8 @@ package com.whl.quickjs.wrapper;
 
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 /**
  * Created by Harlon Wang on 2021/10/12.
  */
@@ -18,12 +20,23 @@ public class QuickJSModuleTest {
             return null;
         });
         QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("assertName", args -> {
+            assertEquals("Jack", args[0]);
+            return null;
+        });
+        context.getGlobalObject().setProperty("assertAge", args -> {
+            assertEquals(18, args[0]);
+            return null;
+        });
+        context.getGlobalObject().setProperty("assertNameUpdated", args -> {
+            assertEquals("TypeError: 'name' is read-only", args[0].toString());
+            return null;
+        });
         context.evaluateModule("import {name, age} from './a.js';\n" +
                 "\n" +
-                "console.log('name：' + name);\n" +
-                "console.log('age：' + age);\n" +
-                "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { console.log(res); });\n" +
-                "console.log(name);");
+                "assertName(name);\n" +
+                "assertAge(age);\n" +
+                "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { assertNameUpdated(res); });");
     }
 
 

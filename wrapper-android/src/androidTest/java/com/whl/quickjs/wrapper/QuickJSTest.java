@@ -214,27 +214,14 @@ public class QuickJSTest {
 
     @Test
     public void jsonParseTest() {
-        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
 
         QuickJSContext context = QuickJSContext.create();
         JSObject result = context.parseJSON(text);
         assertEquals("270", result.getProperty("leadsId"));
 
         context.getGlobalObject().setProperty("test", result);
-        Log.d("__quickjs__", "123------------------" + context.getGlobalObject().getJSObject("test").stringify());
-
-
-        context.destroyContext();
-    }
-
-    @Test
-    public void jsonParseTest2() {
-        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
-
-        QuickJSContext context = QuickJSContext.create();
-        JSFunction log = (JSFunction) context.evaluate("console.log");
-        JSObject jsonObj = context.parseJSON(text);
-        log.call(jsonObj);
+        assertEquals(text, context.getGlobalObject().getJSObject("test").stringify());
 
         context.destroyContext();
     }
@@ -245,7 +232,8 @@ public class QuickJSTest {
         QuickJSContext context = QuickJSContext.create();
         JSObject a = (JSObject) context.evaluate("var a = {}; a;");
         a.setProperty("test", context.parseJSON(text));
-        context.evaluate("console.log(a.test.leadsId);");
+        Object ret = context.evaluate("a.test.leadsId;");
+        assertEquals("270", ret);
         context.destroyContext();
     }
 
@@ -255,26 +243,32 @@ public class QuickJSTest {
         QuickJSContext context = QuickJSContext.create();
         JSObject a = (JSObject) context.evaluate("var a = {b: {}}; a;");
         a.getJSObject("b").setProperty("test", context.parseJSON(text));
-        context.evaluate("console.log(a.b.test.leadsId);");
+        Object ret = context.evaluate("a.b.test.leadsId;");
+        assertEquals("270", ret);
         context.destroyContext();
     }
 
     @Test
     public void jsonParseTest5() {
-        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
+        String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
         QuickJSContext context = QuickJSContext.create();
         context.getGlobalObject().setProperty("test", (JSCallFunction) args -> context.parseJSON(text));
 
-        context.evaluate("var a = test(); console.log(a);");
+        JSObject ret = (JSObject) context.evaluate("var a = test(); a;");
+        assertEquals(text, ret.stringify());
         context.destroyContext();
     }
 
     @Test
     public void testFlat() {
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("let a = [1,[2,3]];  \n" +
+        JSArray ret = (JSArray) context.evaluate("let a = [1,[2,3]];  \n" +
                 "a = a.flat();\n" +
-                "console.log(a);");
+                "a;");
+
+        assertEquals(1, ret.get(0));
+        assertEquals(2, ret.get(1));
+        assertEquals(3, ret.get(2));
 
         context.destroyContext();
     }
@@ -282,14 +276,15 @@ public class QuickJSTest {
     @Test
     public void testClass() {
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("class User {\n" +
+        Object ret = context.evaluate("class User {\n" +
                 "\tconstructor() {\n" +
                 "\t\tthis.name = \"HarlonWang\";\n" +
                 "\t}\n" +
                 "}\n" +
                 "\n" +
                 "var user = new User();\n" +
-                "console.log(user.name);");
+                "user.name;");
+        assertEquals("HarlonWang", ret);
         context.destroyContext();
     }
 
@@ -322,43 +317,33 @@ public class QuickJSTest {
     }
 
     @Test
-    public void testPromise() {
-        QuickJSContext context = QuickJSContext.create();
-        context.evaluate("const promiseA = new Promise( (resolutionFunc,rejectionFunc) => {\n" +
-                "    resolutionFunc(777);\n" +
-                "});\n" +
-                "// 这时，\"promiseA\" 已经被敲定了。\n" +
-                "promiseA.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n" +
-                "console.log(\"immediate logging\");\n" +
-                "\n" +
-                "// produces output in this order:\n" +
-                "// immediate logging\n" +
-                "// asynchronous logging has val: 777\n" +
-                "\n" +
-                "\n" +
-                "const promiseB = new Promise( (resolutionFunc,rejectionFunc) => {\n" +
-                "    resolutionFunc(888);\n" +
-                "});\n" +
-                "\n" +
-                "promiseB.then( (val) => console.log(\"asynchronous logging has val:\",val) );\n");
-        context.destroyContext();
-    }
-
-    @Test
     public void testPromise2() {
         QuickJSContext context = QuickJSContext.create();
+        context.getGlobalObject().setProperty("assert", args -> {
+            assertEquals("哈哈", args[0]);
+            return null;
+        });
         context.evaluate("    var defer =\n" +
                 "        'function' == typeof Promise\n" +
                 "            ? Promise.resolve().then.bind(Promise.resolve())\n" +
                 "            : setTimeout;\n" +
-                "    defer(() => {console.log('哈哈');});");
+                "    defer(() => { assert('哈哈'); });");
         context.destroyContext();
     }
 
     @Test
     public void testProxy() {
         QuickJSContext context = QuickJSContext.create();
-
+        context.getGlobalObject().setProperty("assert0", args -> {
+            assertEquals(1, args[0]);
+            assertNull(args[1]);
+            return null;
+        });
+        context.getGlobalObject().setProperty("assert1", args -> {
+            assertEquals(false, args[0]);
+            assertEquals(37, args[1]);
+            return null;
+        });
         context.evaluate("const handler = {\n" +
                 "    get: function(obj, prop) {\n" +
                 "        return prop in obj ? obj[prop] : 37;\n" +
@@ -369,8 +354,8 @@ public class QuickJSTest {
                 "p.a = 1;\n" +
                 "p.b = undefined;\n" +
                 "\n" +
-                "console.log(p.a, p.b);      // 1, undefined\n" +
-                "console.log('c' in p, p.c); // false, 37");
+                "assert0(p.a, p.b);      // 1, undefined\n" +
+                "assert1('c' in p, p.c); // false, 37");
 
         context.destroyContext();
     }
@@ -378,7 +363,7 @@ public class QuickJSTest {
     @Test(expected = QuickJSException.class)
     public void testQuickJSException() {
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("console.log(a);");
+        context.evaluate("a;");
         context.destroyContext();
     }
 
@@ -417,8 +402,8 @@ public class QuickJSTest {
     public void testFormatToString() {
         QuickJSContext context = QuickJSContext.create();
         String result = (String) context.evaluate("__format_string(this);");
-        assertEquals(result, "{ console: { log: function log() }, __format_string: function __format_string() }");
-        assertEquals(context.getGlobalObject().toString(), "{ console: { log: function log() }, __format_string: function __format_string() }");
+        assertEquals(result, "{ __format_string: function __format_string() }");
+        assertEquals(context.getGlobalObject().toString(), "{ __format_string: function __format_string() }");
         context.destroyContext();
     }
 
@@ -669,7 +654,7 @@ public class QuickJSTest {
         thrown.expectMessage("'aaa' is not defined");
 
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("new Promise(() => { console.log(aaa); });");
+        context.evaluate("new Promise(() => { aaa; });");
         context.destroyContext();
     }
 
@@ -681,7 +666,7 @@ public class QuickJSTest {
             assertEquals(error, "'aaa' is not defined");
             return null;
         });
-        context.evaluate("new Promise(() => { console.log(aaa); }).catch((res) => { assert(res.message); });");
+        context.evaluate("new Promise(() => { aaa; }).catch((res) => { assert(res.message); });");
         context.destroyContext();
     }
 
@@ -701,7 +686,7 @@ public class QuickJSTest {
         thrown.expectMessage("1");
 
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("new Promise((resolve, reject) => { reject(1); }); new Promise(() => { console.log(aaa); });");
+        context.evaluate("new Promise((resolve, reject) => { reject(1); }); new Promise(() => { aaa; });");
         context.destroyContext();
     }
 
@@ -722,7 +707,7 @@ public class QuickJSTest {
         thrown.expectMessage("1");
 
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("new Promise((resolve, reject) => { reject(1); }).then((res) => { console.log(res); });");
+        context.evaluate("new Promise((resolve, reject) => { reject(1); }).then((res) => { res; });");
         context.destroyContext();
     }
 
@@ -732,7 +717,7 @@ public class QuickJSTest {
         thrown.expectMessage("'a' is not defined");
 
         QuickJSContext context = QuickJSContext.create();
-        context.evaluate("new Promise((resolve, reject) => { reject(1); }).catch((res) => { console.log(a); });");
+        context.evaluate("new Promise((resolve, reject) => { reject(1); }).catch((res) => { a; });");
         context.destroyContext();
     }
 
