@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import com.whl.quickjs.android.QuickJSLoader;
+
 /**
  * Created by Harlon Wang on 2021/10/12.
  */
@@ -11,6 +13,7 @@ public class QuickJSModuleTest {
 
     @Test
     public void testModule() {
+        QuickJSLoader.init();
         JSModule.setModuleLoader(moduleName -> {
             if (moduleName.equals("a.js")) {
                 return "export var name = 'Jack';\n" +

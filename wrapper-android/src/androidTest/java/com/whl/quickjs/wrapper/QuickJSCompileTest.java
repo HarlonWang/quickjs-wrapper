@@ -5,12 +5,15 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.whl.quickjs.android.QuickJSLoader;
+
 public class QuickJSCompileTest {
 
     private QuickJSContext context;
 
     @Before
     public void setup() {
+        QuickJSLoader.init();
         context = QuickJSContext.create();
     }
 

@@ -2,12 +2,7 @@ package com.whl.quickjs.wrapper;
 
 public class QuickJSContext {
 
-    static {
-        System.loadLibrary("quickjs-android-wrapper");
-    }
-
     private static final String UNKNOWN_FILE = "unknown.js";
-
 
     public static QuickJSContext create() {
         return new QuickJSContext();
@@ -29,7 +24,11 @@ public class QuickJSContext {
     private final long currentThreadId;
 
     private QuickJSContext() {
-        context = createContext();
+        try {
+            context = createContext();
+        } catch (UnsatisfiedLinkError e) {
+            throw new QuickJSException("The so library must be initialized before createContext!");
+        }
         currentThreadId = Thread.currentThread().getId();
     }
 

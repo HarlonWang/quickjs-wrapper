@@ -3,16 +3,24 @@ package com.whl.quickjs.wrapper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 
+import com.whl.quickjs.android.QuickJSLoader;
+
 public class QuickJSTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    @Before
+    public void initSo() {
+        QuickJSLoader.init();
+    }
 
     @Test
     public void createQuickJSContextTest() {
