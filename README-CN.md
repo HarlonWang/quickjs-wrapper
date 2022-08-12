@@ -6,9 +6,9 @@ Android/JVM 下的 QuickJS Binding 库
 - 支持 Promise 异步执行
 - 统一的 JavaScript 异常处理
 - 优化 not a function 报错并显示名字
+- 支持字节码编译和执行
 
 实验特性（不保证稳定性）：
-- 支持字节码编译和执行
 - 支持模块加载执行（import, export）
 
 ## 依赖

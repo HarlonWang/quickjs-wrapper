@@ -8,9 +8,9 @@ QuickJS wrapper for Android/JVM.
 - Support promise execute
 - JavaScript exception handler
 - Optimize not a function with its name when type error
+- Compile bytecode
 
 Experimental Features Stability not guaranteed.
-- Compile bytecode
 - ESModule (import, export)
 
 ## Download
