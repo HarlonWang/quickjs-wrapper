@@ -1,5 +1,5 @@
-# QuickJS For Android
-QuickJS wrapper for Android.
+# QuickJS For Android/JVM
+QuickJS wrapper for Android/JVM.
 
 ## [中文说明](README-CN.md)
 
@@ -15,26 +15,29 @@ Experimental Features Stability not guaranteed.
 
 ## Download
 
-[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper%22)
+[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper-java.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper-java%22)
 
 ```Groovy
 repositories {
   mavenCentral()
 }
-        
+
 dependencies {
-  implementation 'wang.harlon.quickjs:wrapper:latest.version'
+  // For Android
+  implementation 'wang.harlon.quickjs:wrapper-android:latest.version'
+  // For JVM
+  implementation 'wang.harlon.quickjs:wrapper-java:latest.version'
 }
 ```
 
 ### SNAPSHOT 
-[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=yellowgreen)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=yellowgreen)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper-java/) <br>
 
 <details>
  <summary>See how to import the snapshot</summary>
 
 #### Including the SNAPSHOT
-Snapshots of the current development version of Wrapper are available, which track [the latest versions](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/).
+Snapshots of the current development version of Wrapper are available, which track [the latest versions](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper-java/).
 
 To import snapshot versions on your project, add the code snippet below on your gradle file:
 ```Gradle
@@ -46,7 +49,10 @@ repositories {
 Next, add the dependency below to your **module**'s `build.gradle` file:
 ```gradle
 dependencies {
-    implementation "wang.harlon.quickjs:wrapper:latest-SNAPSHOT"
+    // For Android
+    implementation "wang.harlon.quickjs:wrapper-android:latest-SNAPSHOT"
+    // For JVM
+    implementation "wang.harlon.quickjs:wrapper-java:latest-SNAPSHOT"
 }
 ```
 
