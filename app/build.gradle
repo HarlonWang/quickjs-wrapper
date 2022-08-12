@@ -27,8 +27,8 @@ android {
     }
 
     sourceSets {
-        androidTest.root '../quickjs-android-wrapper/src/androidTest'
-        androidTest.java.srcDirs '../quickjs-android-wrapper/src/androidTest/java'
+        androidTest.root '../wrapper-android/src/androidTest'
+        androidTest.java.srcDirs '../wrapper-android/src/androidTest/java'
     }
 }
 
@@ -38,9 +38,10 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
 
-    implementation(project(":quickjs-android-wrapper"))
+    implementation (project(':wrapper-android'))
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    androidTestImplementation project(path: ':wrapper-java')
 }

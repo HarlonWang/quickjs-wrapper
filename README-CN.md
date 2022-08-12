@@ -1,10 +1,9 @@
-# QuickJS For Android
-Android 下的 QuickJS Binding 库
+# QuickJS For Android/JVM
+Android/JVM 下的 QuickJS Binding 库
 
 ## 特性
 - 支持 Java 和 JavaScript 类型互转
 - 支持 Promise 异步执行
-- 内置 `console.log` 实现
 - 统一的 JavaScript 异常处理
 - 优化 not a function 报错并显示名字
 
@@ -13,7 +12,7 @@ Android 下的 QuickJS Binding 库
 - 支持模块加载执行（import, export）
 
 ## 依赖
-[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper%22)
+[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper-java.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper-java%22)
 
 ```Groovy
 repositories {
@@ -21,18 +20,21 @@ repositories {
 }
         
 dependencies {
-  implementation 'wang.harlon.quickjs:wrapper:latest.version'
+  // For Android
+  implementation 'wang.harlon.quickjs:wrapper-android:latest.version'
+  // For JVM
+  implementation 'wang.harlon.quickjs:wrapper-java:latest.version'
 }
 ```
 
 ### 快照 
-[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=yellowgreen)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/) <br>
+[![Wrapper](https://img.shields.io/static/v1?label=snapshot&message=wrapper&logo=apache%20maven&color=yellowgreen)](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper-java/) <br>
 
 <details>
  <summary>如何使用快照</summary>
 
 #### 依赖快照
-可以获得 Wrapper 当前开发版本的快照, 查看 [最新快照版本](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper/).
+可以获得 Wrapper 当前开发版本的快照, 查看 [最新快照版本](https://s01.oss.sonatype.org/content/repositories/snapshots/wang/harlon/quickjs/wrapper-java/).
 
 要在项目中导入快照版本，请在 gradle 文件中添加下面的代码片段:
 ```Gradle
@@ -44,13 +46,23 @@ repositories {
 接下来，将下面的依赖项添加到你的 **module**'s `build.gradle`:
 ```gradle
 dependencies {
-    implementation "wang.harlon.quickjs:wrapper:latest-SNAPSHOT"
+    // For Android
+    implementation "wang.harlon.quickjs:wrapper-android:latest-SNAPSHOT"
+    // For JVM
+    implementation "wang.harlon.quickjs:wrapper-java:latest-SNAPSHOT"
 }
 ```
 
 </details>
 
 ## 使用
+
+### 初始化
+在 Android 中:
+```Java
+// 建议放在 Application 中初始化
+QuickJSLoader.init();
+```
 
 ### 创建 JSContext
 

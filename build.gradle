@@ -20,7 +20,7 @@ allprojects {
 }
 
 subprojects {
-    if (project.name == "quickjs-android-wrapper") {
+    if (project.name != "app") {
         apply plugin: "com.vanniktech.maven.publish"
     }
 }
