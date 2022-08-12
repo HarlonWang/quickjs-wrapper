@@ -57,6 +57,13 @@ dependencies {
 
 ## 使用
 
+### 初始化
+在 Android 中:
+```Java
+// 建议放在 Application 中初始化
+QuickJSLoader.init();
+```
+
 ### 创建 JSContext
 
 ```Java
