@@ -60,6 +60,13 @@ dependencies {
 
 ## Usage
 
+### Init Library
+In Android:
+```Java
+// It is usually init in the application
+QuickJSLoader.init();
+```
+
 ### Create QuickJSContext
 
 ```Java
