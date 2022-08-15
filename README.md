@@ -61,11 +61,13 @@ dependencies {
 ## Usage
 
 ### Init Library
-In Android:
+In Android Platforms:
 ```Java
 // It is usually init in the application
 QuickJSLoader.init();
 ```
+
+[Refer to here for other platforms.](./wrapper-java/README.md)
 
 ### Create QuickJSContext
 
