@@ -42,7 +42,7 @@ cd make-3.24.0-rc5
 apt install ninja-build
 ```
 
-## 打包so链库
+## 打包 so 链库
 ```
 ./gradlew wrapper-java:cmakeBuild
 ```
@@ -54,4 +54,4 @@ so 链库地址:
 ```
 
 ## TODO
-1.跨平台编译方式(在单一平台编译出其他平台产物)
+- [x] 跨平台编译方式(在单一平台编译出其他平台产物)
