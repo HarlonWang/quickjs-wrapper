@@ -64,7 +64,7 @@ dependencies {
 QuickJSLoader.init();
 ```
 
-[其他平台先参考这里.](./wrapper-java/README.md)
+[其他平台请参考这里.](./wrapper-java/README.md)
 
 ### 创建 JSContext
 
