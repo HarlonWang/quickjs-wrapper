@@ -254,6 +254,7 @@ static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) 
 
     bool is_error = !error.empty();
     if (is_error) {
+        error = "UnhandledPromiseRejectionException: " + error;
         throwJavaException(wrapper->jniEnv, "com/whl/quickjs/wrapper/QuickJSException", error.c_str());
     }
     return is_error;
