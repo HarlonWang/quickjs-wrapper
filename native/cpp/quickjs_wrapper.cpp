@@ -24,7 +24,9 @@ static void throwJavaException(JNIEnv *env, const char *exceptionClass, const ch
     va_start (args, fmt);
     vsnprintf(msg, sizeof(msg), fmt, args);
     va_end (args);
-    env->ThrowNew(env->FindClass(exceptionClass), msg);
+    jclass e = env->FindClass(exceptionClass);
+    env->ThrowNew(e, msg);
+    env->DeleteLocalRef(e);
 }
 
 static const char* jsDumpObj(JSContext *ctx, JSValueConst val)
