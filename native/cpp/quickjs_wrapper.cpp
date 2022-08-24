@@ -238,10 +238,18 @@ static void initFormatObject(JSContext *ctx) {
     JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
 }
 
+static void throwJSException(JNIEnv *env, const char* msg) {
+    jclass e = env->FindClass("com/whl/quickjs/wrapper/QuickJSException");
+    jmethodID init = env->GetMethodID(e, "<init>", "(Ljava/lang/String;Z)V");
+    jstring ret = env->NewStringUTF(msg);
+    auto t = (jthrowable)env->NewObject(e, init, ret, JNI_TRUE);
+    env->Throw(t);
+    env->DeleteLocalRef(e);
+}
+
 static void throwJSException(JNIEnv *env, JSContext *ctx) {
     string error = getJSErrorStr(ctx);
-    throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
-                       error.c_str());
+    throwJSException(env, error.c_str());
 }
 
 static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) {
@@ -257,7 +265,7 @@ static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) 
     bool is_error = !error.empty();
     if (is_error) {
         error = "UnhandledPromiseRejectionException: " + error;
-        throwJavaException(wrapper->jniEnv, "com/whl/quickjs/wrapper/QuickJSException", error.c_str());
+        throwJSException(wrapper->jniEnv, error.c_str());
     }
     return is_error;
 }
@@ -273,8 +281,7 @@ static bool executePendingJobLoop(JNIEnv *env, JSRuntime *rt, JSContext *ctx) {
             if (err < 0) {
                 success = false;
                 string error = getJSErrorStr(ctx);
-                throwJavaException(env, "com/whl/quickjs/wrapper/QuickJSException",
-                                   error.c_str());
+                throwJSException(env, error.c_str());
             }
             break;
         }

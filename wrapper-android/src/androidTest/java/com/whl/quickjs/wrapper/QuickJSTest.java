@@ -807,6 +807,36 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testQuickJSExceptionWithJSError() {
+        QuickJSContext context = QuickJSContext.create();
+        try {
+            context.evaluate("a;");
+        } catch (QuickJSException e) {
+            assertTrue(e.isJSError());
+        }
+        context.destroyContext();
+    }
+
+    @Test
+    public void testQuickJSExceptionWithJavaError() {
+        QuickJSContext context = QuickJSContext.create();
+        Thread t1 = new Thread(() -> {
+            try {
+                context.evaluate("var a = 1;");
+            } catch (QuickJSException e) {
+                assertFalse(e.isJSError());
+                assertEquals("Must be call same thread in QuickJSContext.create!", e.getMessage());
+            }
+        });
+        t1.start();
+        try {
+            t1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {
