@@ -134,3 +134,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_setMaxStackSize(JNIEnv *env, jobject
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     wrapper->setMaxStackSize(size);
 }
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_isLiveObject(JNIEnv *env, jobject thiz, jlong context,
+                                                         jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->isLiveObject(value);
+}

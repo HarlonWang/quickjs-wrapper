@@ -182,6 +182,10 @@ public class QuickJSContext {
         setMaxStackSize(context, maxStackSize);
     }
 
+    public boolean isLiveObject(JSObject jsObj) {
+        return isLiveObject(context, jsObj.getPointer());
+    }
+
     // context
     private native long createContext();
     private native void destroyContext(long context);
@@ -210,4 +214,6 @@ public class QuickJSContext {
 
     // The default is 1024 * 256, and 0 means unlimited.
     private native void setMaxStackSize(long context, int size);
+
+    private native boolean isLiveObject(long context, long objValue);
 }

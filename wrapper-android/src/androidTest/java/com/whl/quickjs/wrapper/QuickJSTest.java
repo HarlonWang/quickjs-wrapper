@@ -837,6 +837,16 @@ public class QuickJSTest {
         }
     }
 
+    @Test
+    public void testIsAliveObject() {
+        QuickJSContext context = QuickJSContext.create();
+        JSObject object = context.createNewJSObject();
+        context.getGlobalObject().setProperty("a", object);
+        assertTrue(object.isAlive());
+        context.destroyContext();
+        assertFalse(object.isAlive());
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {

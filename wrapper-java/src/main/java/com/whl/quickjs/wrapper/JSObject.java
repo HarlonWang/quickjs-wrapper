@@ -242,4 +242,8 @@ public class JSObject {
         }
     }
 
+    public boolean isAlive() {
+        return context.isLiveObject(this);
+    }
+
 }
