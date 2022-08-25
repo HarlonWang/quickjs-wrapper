@@ -82,6 +82,8 @@ public:
     void setMaxStackSize(jint stack_size) const;
 
     jboolean isLiveObject(jlong value) const;
+
+    void runGC() const;
 };
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

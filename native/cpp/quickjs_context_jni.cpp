@@ -141,3 +141,9 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_isLiveObject(JNIEnv *env, jobject th
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->isLiveObject(value);
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_runGC(JNIEnv *env, jobject thiz, jlong context) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    wrapper->runGC();
+}

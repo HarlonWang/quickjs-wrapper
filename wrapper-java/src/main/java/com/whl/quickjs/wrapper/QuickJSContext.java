@@ -186,6 +186,10 @@ public class QuickJSContext {
         return isLiveObject(context, jsObj.getPointer());
     }
 
+    public void runGC() {
+        runGC(context);
+    }
+
     // context
     private native long createContext();
     private native void destroyContext(long context);
@@ -216,4 +220,6 @@ public class QuickJSContext {
     private native void setMaxStackSize(long context, int size);
 
     private native boolean isLiveObject(long context, long objValue);
+
+    private native void runGC(long context);
 }

@@ -812,3 +812,7 @@ jboolean QuickJSWrapper::isLiveObject(jlong value) const {
 
     return JNI_FALSE;
 }
+
+void QuickJSWrapper::runGC() const {
+    JS_RunGC(runtime);
+}
