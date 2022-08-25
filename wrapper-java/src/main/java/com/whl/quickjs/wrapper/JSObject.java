@@ -246,4 +246,12 @@ public class JSObject {
         return context.isLiveObject(this);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JSObject jsObject = (JSObject) o;
+        return pointer == jsObject.pointer && isReleased == jsObject.isReleased && context == jsObject.context;
+    }
+
 }
