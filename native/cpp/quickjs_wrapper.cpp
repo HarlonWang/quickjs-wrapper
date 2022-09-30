@@ -2,7 +2,7 @@
 // Created by yonglan.whl on 2021/7/14.
 //
 #include "quickjs_wrapper.h"
-#include "quickjs/cutils.h"
+#include "../quickjs/cutils.h"
 
 // util
 static string getJavaName(JNIEnv* env, jobject javaClass) {

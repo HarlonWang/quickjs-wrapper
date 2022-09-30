@@ -11,7 +11,7 @@
 #include <queue>
 using namespace std;
 
-#include "quickjs/quickjs.h"
+#include "../quickjs/quickjs.h"
 #include <jni.h>
 #include <map>
 
