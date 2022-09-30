@@ -3,22 +3,7 @@ project(quickjs-java-wrapper)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CPP_PATH "../../../native/cpp")
-
-file(STRINGS "${CPP_PATH}/quickjs/VERSION" CONFIG_VERSION)
-
-add_definitions(-DCONFIG_VERSION=\"${CONFIG_VERSION}\")
-add_definitions(-DCONFIG_BIGNUM)
-
-file(GLOB wrapper_src
-        "${CPP_PATH}/*.cpp"
-        "${CPP_PATH}/*.h"
-        )
-
-file(GLOB quickjs_src
-        "${CPP_PATH}/quickjs/*.c"
-        "${CPP_PATH}/quickjs/*.h"
-        )
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../../CMakeLists.txt)
 
 add_library( # Sets the name of the library.
         quickjs-java-wrapper
