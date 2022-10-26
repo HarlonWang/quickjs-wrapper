@@ -42,9 +42,17 @@ cd make-3.24.0-rc5
 apt install ninja-build
 ```
 
-## 打包 so 链库
-```
-./gradlew wrapper-java:cmakeBuild
+## 构建动态链接库
+打开 `terminal` 窗口，执行以下命令：
+```shell
+// 进入 wrapper-java 目录
+cd wrapper-java
+
+// step 1
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S ./src/main -B ./build/cmake
+
+// step 2
+cmake --build ./build/cmake --target quickjs-java-wrapper -j 6
 ```
 
 ## 产物
