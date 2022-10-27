@@ -6,21 +6,3 @@ java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
-
-task("cmakeBuild") {
-    doFirst {
-        def shell = "cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S ${project.projectDir}/src/main -B ${project.projectDir}/build/cmake"
-        def process = shell.execute()
-        println process.inputStream.text
-        println process.errorStream.text
-        process.waitFor()
-        process.destroy()
-    }
-    doLast {
-        def process = "cmake --build ${project.projectDir}/build/cmake --target quickjs-java-wrapper -j 6".execute()
-        println process.inputStream.text
-        println process.errorStream.text
-        process.waitFor()
-        process.destroy()
-    }
-}
