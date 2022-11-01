@@ -14,6 +14,16 @@ extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_evaluate(JNIEnv *env, jobject thiz, jlong context, jstring script,
                                                      jstring file_name) {
+    if (script == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Script cannot be null");
+        return nullptr;
+    }
+
+    if (file_name == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File name cannot be null");
+        return nullptr;
+    }
+
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->evaluate(env, thiz, script, file_name);
 }
@@ -30,6 +40,11 @@ extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_getProperty(JNIEnv *env, jobject thiz, jlong context, jlong value,
                                                  jstring name) {
+    if (name == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Property Name cannot be null");
+        return nullptr;
+    }
+
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->getProperty(env, thiz, value, name);
 }
@@ -75,6 +90,11 @@ JNIEXPORT void JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_setProperty(JNIEnv *env, jobject thiz, jlong context,
                                                         jlong this_obj, jstring name,
                                                         jobject value) {
+    if (name == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Property Name cannot be null");
+        return;
+    }
+
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     wrapper->setProperty(env, thiz, this_obj, name, value);
 }extern "C"
@@ -99,12 +119,26 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_freeDupValue(JNIEnv *env, jobject th
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_parseJSON(JNIEnv *env, jobject thiz, jlong context,
                                                       jstring json) {
+    if (json == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "JSON cannot be null");
+        return nullptr;
+    }
+
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->parseJSON(env, thiz, json);
 }extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_compile(JNIEnv *env, jobject thiz, jlong context,
                                                     jstring source_code, jstring file_name) {
+    if (source_code == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Source code cannot be null");
+        return nullptr;
+    }
+
+    if (file_name == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File name cannot be null");
+        return nullptr;
+    }
 
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->compile(env, source_code, file_name);
@@ -118,6 +152,16 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_execute(JNIEnv *env, jobject thiz, j
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_evaluateModule(JNIEnv *env, jobject thiz, jlong context,
                                                            jstring script, jstring file_name) {
+    if (script == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Script cannot be null");
+        return nullptr;
+    }
+
+    if (file_name == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File name cannot be null");
+        return nullptr;
+    }
+
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->evaluateModule(env, thiz, script, file_name);
 }extern "C"

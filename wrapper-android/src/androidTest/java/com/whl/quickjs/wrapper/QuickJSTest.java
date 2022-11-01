@@ -847,6 +847,68 @@ public class QuickJSTest {
         assertFalse(object.isAlive());
     }
 
+    @Test
+    public void testNullExceptionWithGetProperty() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("Property Name cannot be null");
+
+        QuickJSContext context = QuickJSContext.create();
+        JSObject object = context.createNewJSObject();
+        object.getJSObject(null);
+        context.destroyContext();
+    }
+
+    @Test
+    public void testNullExceptionWithSetProperty() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("Property Name cannot be null");
+
+        QuickJSContext context = QuickJSContext.create();
+        JSObject object = context.createNewJSObject();
+        object.setProperty(null, context.getGlobalObject());
+        context.destroyContext();
+    }
+
+    @Test
+    public void testNullExceptionWithEval() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("Script cannot be null");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate(null);
+        context.destroyContext();
+    }
+
+    @Test
+    public void testNullExceptionWithCompile() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("Source code cannot be null");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.compile(null);
+        context.destroyContext();
+    }
+
+    @Test
+    public void testNullExceptionWithEvalModule() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("Script cannot be null");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluateModule(null);
+        context.destroyContext();
+    }
+
+    @Test
+    public void testNullExceptionWithParseJSON() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("JSON cannot be null");
+
+        QuickJSContext context = QuickJSContext.create();
+        context.parseJSON(null);
+        context.destroyContext();
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {
