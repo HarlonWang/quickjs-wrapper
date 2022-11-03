@@ -27,7 +27,7 @@ public class QuickJSContext {
         try {
             context = createContext();
         } catch (UnsatisfiedLinkError e) {
-            throw new QuickJSException("The so library must be initialized before createContext!");
+            throw new QuickJSException("The so library must be initialized before createContext! QuickJSLoader.init should be called on the Android platform. In the JVM, you need to manually call System.loadLibrary");
         }
         currentThreadId = Thread.currentThread().getId();
     }
