@@ -82,17 +82,28 @@ QuickJSContext context = QuickJSContext.create();
 context.evaluate("var a = 1 + 2;");
 ```
 
-### Supported Java Types
-Currently, the following Java types are supported with JavaScript:
+### Supported Types
+
+#### Java and JavaScript can directly convert to each other for the following basic types
 - `boolean`
 - `int` when calling JavaScript from Java.
 - `double`
 - `String`
 - `null`
+
+#### Mutual conversion of JS object types
 - `JSObject` represents a JavaScript object
 - `JSFunction` represents a JavaScript function
 - `JSArray` represents a JavaScript Array
-                
+
+#### About Long Type
+Because there is no Long type corresponding to Java in JavaScript, the conversion of Long type is special.
+- Long value can be directly transferred from Java to JavaScript, which will be converted to Int64 bit。
+- To convert a value from JavaScript to Java into a Long type, you need to use the Double type, as shown in the following example:
+    ```Java
+    ((Double)target).longValue());
+    ```
+
 ### Set Property
 Java
 

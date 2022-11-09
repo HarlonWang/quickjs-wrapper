@@ -79,17 +79,28 @@ QuickJSContext context = QuickJSContext.create();
 context.evaluate("var a = 1 + 2;");
 ```
 
-### 支持的 Java 类型
-以下的 Java 类型可以直接转换到 JavaScript 中使用:
+### 支持的类型
+
+#### 以下基础类型，Java 和 JavaScript 可以直接互转使用
 - `boolean`
-- `int` 
+- `int`
 - `double`
 - `String`
-- `null` 
+- `null`
+
+#### JS 对象类型的互转
 - `JSObject` 代表一个 JavaScript 对象
 - `JSFunction` 代表一个 JavaScript 方法
 - `JSArray` 代表一个 JavaScript 数组
-                
+
+#### 关于 Long 类型
+因为 JavaScript 里没有对应 Java 的 Long 类型，所以，Long 类型的转换比较特殊。
+- 从 Java 可以直接传 Long 值到 JavaScript，会转为 Int64 位。
+- 从 JavaScript 传值到 Java 转为为 Long 类型，需要借助 Double 类型，示例如下：
+    ```Java
+    ((Double)target).longValue());
+    ```
+
 ### 属性设置
 Java
 
@@ -173,4 +184,4 @@ console.log('age：' + age); // 18
 
 - [quickjs-java](https://github.com/cashapp/quickjs-java)
 - [quack](https://github.com/koush/quack)
-- [quickjs-android](https://github.com/taoweiji/quickjs-android)                
+- [quickjs-android](https://github.com/taoweiji/quickjs-android)
