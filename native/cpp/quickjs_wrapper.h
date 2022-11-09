@@ -31,6 +31,7 @@ public:
     jclass objectClass;
     jclass booleanClass;
     jclass integerClass;
+    jclass longClass;
     jclass doubleClass;
     jclass stringClass;
     jclass jsObjectClass;
@@ -41,10 +42,12 @@ public:
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
+    jmethodID longValueOf;
     jmethodID doubleValueOf;
 
     jmethodID booleanGetValue;
     jmethodID integerGetValue;
+    jmethodID longGetValue;
     jmethodID doubleGetValue;
     jmethodID jsObjectGetValue;
 

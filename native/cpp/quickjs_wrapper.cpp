@@ -325,6 +325,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
     integerClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
+    longClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Long")));
     doubleClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Double")));
     stringClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/String")));
     jsObjectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObject")));
@@ -335,10 +336,12 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
+    longValueOf = jniEnv->GetStaticMethodID(longClass, "valueOf", "(J)Ljava/lang/Long;");
     doubleValueOf = jniEnv->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
 
     booleanGetValue = jniEnv->GetMethodID(booleanClass, "booleanValue", "()Z");
     integerGetValue = jniEnv->GetMethodID(integerClass, "intValue", "()I");
+    longGetValue = jniEnv->GetMethodID(longClass, "longValue", "()J");
     doubleGetValue = jniEnv->GetMethodID(doubleClass, "doubleValue", "()D");
     jsObjectGetValue = jniEnv->GetMethodID(jsObjectClass, "getPointer", "()J");
 
@@ -354,6 +357,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(objectClass);
     jniEnv->DeleteGlobalRef(doubleClass);
     jniEnv->DeleteGlobalRef(integerClass);
+    jniEnv->DeleteGlobalRef(longClass);
     jniEnv->DeleteGlobalRef(booleanClass);
     jniEnv->DeleteGlobalRef(stringClass);
     jniEnv->DeleteGlobalRef(jsObjectClass);
@@ -585,6 +589,8 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
             propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
         } else if (env->IsAssignableFrom(classType, integerClass)) {
             propValue = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
+        } else if (env->IsAssignableFrom(classType, longClass)) {
+            propValue = JS_NewInt64(context, env->CallLongMethod(value, longGetValue));
         } else if (env->IsAssignableFrom(classType, booleanClass)) {
             propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
         } else {
@@ -664,6 +670,8 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
         result = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
     } else if (env->IsAssignableFrom(classType, integerClass)) {
         result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
+    } else if(env->IsAssignableFrom(classType, longClass)) {
+        result = JS_NewInt64(context, env->CallLongMethod(value, longGetValue));
     } else if (env->IsAssignableFrom(classType, booleanClass)) {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else if (env->IsInstanceOf(value, jsObjectClass)) {

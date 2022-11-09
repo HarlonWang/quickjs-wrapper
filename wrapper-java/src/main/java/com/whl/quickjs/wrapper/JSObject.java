@@ -36,6 +36,10 @@ public class JSObject {
         context.setProperty(this, name, value);
     }
 
+    public void setProperty(String name, long value) {
+        context.setProperty(this, name, value);
+    }
+
     public void setProperty(String name, JSObject value) {
         context.setProperty(this, name, value);
     }

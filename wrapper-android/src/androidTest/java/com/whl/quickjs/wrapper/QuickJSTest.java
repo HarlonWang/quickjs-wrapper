@@ -909,6 +909,19 @@ public class QuickJSTest {
         context.destroyContext();
     }
 
+    @Test
+    public void testLongValue() {
+        QuickJSContext context = QuickJSContext.create();
+        long currentTime = System.currentTimeMillis();
+        context.getGlobalObject().setProperty("getLongValue", args -> currentTime);
+        context.getGlobalObject().setProperty("assert", args -> {
+            assertEquals(currentTime, ((Double)args[0]).longValue());
+            return null;
+        });
+        context.evaluate("var l = getLongValue();assert(l);");
+        context.destroyContext();
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {
