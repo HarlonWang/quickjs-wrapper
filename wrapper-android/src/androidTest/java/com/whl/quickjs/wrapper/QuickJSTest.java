@@ -25,7 +25,8 @@ public class QuickJSTest {
     @Test
     public void createQuickJSContextTest() {
         QuickJSContext context = QuickJSContext.create();
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -38,7 +39,8 @@ public class QuickJSTest {
 
         JSObject globalObject = context.getGlobalObject();
         assertEquals(123, globalObject.getProperty("a"));
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -61,7 +63,8 @@ public class QuickJSTest {
         assertEquals("HarlonWang", context.evaluate("obj1.functionProperty(\"Harlon\");"));
         assertNull(context.evaluate("obj1.nullProperty;"));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -84,7 +87,8 @@ public class QuickJSTest {
         assertNull(obj1.getProperty("nullProperty"));
         assertEquals("HarlonWang", obj1.getJSFunction("functionProperty").call("Harlon"));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -97,7 +101,8 @@ public class QuickJSTest {
                 "test(3);");
         assertEquals(3, ret.get(2));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -110,7 +115,8 @@ public class QuickJSTest {
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -123,7 +129,8 @@ public class QuickJSTest {
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, undefined-13", func.call(null, -1, 3));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -141,7 +148,8 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("Unsupported Java type"));
         }
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -164,7 +172,8 @@ public class QuickJSTest {
 
         context.evaluate("console.log(123)");
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -207,7 +216,8 @@ public class QuickJSTest {
         JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
         jsFunction.call();
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -217,7 +227,8 @@ public class QuickJSTest {
         context.getGlobalObject().setProperty("test1", (JSObject) context.getGlobalObject().getProperty("test"));
 
         assertEquals("{\"count\":0}", context.getGlobalObject().getJSObject("test1").stringify());
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -231,7 +242,8 @@ public class QuickJSTest {
         context.getGlobalObject().setProperty("test", result);
         assertEquals(text, context.getGlobalObject().getJSObject("test").stringify());
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -242,7 +254,8 @@ public class QuickJSTest {
         a.setProperty("test", context.parseJSON(text));
         Object ret = context.evaluate("a.test.leadsId;");
         assertEquals("270", ret);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -253,7 +266,8 @@ public class QuickJSTest {
         a.getJSObject("b").setProperty("test", context.parseJSON(text));
         Object ret = context.evaluate("a.b.test.leadsId;");
         assertEquals("270", ret);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -264,7 +278,8 @@ public class QuickJSTest {
 
         JSObject ret = (JSObject) context.evaluate("var a = test(); a;");
         assertEquals(text, ret.stringify());
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -278,7 +293,8 @@ public class QuickJSTest {
         assertEquals(2, ret.get(1));
         assertEquals(3, ret.get(2));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -293,7 +309,8 @@ public class QuickJSTest {
                 "var user = new User();\n" +
                 "user.name;");
         assertEquals("HarlonWang", ret);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -310,7 +327,8 @@ public class QuickJSTest {
             }
         }
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -321,7 +339,8 @@ public class QuickJSTest {
         } catch (Exception e) {
             assertTrue(e.getMessage().contains("not a function"));
         }
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -336,7 +355,8 @@ public class QuickJSTest {
                 "            ? Promise.resolve().then.bind(Promise.resolve())\n" +
                 "            : setTimeout;\n" +
                 "    defer(() => { assert('哈哈'); });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -365,14 +385,16 @@ public class QuickJSTest {
                 "assert0(p.a, p.b);      // 1, undefined\n" +
                 "assert1('c' in p, p.c); // false, 37");
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test(expected = QuickJSException.class)
     public void testQuickJSException() {
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("a;");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -380,7 +402,8 @@ public class QuickJSTest {
         QuickJSContext context = QuickJSContext.create();
         context.getGlobalObject().setProperty("test", (JSCallFunction) args -> context.parseJSON("{}"));
         context.evaluate("test();test();test();");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -391,7 +414,8 @@ public class QuickJSTest {
         JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
         Object result = function.call(jsObject);
         assertEquals("{ name: {  } }", result.toString());
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -403,7 +427,8 @@ public class QuickJSTest {
         JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
         Object result = function.call(jsArray);
         assertEquals("[ 11, 222 ]", result.toString());
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -412,7 +437,8 @@ public class QuickJSTest {
         String result = (String) context.evaluate("__format_string(this);");
         assertEquals(result, "{ __format_string: function __format_string() }");
         assertEquals(context.getGlobalObject().toString(), "{ __format_string: function __format_string() }");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -424,7 +450,8 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("'a' is not a function"));
         }
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -554,7 +581,8 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("'navigsateTo' is not a function"));
         }
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -565,7 +593,8 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("'[object Object]' is not a function"));
         }
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -576,7 +605,8 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("stack overflow"));
         }
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -587,7 +617,8 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("missing formal parameter"));
         }
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -598,7 +629,8 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("stack overflow"));
         }
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     public static class TestJava {
@@ -641,7 +673,8 @@ public class QuickJSTest {
         assertTrue((boolean) context.evaluate("test1.testObject({'arg1':'a', 'arg2':18});"));
         assertTrue((boolean) context.evaluate("test1.testAll({'arg1':'a', 'arg2':18}, [1,2,3],18, 'name');"));
 
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test(expected = QuickJSException.class)
@@ -653,7 +686,8 @@ public class QuickJSTest {
             return null;
         });
         context.evaluate("onError = (e) => { assertTrue(e instanceof Error, e.message); }; a();");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -663,7 +697,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("new Promise(() => { aaa; });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -675,7 +710,8 @@ public class QuickJSTest {
             return null;
         });
         context.evaluate("new Promise(() => { aaa; }).catch((res) => { assert(res.message); });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -685,7 +721,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("new Promise((resolve, reject) => { reject(1); });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -695,7 +732,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("new Promise((resolve, reject) => { reject(1); }); new Promise(() => { aaa; });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -706,7 +744,8 @@ public class QuickJSTest {
             return null;
         });
         context.evaluate("new Promise((resolve, reject) => { resolve(1); }).then((res) => { assert(res); });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -716,7 +755,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("new Promise((resolve, reject) => { reject(1); }).then((res) => { res; });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -726,7 +766,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluate("new Promise((resolve, reject) => { reject(1); }).catch((res) => { a; });");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -745,7 +786,8 @@ public class QuickJSTest {
                 "}).catch((res) => {\n" +
                 "    t2(res);\n" +
                 "});\n");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -768,7 +810,8 @@ public class QuickJSTest {
                 "}).catch((res) => {\n" +
                 "    t2(res);\n" +
                 "});");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -790,7 +833,8 @@ public class QuickJSTest {
                 "}).catch((res) => {\n" +
                 "    t4.log(res);\n" +
                 "});\n");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -804,7 +848,8 @@ public class QuickJSTest {
                 "}).then(() => {\n" +
                 "  throw new Error('bad');\n" +
                 "});");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -815,7 +860,8 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.isJSError());
         }
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -843,7 +889,8 @@ public class QuickJSTest {
         JSObject object = context.createNewJSObject();
         context.getGlobalObject().setProperty("a", object);
         assertTrue(object.isAlive());
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
         assertFalse(object.isAlive());
     }
 
@@ -855,7 +902,8 @@ public class QuickJSTest {
         QuickJSContext context = QuickJSContext.create();
         JSObject object = context.createNewJSObject();
         object.getJSObject(null);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -866,7 +914,8 @@ public class QuickJSTest {
         QuickJSContext context = QuickJSContext.create();
         JSObject object = context.createNewJSObject();
         object.setProperty(null, context.getGlobalObject());
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -876,7 +925,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluate(null);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -886,7 +936,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.compile(null);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -896,7 +947,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.evaluateModule(null);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -906,7 +958,8 @@ public class QuickJSTest {
 
         QuickJSContext context = QuickJSContext.create();
         context.parseJSON(null);
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
@@ -919,7 +972,8 @@ public class QuickJSTest {
             return null;
         });
         context.evaluate("var l = getLongValue();assert(l);");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     // todo fix

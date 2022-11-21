@@ -57,7 +57,7 @@ public:
     jmethodID jsGetModuleScript;
     jmethodID jsConvertModuleName;
 
-    QuickJSWrapper(JNIEnv *env);
+    QuickJSWrapper(JNIEnv *env, JSRuntime *rt);
     ~QuickJSWrapper();
 
     jobject evaluate(JNIEnv*, jobject thiz, jstring script, jstring file_name);

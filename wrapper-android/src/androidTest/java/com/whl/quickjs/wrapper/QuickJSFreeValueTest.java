@@ -21,7 +21,8 @@ public class QuickJSFreeValueTest {
 
     @After
     public void teardown() {
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test

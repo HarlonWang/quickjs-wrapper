@@ -306,9 +306,9 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     }
 }
 
-QuickJSWrapper::QuickJSWrapper(JNIEnv *env) {
+QuickJSWrapper::QuickJSWrapper(JNIEnv *env, JSRuntime *rt) {
     jniEnv = env;
-    runtime = JS_NewRuntime();
+    runtime = rt;
 
     // init ES6Module
     JS_SetModuleLoaderFunc(runtime, jsModuleNormalizeFunc, jsModuleLoaderFunc, nullptr);
@@ -374,7 +374,6 @@ QuickJSWrapper::~QuickJSWrapper() {
     values.clear();
 
     JS_FreeContext(context);
-    JS_FreeRuntime(runtime);
 }
 
 jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold){

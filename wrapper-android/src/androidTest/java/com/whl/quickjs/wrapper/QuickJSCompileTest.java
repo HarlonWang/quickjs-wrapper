@@ -1,6 +1,5 @@
 package com.whl.quickjs.wrapper;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -14,40 +13,46 @@ public class QuickJSCompileTest {
     @Before
     public void setup() {
         QuickJSLoader.init();
-        context = QuickJSContext.create();
-    }
-
-    @After
-    public void teardown() {
-        context.destroyContext();
     }
 
     @Test
     public void helloWorld() {
-        byte[] code = context.compile("'hello, world!'.toUpperCase();");
-
-        context.destroyContext();
         context = QuickJSContext.create();
+        byte[] code = context.compile("'hello, world!'.toUpperCase();");
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
 
+        context = QuickJSContext.create();
         Object hello = context.execute(code);
         assertEquals(hello, "HELLO, WORLD!");
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test
     public void testPromise() {
+        context = QuickJSContext.create();
         byte[] bytes = context.compile("var ret; new Promise((resolve, reject) => { ret = 'resolved'; }); ret;");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
+
         context = QuickJSContext.create();
         Object ret = context.execute(bytes);
         assertEquals(ret, "resolved");
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
     @Test(expected = QuickJSException.class)
     public void testThrowErrorWithFileName() {
+        context = QuickJSContext.create();
         byte[] bytes = context.compile("test;", "test.js");
-        context.destroyContext();
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
         context = QuickJSContext.create();
         context.execute(bytes);
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
 }

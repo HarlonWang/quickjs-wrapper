@@ -40,6 +40,9 @@ public class QuickJSModuleTest {
                 "assertName(name);\n" +
                 "assertAge(age);\n" +
                 "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { assertNameUpdated(res); });");
+
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
     }
 
 

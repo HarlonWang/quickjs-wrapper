@@ -4,16 +4,32 @@ public class QuickJSContext {
 
     private static final String UNKNOWN_FILE = "unknown.js";
 
-    public static QuickJSContext create() {
-        return new QuickJSContext();
+    public static QuickJSContext create(long runtime) {
+        return new QuickJSContext(runtime);
     }
 
-    public static QuickJSContext create(int maxStackSize) {
-        QuickJSContext context = create();
+    @Deprecated
+    public static QuickJSContext create() {
+        return new QuickJSContext(createRuntime());
+    }
+
+    public static QuickJSContext create(long runtime, int maxStackSize) {
+        QuickJSContext context = create(runtime);
         context.setMaxStackSize(maxStackSize);
         return context;
     }
 
+    public static QuickJSContext create(int maxStackSize) {
+        QuickJSContext context = create(createRuntime());
+        context.setMaxStackSize(maxStackSize);
+        return context;
+    }
+
+    public static void destroyRuntime(QuickJSContext context) {
+        destroyRuntime(context.getRuntime());
+    }
+
+    private final long runtime;
     private final long context;
     private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
         @Override
@@ -23,13 +39,18 @@ public class QuickJSContext {
     };
     private final long currentThreadId;
 
-    private QuickJSContext() {
+    private QuickJSContext(long runtime) {
+        this.runtime = runtime;
         try {
-            context = createContext();
+            context = createContext(runtime);
         } catch (UnsatisfiedLinkError e) {
             throw new QuickJSException("The so library must be initialized before createContext! QuickJSLoader.init should be called on the Android platform. In the JVM, you need to manually call System.loadLibrary");
         }
         currentThreadId = Thread.currentThread().getId();
+    }
+
+    public long getRuntime() {
+        return runtime;
     }
 
     private void checkSameThread() {
@@ -53,7 +74,7 @@ public class QuickJSContext {
         return getGlobalObject(context);
     }
 
-    public void destroyContext() {
+    public void destroy() {
         checkSameThread();
 
         nativeCleaner.forceClean();
@@ -190,8 +211,12 @@ public class QuickJSContext {
         runGC(context);
     }
 
+    // runtime
+    public static native long createRuntime();
+    public static native void destroyRuntime(long runtime);
+
     // context
-    private native long createContext();
+    private native long createContext(long runtime);
     private native void destroyContext(long context);
 
     private native Object evaluate(long context, String script, String fileName);

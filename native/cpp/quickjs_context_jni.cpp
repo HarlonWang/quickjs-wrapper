@@ -77,8 +77,8 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_get(JNIEnv *env, jobject thiz, jlong
     return wrapper->get(env, thiz, value, index);
 }extern "C"
 JNIEXPORT jlong JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz) {
-    auto *wrapper = new(std::nothrow) QuickJSWrapper(env);
+Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz, jlong runtime) {
+    auto *wrapper = new(std::nothrow) QuickJSWrapper(env, reinterpret_cast<JSRuntime *>(runtime));
     if (!wrapper || !wrapper->context || !wrapper->runtime) {
         delete wrapper;
         wrapper = nullptr;
@@ -190,4 +190,17 @@ JNIEXPORT void JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_runGC(JNIEnv *env, jobject thiz, jlong context) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     wrapper->runGC();
+}
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_createRuntime(JNIEnv *env, jclass clazz) {
+    auto *rt = JS_NewRuntime();
+    return reinterpret_cast<jlong>(rt);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_destroyRuntime(JNIEnv *env, jclass clazz,
+                                                           jlong runtime) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    JS_FreeRuntime(rt);
 }
