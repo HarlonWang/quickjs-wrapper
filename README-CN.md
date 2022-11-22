@@ -72,6 +72,14 @@ QuickJSLoader.init();
 QuickJSContext context = QuickJSContext.create();
 ```
 
+### 销毁 JSContext
+
+```Java
+QuickJSContext context = QuickJSContext.create();
+context.destroy();
+QuickJSContext.destroyRuntime(context);
+```
+
 ### 执行 JavaScript
 
 ```Java

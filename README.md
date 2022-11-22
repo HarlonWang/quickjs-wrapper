@@ -75,6 +75,14 @@ QuickJSLoader.init();
 QuickJSContext context = QuickJSContext.create();
 ```
 
+### Destroy QuickJSContext
+
+```Java
+QuickJSContext context = QuickJSContext.create();
+context.destroy();
+QuickJSContext.destroyRuntime(context);
+```
+
 ### Evaluating JavaScript
 
 ```Java
