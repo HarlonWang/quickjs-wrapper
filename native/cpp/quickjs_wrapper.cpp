@@ -803,20 +803,3 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     JS_FreeValue(context, global);
     return jsObj;
 }
-
-void QuickJSWrapper::setMaxStackSize(jint stack_size) const {
-    JS_SetMaxStackSize(runtime, stack_size);
-}
-
-jboolean QuickJSWrapper::isLiveObject(jlong value) const {
-    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
-    if (JS_IsLiveObject(runtime, jsObj)) {
-        return JNI_TRUE;
-    }
-
-    return JNI_FALSE;
-}
-
-void QuickJSWrapper::runGC() const {
-    JS_RunGC(runtime);
-}

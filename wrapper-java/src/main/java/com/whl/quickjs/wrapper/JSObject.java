@@ -247,7 +247,7 @@ public class JSObject {
     }
 
     public boolean isAlive() {
-        return context.isLiveObject(this);
+        return QuickJSContext.isLiveObject(context.getRuntime(), this);
     }
 
     @Override

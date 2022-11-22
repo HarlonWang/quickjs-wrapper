@@ -599,7 +599,8 @@ public class QuickJSTest {
 
     @Test
     public void testStackOverflowWithStackSize() {
-        QuickJSContext context = QuickJSContext.create(1024);
+        QuickJSContext context = QuickJSContext.create();
+        QuickJSContext.setMaxStackSize(context, 1024);
         try {
             context.evaluate("function y(){}");
         } catch (QuickJSException e) {
@@ -623,7 +624,8 @@ public class QuickJSTest {
 
     @Test
     public void testStackSizeWithLimited() {
-        QuickJSContext context = QuickJSContext.create(1024 * 512);
+        QuickJSContext context = QuickJSContext.create();
+        QuickJSContext.setMaxStackSize(context, 1024 * 512);
         try {
             context.evaluate("function y(){y();} y();");
         } catch (QuickJSException e) {

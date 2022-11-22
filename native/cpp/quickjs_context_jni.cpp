@@ -173,23 +173,28 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_set(JNIEnv *env, jobject thiz, jlong
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_setMaxStackSize(JNIEnv *env, jobject thiz,
-                                                            jlong context, jint size) {
-    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    wrapper->setMaxStackSize(size);
+Java_com_whl_quickjs_wrapper_QuickJSContext_setMaxStackSize(JNIEnv *env, jclass thiz,
+                                                            jlong runtime, jint size) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    JS_SetMaxStackSize(rt, size);
 }
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_isLiveObject(JNIEnv *env, jobject thiz, jlong context,
+Java_com_whl_quickjs_wrapper_QuickJSContext_isLiveObject(JNIEnv *env, jclass thiz, jlong runtime,
                                                          jlong value) {
-    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->isLiveObject(value);
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    if (JS_IsLiveObject(rt, jsObj)) {
+        return JNI_TRUE;
+    }
+
+    return JNI_FALSE;
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_runGC(JNIEnv *env, jobject thiz, jlong context) {
-    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    wrapper->runGC();
+Java_com_whl_quickjs_wrapper_QuickJSContext_runGC(JNIEnv *env, jclass thiz, jlong runtime) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    JS_RunGC(rt);
 }
 extern "C"
 JNIEXPORT jlong JNICALL

@@ -81,12 +81,6 @@ public:
     jobject execute(JNIEnv*, jobject, jbyteArray);
 
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
-
-    void setMaxStackSize(jint stack_size) const;
-
-    jboolean isLiveObject(jlong value) const;
-
-    void runGC() const;
 };
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

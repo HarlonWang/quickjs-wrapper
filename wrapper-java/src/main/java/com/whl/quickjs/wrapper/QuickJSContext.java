@@ -8,25 +8,28 @@ public class QuickJSContext {
         return new QuickJSContext(runtime);
     }
 
-    @Deprecated
     public static QuickJSContext create() {
         return new QuickJSContext(createRuntime());
     }
 
-    public static QuickJSContext create(long runtime, int maxStackSize) {
-        QuickJSContext context = create(runtime);
-        context.setMaxStackSize(maxStackSize);
-        return context;
-    }
-
-    public static QuickJSContext create(int maxStackSize) {
-        QuickJSContext context = create(createRuntime());
-        context.setMaxStackSize(maxStackSize);
-        return context;
-    }
-
     public static void destroyRuntime(QuickJSContext context) {
         destroyRuntime(context.getRuntime());
+    }
+
+    public static boolean isLiveObject(long runtime, JSObject jsObj) {
+        return isLiveObject(runtime, jsObj.getPointer());
+    }
+
+    public static boolean isLiveObject(QuickJSContext context, JSObject jsObj) {
+        return isLiveObject(context.getRuntime(), jsObj.getPointer());
+    }
+
+    public static void setMaxStackSize(QuickJSContext context, int maxStackSize) {
+        setMaxStackSize(context.getRuntime(), maxStackSize);
+    }
+
+    public static void runGC(QuickJSContext context) {
+        runGC(context.getRuntime());
     }
 
     private final long runtime;
@@ -198,32 +201,20 @@ public class QuickJSContext {
         evaluate(errorScript);
     }
 
-    public void setMaxStackSize(int maxStackSize) {
-        checkSameThread();
-        setMaxStackSize(context, maxStackSize);
-    }
-
-    public boolean isLiveObject(JSObject jsObj) {
-        return isLiveObject(context, jsObj.getPointer());
-    }
-
-    public void runGC() {
-        runGC(context);
-    }
-
     // runtime
     public static native long createRuntime();
     public static native void destroyRuntime(long runtime);
+    private static native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
+    private static native boolean isLiveObject(long runtime, long objValue);
+    private static native void runGC(long runtime);
 
     // context
     private native long createContext(long runtime);
     private native void destroyContext(long context);
-
     private native Object evaluate(long context, String script, String fileName);
     private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
     private native Object call(long context, long func, long thisObj, Object[] args);
-
     private native Object getProperty(long context, long objValue, String name);
     private native void setProperty(long context, long objValue, String name, Object value);
     private native String stringify(long context, long objValue);
@@ -233,18 +224,7 @@ public class QuickJSContext {
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);
-
-    // JSON.parse
     private native JSObject parseJSON(long context, String json);
-
-    // bytecode
-    private native byte[] compile(long context, String sourceCode, String fileName);
-    private native Object execute(long context, byte[] bytecode);
-
-    // The default is 1024 * 256, and 0 means unlimited.
-    private native void setMaxStackSize(long context, int size);
-
-    private native boolean isLiveObject(long context, long objValue);
-
-    private native void runGC(long context);
+    private native byte[] compile(long context, String sourceCode, String fileName); // Bytecode compile
+    private native Object execute(long context, byte[] bytecode); // Bytecode execute
 }
