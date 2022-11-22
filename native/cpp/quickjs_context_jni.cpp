@@ -216,3 +216,22 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_setMemoryLimit(JNIEnv *env, jclass c
     auto *rt = reinterpret_cast<JSRuntime*>(runtime);
     JS_SetMemoryLimit(rt, size);
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_dumpMemoryUsage(JNIEnv *env, jclass clazz,
+                                                            jlong runtime, jstring file_name) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    const char *path = env->GetStringUTFChars(file_name, JNI_FALSE);
+    auto file = fopen(path, "w");
+    env->ReleaseStringUTFChars(file_name, path);
+    if (!file) {
+        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File cannot be null");
+        return;
+    }
+
+    JSMemoryUsage stats;
+    JS_ComputeMemoryUsage(rt, &stats);
+    JS_DumpMemoryUsage(file, &stats, rt);
+
+    fclose(file);
+}

@@ -1,5 +1,6 @@
 package com.whl.quickjs.wrapper;
 
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -10,7 +11,12 @@ import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.whl.quickjs.android.QuickJSLoader;
+
+import java.io.File;
+import java.io.IOException;
 
 public class QuickJSTest {
 
@@ -974,6 +980,22 @@ public class QuickJSTest {
             return null;
         });
         context.evaluate("var l = getLongValue();assert(l);");
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
+    }
+
+    @Test
+    public void dumpMemoryUsageTest() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("var a = 100000; var b = 2000000; var c= a + b;");
+        Context androidContext = ApplicationProvider.getApplicationContext();
+        File file = new File(androidContext.getCacheDir(), "dump_memory.txt");
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        QuickJSContext.dumpMemoryUsage(context, file);
         context.destroy();
         QuickJSContext.destroyRuntime(context);
     }

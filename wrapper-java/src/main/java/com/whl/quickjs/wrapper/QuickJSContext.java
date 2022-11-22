@@ -1,5 +1,7 @@
 package com.whl.quickjs.wrapper;
 
+import java.io.File;
+
 public class QuickJSContext {
 
     private static final String UNKNOWN_FILE = "unknown.js";
@@ -28,12 +30,20 @@ public class QuickJSContext {
         setMaxStackSize(context.getRuntime(), maxStackSize);
     }
 
+    public static void runGC(QuickJSContext context) {
+        runGC(context.getRuntime());
+    }
+
     public static void setMemoryLimit(QuickJSContext context, int memoryLimitSize) {
         setMemoryLimit(context.getRuntime(), memoryLimitSize);
     }
 
-    public static void runGC(QuickJSContext context) {
-        runGC(context.getRuntime());
+    public static void dumpMemoryUsage(QuickJSContext context, File target) {
+        if (target == null || !target.exists()) {
+            return;
+        }
+
+        dumpMemoryUsage(context.getRuntime(), target.getAbsolutePath());
     }
 
     private final long runtime;
@@ -212,6 +222,7 @@ public class QuickJSContext {
     private static native boolean isLiveObject(long runtime, long objValue);
     private static native void runGC(long runtime);
     private static native void setMemoryLimit(long runtime, int size);
+    private static native void dumpMemoryUsage(long runtime, String fileName);
 
     // context
     private native long createContext(long runtime);
