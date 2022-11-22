@@ -28,6 +28,10 @@ public class QuickJSContext {
         setMaxStackSize(context.getRuntime(), maxStackSize);
     }
 
+    public static void setMemoryLimit(QuickJSContext context, int memoryLimitSize) {
+        setMemoryLimit(context.getRuntime(), memoryLimitSize);
+    }
+
     public static void runGC(QuickJSContext context) {
         runGC(context.getRuntime());
     }
@@ -207,6 +211,7 @@ public class QuickJSContext {
     private static native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
     private static native boolean isLiveObject(long runtime, long objValue);
     private static native void runGC(long runtime);
+    private static native void setMemoryLimit(long runtime, int size);
 
     // context
     private native long createContext(long runtime);
