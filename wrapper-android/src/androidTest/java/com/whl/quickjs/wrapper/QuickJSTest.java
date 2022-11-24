@@ -1000,6 +1000,28 @@ public class QuickJSTest {
         QuickJSContext.destroyRuntime(context);
     }
 
+    @Test
+    public void testGetNativeFuncName() {
+        QuickJSContext context = QuickJSContext.create();
+
+        context.getGlobalObject().setProperty("console", context.createNewJSObject());
+
+        JSObject console = context.getGlobalObject().getJSObject("console");
+        console.setProperty("log", args -> {
+            assertEquals("nativeCall", args[0].toString());
+            return null;
+        });
+
+        context.evaluate("var nativeObj = {};");
+
+        JSObject tinyDOM = context.getGlobalObject().getJSObject("nativeObj");
+        tinyDOM.setProperty("nativeCall", args -> null);
+
+        context.evaluate("console.log(nativeObj.nativeCall.name);");
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {

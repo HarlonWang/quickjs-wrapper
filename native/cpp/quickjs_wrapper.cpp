@@ -573,6 +573,8 @@ void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject valu
 void
 QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) const {
     JSValue propValue;
+    const char* propName = env->GetStringUTFChars(name, JNI_FALSE);
+
     if (value == nullptr) {
         propValue = JS_UNDEFINED;
     } else {
@@ -594,8 +596,17 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
                 // 这里的 obj 是用来获取 JSFuncCallback 对象的
                 JSValue obj = JS_NewObjectClass(context, js_func_callback_class_id);
                 propValue = JS_NewCFunctionData(context, jsFnCallback, 1, 0, 1, &obj);
-                // 因为 JS_NewCFunctionData 有 dupValue obj，这里需要对 obj 计数减一，保持计数平衡
+                // JS_NewCFunctionData 有 dupValue obj，这里需要对 obj 计数减一，保持计数平衡
                 JS_FreeValue(context, obj);
+
+                // 通过 JS_NewCFunctionData 创建的 fn 对象的 name 属性值被定义为 Empty 了，
+                // 这里需要额外定义下，不然 js 层拿到的 fn.name 的值为空.
+                JSAtom name_atom = JS_NewAtom(context, propName);
+                JSAtom name_atom_key = JS_NewAtom(context, "name");
+                JS_DefinePropertyValue(context, propValue, name_atom_key,
+                                       JS_AtomToString(context, name_atom), JS_PROP_CONFIGURABLE);
+                JS_FreeAtom(context, name_atom);
+                JS_FreeAtom(context, name_atom_key);
 
                 auto *jsFc = new JSFuncCallback;
                 jsFc->value = env->NewGlobalRef(value);
@@ -618,7 +629,6 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
     }
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
-    const char* propName = env->GetStringUTFChars(name, JNI_FALSE);
     JS_SetPropertyStr(context, jsObj, propName, propValue);
 
     env->ReleaseStringUTFChars(name, propName);
