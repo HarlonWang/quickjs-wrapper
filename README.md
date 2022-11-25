@@ -80,6 +80,7 @@ QuickJSContext context = QuickJSContext.create();
 ```Java
 QuickJSContext context = QuickJSContext.create();
 context.destroy();
+// Must be after context.destroy called.
 QuickJSContext.destroyRuntime(context);
 ```
 
