@@ -566,6 +566,12 @@ public class QuickJSTest {
         }
 
         try {
+            context.evaluate("var a = {}; a.b();");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'b' is not a function"));
+        }
+
+        try {
             context.evaluate("function test (){var a = {}; var b = 1;var c = 1; var d = 1; var e = 1; function test1 () {b = a; c = a; d = e; c = b;e(); } test1();} test();");
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("'e' is not a function"));
