@@ -14,13 +14,15 @@ public class QuickJSModuleTest {
     @Test
     public void testModule() {
         QuickJSLoader.init();
-        JSModule.setModuleLoader(moduleName -> {
-            if (moduleName.equals("a.js")) {
-                return "export var name = 'Jack';\n" +
-                        "export var age = 18;";
+        JSModule.setModuleLoader(new JSModuleLoader() {
+            @Override
+            public String getModuleScript(String moduleName) {
+                if (moduleName.equals("a.js")) {
+                    return "export var name = 'Jack';\n" +
+                            "export var age = 18;";
+                }
+                return null;
             }
-
-            return null;
         });
         QuickJSContext context = QuickJSContext.create();
         context.getGlobalObject().setProperty("assertName", args -> {
