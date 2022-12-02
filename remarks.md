@@ -6,7 +6,7 @@
 ## 日志调试
 在 `quickjs.c` 文件加入以下代码，可以在 `Android` 层打印 `logcat` 日志，方便排查泄漏问题
 
-        // 注意需要放在 `#include <stdio.h>` 后面，不然会编译报错
+        // 注意需要放在 #include <stdio.h> 后面，不然会编译报错
         #include <android/log.h>
         #define printf(...) __android_log_print(ANDROID_LOG_DEBUG, "__quickjs__", __VA_ARGS__);
         
