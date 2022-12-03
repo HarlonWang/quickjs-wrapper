@@ -26,6 +26,7 @@ public class QuickJSTest {
     @Before
     public void initSo() {
         QuickJSLoader.init();
+        QuickJSLoader.startRedirectingStdoutStderr("QuickJSTest");
     }
 
     @Test

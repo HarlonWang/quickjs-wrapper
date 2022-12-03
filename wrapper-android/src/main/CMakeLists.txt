@@ -9,6 +9,10 @@ project(quickjs-android-wrapper)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../../CMakeLists.txt)
 
+file(GLOB android_src
+        "cpp/quickjs_android.cpp"
+        )
+
 add_library( # Sets the name of the library.
         quickjs-android-wrapper
 
@@ -16,7 +20,7 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        ${wrapper_src} ${quickjs_src})
+        ${wrapper_src} ${quickjs_src} ${android_src})
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

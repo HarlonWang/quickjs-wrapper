@@ -9,4 +9,10 @@ public final class QuickJSLoader {
         System.loadLibrary("quickjs-android-wrapper");
     }
 
+    /**
+     * Start threads to show stdout and stderr in logcat.
+     * @param tag Android Tag
+     */
+    public native static void startRedirectingStdoutStderr(String tag);
+
 }
