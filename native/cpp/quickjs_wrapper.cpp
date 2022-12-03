@@ -455,6 +455,7 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
     }
 
     if (!executePendingJobLoop(env, runtime, context)) {
+        JS_FreeValue(context, result);
         return nullptr;
     }
 
@@ -523,6 +524,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     }
 
     if (!executePendingJobLoop(env, runtime, context)) {
+        JS_FreeValue(context, ret);
         return nullptr;
     }
 
@@ -805,6 +807,7 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     }
 
     if (!executePendingJobLoop(env, runtime, context)) {
+        JS_FreeValue(context, result);
         return nullptr;
     }
 
