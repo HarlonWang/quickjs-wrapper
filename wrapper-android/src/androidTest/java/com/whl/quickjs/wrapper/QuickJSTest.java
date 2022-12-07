@@ -1035,6 +1035,14 @@ public class QuickJSTest {
         QuickJSContext.destroyRuntime(context);
     }
 
+    @Test
+    public void testArrayAtSupport() {
+        QuickJSContext context = QuickJSContext.create();
+        context.evaluate("if([1, 2].at(0) !== 1) { throw 'not equal'; }");
+        context.destroy();
+        QuickJSContext.destroyRuntime(context);
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {
