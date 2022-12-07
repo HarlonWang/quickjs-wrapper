@@ -579,6 +579,12 @@ public class QuickJSTest {
         }
 
         try {
+            context.evaluate("[1, 2].atIndex(0);");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'atIndex' is not a function"));
+        }
+
+        try {
             context.evaluate("var C={index:function(e){\n" +
                     "\tfunction t(){\n" +
                     "\t \tvar e = {router: {}};\n" +
