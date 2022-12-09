@@ -14,7 +14,7 @@ public class QuickJSModuleTest {
     @Test
     public void testModule() {
         QuickJSLoader.init();
-        JSModule.setModuleLoader(new JSModuleLoader() {
+        JSModule.setModuleLoader(new JSModule.ModuleLoader() {
             @Override
             public String getModuleScript(String moduleName) {
                 if (moduleName.equals("a.js")) {
