@@ -22,13 +22,13 @@ public class QuickJSRuntimeTest {
     public void testRuntimeDestroy() {
         context = QuickJSContext.create();
         byte[] code = context.compile("'hello, world!'.toUpperCase();");
-        context.destroy();
+        QuickJSContext.destroy(context);
         QuickJSContext.destroyRuntime(context);
 
         context = QuickJSContext.create();
         Object hello = context.execute(code);
         assertEquals(hello, "HELLO, WORLD!");
-        context.destroy();
+        QuickJSContext.destroy(context);
         QuickJSContext.destroyRuntime(context);
     }
 
@@ -39,9 +39,9 @@ public class QuickJSRuntimeTest {
 
         assertNotEquals(context.getRuntime(), context1.getRuntime());
 
-        context.destroy();
+        QuickJSContext.destroy(context);
         QuickJSContext.destroyRuntime(context.getRuntime());
-        context1.destroy();
+        QuickJSContext.destroy(context1);
         QuickJSContext.destroyRuntime(context1.getRuntime());
     }
 
@@ -52,8 +52,8 @@ public class QuickJSRuntimeTest {
 
         assertEquals(context.getRuntime(), context1.getRuntime());
 
-        context.destroy();
-        context1.destroy();
+        QuickJSContext.destroy(context);
+        QuickJSContext.destroy(context1);
         QuickJSContext.destroyRuntime(context.getRuntime());
     }
 

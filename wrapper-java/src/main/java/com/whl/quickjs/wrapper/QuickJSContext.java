@@ -14,6 +14,10 @@ public class QuickJSContext {
         return new QuickJSContext(createRuntime());
     }
 
+    public static void destroy(QuickJSContext context) {
+        context.destroy();
+    }
+
     public static void destroyRuntime(QuickJSContext context) {
         destroyRuntime(context.getRuntime());
     }
@@ -91,7 +95,7 @@ public class QuickJSContext {
         return getGlobalObject(context);
     }
 
-    public void destroy() {
+    private void destroy() {
         checkSameThread();
 
         nativeCleaner.forceClean();

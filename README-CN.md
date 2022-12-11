@@ -76,8 +76,8 @@ QuickJSContext context = QuickJSContext.create();
 
 ```Java
 QuickJSContext context = QuickJSContext.create();
-context.destroy();
-// 必须要在 context.destroy 之后再调用.
+QuickJSContext.destroy(context);
+// 必须要在 QuickJSContext destroy 之后再调用.
 QuickJSContext.destroyRuntime(context);
 ```
 
