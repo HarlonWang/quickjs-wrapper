@@ -95,6 +95,9 @@ public class QuickJSContext {
         return getGlobalObject(context);
     }
 
+    /**
+     * Use {@link QuickJSContext#destroy(QuickJSContext)}
+     */
     private void destroy() {
         checkSameThread();
 
