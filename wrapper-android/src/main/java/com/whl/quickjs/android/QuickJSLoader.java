@@ -13,30 +13,74 @@ public final class QuickJSLoader {
         System.loadLibrary("quickjs-android-wrapper");
     }
 
-    public static void initConsoleLog(QuickJSContext context) {
-        context.getGlobalObject().setProperty("nativeLog", args -> {
-            String level = (String) args[0];
-            String info = (String) args[1];
-            String tag = "tiny-console";
-            if (args.length > 2) {
-                tag = (String) args[2];
-            }
+    public interface Console {
+        void log(String info);
+        void debug(String info);
+        void info(String info);
+        void warn(String info);
+        void error(String info);
+    }
 
-            switch (level) {
-                case "info":
-                    Log.i(tag, info);
-                    break;
-                case "warn":
-                    Log.w(tag, info);
-                    break;
-                case "error":
-                    Log.e(tag, info);
-                    break;
-                case "log":
-                case "debug":
-                default:
-                    Log.d(tag, info);
-                    break;
+    static final Console DEFAULT_CONSOLE = new Console() {
+
+        final String tag = "quickjs";
+
+        @Override
+        public void log(String info) {
+            Log.d(tag, info);
+        }
+
+        @Override
+        public void debug(String info) {
+            Log.d(tag, info);
+        }
+
+        @Override
+        public void info(String info) {
+            Log.i(tag, info);
+        }
+
+        @Override
+        public void warn(String info) {
+            Log.w(tag, info);
+        }
+
+        @Override
+        public void error(String info) {
+            Log.e(tag, info);
+        }
+    };
+
+    public static void initConsoleLog(QuickJSContext context) {
+        initConsoleLog(context, null);
+    }
+
+    public static void initConsoleLog(QuickJSContext context, Console console) {
+        if (console == null) {
+            console = DEFAULT_CONSOLE;
+        }
+
+        Console finalConsole = console;
+        context.getGlobalObject().setProperty("nativeLog", args -> {
+            if (args.length == 2) {
+                String level = (String) args[0];
+                String info = (String) args[1];
+                switch (level) {
+                    case "info":
+                        finalConsole.info(info);
+                        break;
+                    case "warn":
+                        finalConsole.warn(info);
+                        break;
+                    case "error":
+                        finalConsole.error(info);
+                        break;
+                    case "log":
+                    case "debug":
+                    default:
+                        finalConsole.debug(info);
+                        break;
+                }
             }
 
             return null;
