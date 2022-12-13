@@ -2,8 +2,6 @@ package com.whl.quickjs.wrapper;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1004,6 +1002,33 @@ public class QuickJSTest {
     public void testArrayAtSupport() {
         QuickJSContext context = createContext();
         context.evaluate("if([1, 2].at(0) !== 1) { throw 'not equal'; }");
+        QuickJSContext.destroy(context);
+        QuickJSContext.destroyRuntime(context);
+    }
+
+    @Test
+    public void testPolyfillDate() {
+        QuickJSContext context = createContext();
+        context.evaluate("function assert(expected, actual) {\n" +
+                "    if ((Date.parse(expected) === new Date(expected).getTime()) && (Date.parse(expected) === actual)) {\n" +
+                "        console.log('✅assert passed with ' + expected, 'Date.parse = ' + Date.parse(expected), 'Date.construct = ' + new Date(expected).getTime(), 'actual = ' + actual);\n" +
+                "    } else {\n" +
+                "        console.log('❌assert failed with ' + expected, 'Date.parse = ' + Date.parse(expected), 'Date.construct = ' + new Date(expected).getTime(), 'actual = ' + actual);\n" +
+                "        throw Error('parse failed.');\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "assert('20130108', 1357603200000);\n" +
+                "assert('2018-04-24', 1524528000000);\n" +
+                "assert('2018-04-24 11:12', 1524539520000);\n" +
+                "assert('2018-05-02 11:12:13', 1525230733000);\n" +
+                "assert('2018-05-02 11:12:13.998', 1525230733998);\n" +
+                "assert('2018-4-1', 1522540800000);\n" +
+                "assert('2018-4-1 11:12', 1522552320000);\n" +
+                "assert('2018-4-1 1:1:1:223', 1522515661223);\n" +
+                "assert('2018-01', 1514764800000);\n" +
+                "assert('2018', 1514764800000);\n" +
+                "assert('2018-05-02T11:12:13Z', 1525259533000);");
         QuickJSContext.destroy(context);
         QuickJSContext.destroyRuntime(context);
     }
