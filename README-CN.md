@@ -88,6 +88,14 @@ QuickJSContext context = QuickJSContext.create();
 context.evaluate("var a = 1 + 2;");
 ```
 
+### Console 支持
+```Java
+QuickJSContext context = QuickJSContext.create();
+QuickJSLoader.initConsoleLog(context);
+// or custom console.
+// QuickJSLoader.initConsoleLog(context, your console implementation.);
+```
+
 ### 支持的类型
 
 #### 以下基础类型，Java 和 JavaScript 可以直接互转使用

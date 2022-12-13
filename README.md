@@ -91,6 +91,14 @@ QuickJSContext context = QuickJSContext.create();
 context.evaluate("var a = 1 + 2;");
 ```
 
+### Console Support
+```Java
+QuickJSContext context = QuickJSContext.create();
+QuickJSLoader.initConsoleLog(context);
+// or custom console.
+// QuickJSLoader.initConsoleLog(context, your console implementation.);
+```
+
 ### Supported Types
 
 #### Java and JavaScript can directly convert to each other for the following basic types
