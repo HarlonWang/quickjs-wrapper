@@ -1033,6 +1033,19 @@ public class QuickJSTest {
         QuickJSContext.destroyRuntime(context);
     }
 
+    @Test
+    public void testNativeCallWithAsyncFunc() {
+        QuickJSContext context = createContext();
+        context.getGlobalObject().setProperty("nativeCall", args -> {
+            JSFunction function = (JSFunction) args[0];
+            function.call();
+            return null;
+        });
+        context.evaluate("nativeCall(async () => { console.log(123); });");
+        QuickJSContext.destroy(context);
+        QuickJSContext.destroyRuntime(context);
+    }
+
     // todo fix
 //    @Test
 //    public void testJSArraySetParseJSON() {

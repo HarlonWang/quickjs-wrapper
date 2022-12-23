@@ -587,10 +587,16 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         arguments.push_back(jsArg);
     }
 
-    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
+    JSValue jsObj;
+    if (this_obj == 0) {
+        jsObj = JS_UNDEFINED;
+    } else {
+        jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
+    }
+
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
 
-    JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data());
+    JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data()); ;
     if (JS_IsException(ret)) {
         throwJSException(env, context);
         return nullptr;
