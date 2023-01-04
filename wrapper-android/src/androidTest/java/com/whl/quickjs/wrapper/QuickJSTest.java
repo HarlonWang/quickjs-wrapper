@@ -1046,19 +1046,19 @@ public class QuickJSTest {
         QuickJSContext.destroyRuntime(context);
     }
 
-    // todo fix
-//    @Test
-//    public void testJSArraySetParseJSON() {
-//        QuickJSContext context = createContext();
-//        context.getGlobalObject().setProperty("getData", args -> {
-//            JSArray jsArray = context.createNewJSArray();
-//            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
-//            jsArray.set(jsObject, 0);
-//            // jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
-//            return jsArray;
-//        });
-//        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
-//        context.destroyContext();
-//    }
+    @Test
+    public void testJSArraySetParseJSON() {
+        QuickJSContext context = createContext();
+        context.getGlobalObject().setProperty("getData", args -> {
+            JSArray jsArray = context.createNewJSArray();
+            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+            jsArray.set(jsObject, 0);
+            jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
+            return jsArray;
+        });
+        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+        QuickJSContext.destroy(context);
+        QuickJSContext.destroyRuntime(context);
+    }
 
 }
