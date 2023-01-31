@@ -1,8 +1,6 @@
 # QuickJS For Android/JVM
 QuickJS wrapper for Android/JVM.
 
-## [中文说明](README-CN.md)
-
 ## Feature
 - Java types are supported with JavaScript
 - Support promise execute
