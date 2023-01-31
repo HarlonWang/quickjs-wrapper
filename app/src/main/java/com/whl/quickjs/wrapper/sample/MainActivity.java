@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import com.whl.quickjs.android.QuickJSLoader;
 import com.whl.quickjs.wrapper.QuickJSContext;
 
 public class MainActivity extends AppCompatActivity {
@@ -15,6 +16,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        QuickJSLoader.init();
 
         jsContext = QuickJSContext.create();
         jsContext.evaluate("var text = 'Hello QuickJS';");
