@@ -1056,7 +1056,7 @@ public class QuickJSTest {
             jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
             return jsArray;
         });
-        context.evaluate("var array = getData();console.log(JSON.stringify(array));");
+        context.evaluate("var array = getData();console.log(JSON.stringify(array));console.log(array[0]);");
         QuickJSContext.destroy(context);
         QuickJSContext.destroyRuntime(context);
     }
