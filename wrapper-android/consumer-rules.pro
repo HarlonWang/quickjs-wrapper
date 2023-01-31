@@ -1,0 +1,1 @@
+-keep class com.whl.quickjs.wrapper.JSMethod
