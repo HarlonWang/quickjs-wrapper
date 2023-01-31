@@ -197,6 +197,11 @@ console.log('name：' + name); // Jack
 console.log('age：' + age); // 18
 ```
 
+## R8 / ProGuard
+If you are using R8 the shrinking and obfuscation rules are included automatically.
+
+ProGuard users must manually add the options from [consumer-rules.pro](/wrapper-android/consumer-rules.pro).
+
 ## Concurrency
 JavaScript runtimes are single threaded. All execution in the JavaScript runtime is guaranteed thread safe, by way of Java synchronization.
 
