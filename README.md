@@ -21,9 +21,12 @@ repositories {
 }
 
 dependencies {
-  // For Android
-  implementation 'wang.harlon.quickjs:wrapper-android:latest.version'
-  // For JVM
+  // Pick one:
+
+  // 1. Use Wrapper for Android.
+  api 'wang.harlon.quickjs:wrapper-android:latest.version'
+
+  // 2. Use Wrapper for JVM.
   implementation 'wang.harlon.quickjs:wrapper-java:latest.version'
 }
 ```
