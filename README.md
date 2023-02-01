@@ -23,10 +23,10 @@ repositories {
 dependencies {
   // Pick one:
 
-  // 1. Use Wrapper for Android.
+  // 1. Android - Use wrapper in your public API:
   api 'wang.harlon.quickjs:wrapper-android:latest.version'
 
-  // 2. Use Wrapper for JVM.
+  // 2. JVM - Use wrapper in your implementation only:
   implementation 'wang.harlon.quickjs:wrapper-java:latest.version'
 }
 ```
