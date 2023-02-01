@@ -61,10 +61,10 @@ dependencies {
 
 ## Usage
 
-### Init Library
+### Initialization
 In Android Platforms:
 ```Java
-// It is usually init in the application
+// It is usually init in the application.
 QuickJSLoader.init();
 ```
 
@@ -104,7 +104,7 @@ QuickJSLoader.initConsoleLog(context);
 
 #### Java and JavaScript can directly convert to each other for the following basic types
 - `boolean`
-- `int` when calling JavaScript from Java.
+- `int`
 - `double`
 - `String`
 - `null`
