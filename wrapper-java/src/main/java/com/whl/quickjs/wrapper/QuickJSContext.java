@@ -59,6 +59,7 @@ public class QuickJSContext {
         }
     };
     private final long currentThreadId;
+    private boolean destroyed;
 
     private QuickJSContext(long runtime) {
         this.runtime = runtime;
@@ -81,17 +82,25 @@ public class QuickJSContext {
         }
     }
 
+    private void checkDestroyed() {
+        if (destroyed) {
+            throw new QuickJSException("Can not called this after QuickJSContext was destroyed!");
+        }
+    }
+
     public Object evaluate(String script) {
         return evaluate(script, UNKNOWN_FILE);
     }
 
     public Object evaluate(String script, String fileName) {
         checkSameThread();
+        checkDestroyed();
         return evaluate(context, script, fileName);
     }
 
     public JSObject getGlobalObject() {
         checkSameThread();
+        checkDestroyed();
         return getGlobalObject(context);
     }
 
@@ -100,29 +109,36 @@ public class QuickJSContext {
      */
     private void destroy() {
         checkSameThread();
+        checkDestroyed();
 
         nativeCleaner.forceClean();
         destroyContext(context);
+        destroyed = true;
     }
 
     public String stringify(JSObject jsObj) {
         checkSameThread();
+        checkDestroyed();
         return stringify(context, jsObj.getPointer());
     }
 
     public Object getProperty(JSObject jsObj, String name) {
         checkSameThread();
+        checkDestroyed();
         return getProperty(context, jsObj.getPointer(), name);
     }
 
     public void setProperty(JSObject jsObj, String name, Object value) {
         checkSameThread();
+        checkDestroyed();
 
         setProperty(context, jsObj.getPointer(), name, value);
     }
 
     public void freeValue(JSObject jsObj) {
         checkSameThread();
+        checkDestroyed();
+
         freeValue(context, jsObj.getPointer());
     }
 
@@ -133,6 +149,8 @@ public class QuickJSContext {
      */
     private void dupValue(JSObject jsObj) {
         checkSameThread();
+        checkDestroyed();
+
         dupValue(context, jsObj.getPointer());
     }
 
@@ -141,26 +159,35 @@ public class QuickJSContext {
      */
     private void freeDupValue(JSObject jsObj) {
         checkSameThread();
+        checkDestroyed();
+
         freeDupValue(context, jsObj.getPointer());
     }
 
     public int length(JSArray jsArray) {
         checkSameThread();
+        checkDestroyed();
+
         return length(context, jsArray.getPointer());
     }
 
     public Object get(JSArray jsArray, int index) {
         checkSameThread();
+        checkDestroyed();
+
         return get(context, jsArray.getPointer(), index);
     }
 
     public void set(JSArray jsArray, Object value, int index) {
         checkSameThread();
+        checkDestroyed();
+
         set(context, jsArray.getPointer(), value, index);
     }
 
     Object call(JSObject func, long objPointer, Object... args) {
         checkSameThread();
+        checkDestroyed();
 
         return call(context, func.getPointer(), objPointer, args);
     }
@@ -172,6 +199,7 @@ public class QuickJSContext {
      */
     public void hold(JSObject jsObj) {
         checkSameThread();
+        checkDestroyed();
 
         dupValue(jsObj);
         nativeCleaner.register(jsObj, jsObj.getPointer());
@@ -187,36 +215,41 @@ public class QuickJSContext {
 
     public JSObject parseJSON(String json) {
         checkSameThread();
+        checkDestroyed();
+
         return parseJSON(context, json);
     }
 
     public byte[] compile(String sourceCode) {
-        checkSameThread();
-        return compile(context, sourceCode, UNKNOWN_FILE);
+        return compile(sourceCode, UNKNOWN_FILE);
     }
 
     public byte[] compile(String sourceCode, String fileName) {
         checkSameThread();
+        checkDestroyed();
+
         return compile(context, sourceCode, fileName);
     }
 
     public Object execute(byte[] code) {
         checkSameThread();
+        checkDestroyed();
+
         return execute(context, code);
     }
 
     public Object evaluateModule(String script, String moduleName) {
+        checkSameThread();
+        checkDestroyed();
+
         return evaluateModule(context, script, moduleName);
     }
     
     public Object evaluateModule(String script) {
-        checkSameThread();
         return evaluateModule(script, UNKNOWN_FILE);
     }
 
     public void throwJSException(String error) {
-        checkSameThread();
-
         // throw $error;
         String errorScript = "throw " + "\"" + error + "\"" + ";";
         evaluate(errorScript);
