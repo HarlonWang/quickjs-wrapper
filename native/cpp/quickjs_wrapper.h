@@ -17,6 +17,7 @@ using namespace std;
 
 class QuickJSWrapper {
 private:
+    bool destroyed = false;
     jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold = true);
     JSValue toJSValue(JNIEnv *env, jobject value) const;
 
@@ -56,7 +57,6 @@ public:
     jmethodID jsFunctionInit;
     jmethodID jsGetModuleScript;
     jmethodID jsConvertModuleName;
-    bool destroyed;
 
     QuickJSWrapper(JNIEnv *env, JSRuntime *rt);
     ~QuickJSWrapper();

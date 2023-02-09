@@ -59,7 +59,7 @@ public class QuickJSContext {
         }
     };
     private final long currentThreadId;
-    private boolean destroyed;
+    private boolean destroyed = false;
 
     private QuickJSContext(long runtime) {
         this.runtime = runtime;
