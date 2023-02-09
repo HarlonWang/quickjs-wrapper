@@ -56,6 +56,7 @@ public:
     jmethodID jsFunctionInit;
     jmethodID jsGetModuleScript;
     jmethodID jsConvertModuleName;
+    bool destroyed;
 
     QuickJSWrapper(JNIEnv *env, JSRuntime *rt);
     ~QuickJSWrapper();
