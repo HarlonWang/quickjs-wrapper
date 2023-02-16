@@ -80,9 +80,7 @@ QuickJSContext context = QuickJSContext.create();
 
 ```Java
 QuickJSContext context = QuickJSContext.create();
-QuickJSContext.destroy(context);
-// Must be after QuickJSContext destroy called.
-QuickJSContext.destroyRuntime(context);
+context.destroy(context);
 ```
 
 ### Evaluating JavaScript
@@ -154,7 +152,7 @@ JavaScript
 ```JavaScript
 var obj1 = {
 	stringProperty: 'hello string',
-	intProperety: 1,
+	intProperty: 1,
 	doubleProperty: 0.1,
 	booleanProperty: true,
 	functionProperty: (name) => { return name + 'Wang'; }
