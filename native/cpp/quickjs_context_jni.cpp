@@ -204,13 +204,6 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_createRuntime(JNIEnv *env, jclass cl
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_destroyRuntime(JNIEnv *env, jclass clazz,
-                                                           jlong runtime) {
-    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
-    JS_FreeRuntime(rt);
-}
-extern "C"
-JNIEXPORT void JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_setMemoryLimit(JNIEnv *env, jclass clazz, jlong runtime,
                                                            jint size) {
     auto *rt = reinterpret_cast<JSRuntime*>(runtime);

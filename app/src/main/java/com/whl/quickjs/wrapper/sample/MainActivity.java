@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        QuickJSContext.destroy(jsContext);
-        QuickJSContext.destroyRuntime(jsContext);
+        jsContext.destroy();
     }
 }

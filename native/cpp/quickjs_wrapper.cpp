@@ -457,6 +457,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     values.clear();
 
     JS_FreeContext(context);
+    JS_FreeRuntime(runtime);
     destroyed = true;
 }
 

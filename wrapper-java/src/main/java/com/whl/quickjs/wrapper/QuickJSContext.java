@@ -6,48 +6,32 @@ public class QuickJSContext {
 
     private static final String UNKNOWN_FILE = "unknown.js";
 
-    public static QuickJSContext create(long runtime) {
-        return new QuickJSContext(runtime);
-    }
-
     public static QuickJSContext create() {
-        return new QuickJSContext(createRuntime());
+        return new QuickJSContext();
     }
 
-    public static void destroy(QuickJSContext context) {
-        context.destroy();
-    }
-
-    public static void destroyRuntime(QuickJSContext context) {
-        destroyRuntime(context.getRuntime());
-    }
-
-    public static boolean isLiveObject(long runtime, JSObject jsObj) {
+    public boolean isLiveObject(JSObject jsObj) {
         return isLiveObject(runtime, jsObj.getPointer());
     }
 
-    public static boolean isLiveObject(QuickJSContext context, JSObject jsObj) {
-        return isLiveObject(context.getRuntime(), jsObj.getPointer());
+    public void setMaxStackSize(int maxStackSize) {
+        setMaxStackSize(runtime, maxStackSize);
     }
 
-    public static void setMaxStackSize(QuickJSContext context, int maxStackSize) {
-        setMaxStackSize(context.getRuntime(), maxStackSize);
+    public void runGC() {
+        runGC(runtime);
     }
 
-    public static void runGC(QuickJSContext context) {
-        runGC(context.getRuntime());
+    public void setMemoryLimit(int memoryLimitSize) {
+        setMemoryLimit(runtime, memoryLimitSize);
     }
 
-    public static void setMemoryLimit(QuickJSContext context, int memoryLimitSize) {
-        setMemoryLimit(context.getRuntime(), memoryLimitSize);
-    }
-
-    public static void dumpMemoryUsage(QuickJSContext context, File target) {
+    public void dumpMemoryUsage(File target) {
         if (target == null || !target.exists()) {
             return;
         }
 
-        dumpMemoryUsage(context.getRuntime(), target.getAbsolutePath());
+        dumpMemoryUsage(runtime, target.getAbsolutePath());
     }
 
     private final long runtime;
@@ -61,18 +45,14 @@ public class QuickJSContext {
     private final long currentThreadId;
     private boolean destroyed = false;
 
-    private QuickJSContext(long runtime) {
-        this.runtime = runtime;
+    private QuickJSContext() {
         try {
+            runtime = createRuntime();
             context = createContext(runtime);
         } catch (UnsatisfiedLinkError e) {
             throw new QuickJSException("The so library must be initialized before createContext! QuickJSLoader.init should be called on the Android platform. In the JVM, you need to manually call System.loadLibrary");
         }
         currentThreadId = Thread.currentThread().getId();
-    }
-
-    public long getRuntime() {
-        return runtime;
     }
 
     private void checkSameThread() {
@@ -104,10 +84,7 @@ public class QuickJSContext {
         return getGlobalObject(context);
     }
 
-    /**
-     * Use {@link QuickJSContext#destroy(QuickJSContext)}
-     */
-    private void destroy() {
+    public void destroy() {
         checkSameThread();
         checkDestroyed();
 
@@ -256,17 +233,15 @@ public class QuickJSContext {
     }
 
     // runtime
-    public static native long createRuntime();
-    public static native void destroyRuntime(long runtime);
-    private static native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
-    private static native boolean isLiveObject(long runtime, long objValue);
-    private static native void runGC(long runtime);
-    private static native void setMemoryLimit(long runtime, int size);
-    private static native void dumpMemoryUsage(long runtime, String fileName);
+    private native long createRuntime();
+    private native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
+    private native boolean isLiveObject(long runtime, long objValue);
+    private native void runGC(long runtime);
+    private native void setMemoryLimit(long runtime, int size);
+    private native void dumpMemoryUsage(long runtime, String fileName);
 
     // context
     private native long createContext(long runtime);
-    private native void destroyContext(long context);
     private native Object evaluate(long context, String script, String fileName);
     private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
@@ -283,4 +258,7 @@ public class QuickJSContext {
     private native JSObject parseJSON(long context, String json);
     private native byte[] compile(long context, String sourceCode, String fileName); // Bytecode compile
     private native Object execute(long context, byte[] bytecode); // Bytecode execute
+
+    // destroy context and runtime
+    private native void destroyContext(long context);
 }

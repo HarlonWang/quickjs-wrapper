@@ -27,8 +27,7 @@ public class ConsoleLogTest {
 
     @After
     public void tearDown() {
-        QuickJSContext.destroy(context);
-        QuickJSContext.destroyRuntime(context);
+        context.destroy();
     }
 
     @Test
