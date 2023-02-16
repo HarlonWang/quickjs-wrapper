@@ -458,7 +458,6 @@ QuickJSWrapper::~QuickJSWrapper() {
 
     JS_FreeContext(context);
     JS_FreeRuntime(runtime);
-    destroyed = true;
 }
 
 jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold){
@@ -728,11 +727,6 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
 }
 
 JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv){
-    if (destroyed) {
-        throwJSException(jniEnv, "Can not called jsFuncCall after QuickJSContext was destroyed!");
-        return JS_EXCEPTION;
-    }
-
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
