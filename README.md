@@ -163,11 +163,11 @@ Java
 ```Java
 JSObject globalObject = context.getGlobalObject();
 JSObject obj1 = globalObject.getJSObjectProperty("obj1");
-obj1.getProperty("stringProperty"); // hello
-obj1.getProperty("intProperty"); // 1
-obj1.getProperty("doubleProperty"); // 0.1
-obj1.getProperty("booleanProperty"); // true
-obj1.getJSFunctionProperty("functionProperty").call("Harlon"); // HarlonWang
+obj1.getString("stringProperty"); // hello
+obj1.getInteger("intProperty"); // 1
+obj1.getDouble("doubleProperty"); // 0.1
+obj1.getBoolean("booleanProperty"); // true
+obj1.getJSFunction("functionProperty").call("Harlon"); // HarlonWang
 ```
 
 ### Compile ByteCode
