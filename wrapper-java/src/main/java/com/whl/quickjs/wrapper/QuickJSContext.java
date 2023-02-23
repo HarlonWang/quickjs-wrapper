@@ -190,10 +190,23 @@ public class QuickJSContext {
         return (JSArray) parseJSON("[]");
     }
 
-    public Object parseJSON(String json) {
+    /**
+     * Use {@link #parse(String)} replace.
+     */
+    @Deprecated
+    public JSObject parseJSON(String json) {
         checkSameThread();
         checkDestroyed();
 
+        Object obj = parseJSON(context, json);
+        if (!(obj instanceof JSObject)) {
+            throw new QuickJSException("Only parse json with valid format, must be start with '{', if it contains other case, use parse(String) replace.");
+        }
+
+        return (JSObject) obj;
+    }
+
+    public Object parse(String json) {
         return parseJSON(context, json);
     }
 
