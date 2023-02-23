@@ -183,14 +183,14 @@ public class QuickJSContext {
     }
 
     public JSObject createNewJSObject() {
-        return parseJSON("{}");
+        return (JSObject) parseJSON("{}");
     }
 
     public JSArray createNewJSArray() {
         return (JSArray) parseJSON("[]");
     }
 
-    public JSObject parseJSON(String json) {
+    public Object parseJSON(String json) {
         checkSameThread();
         checkDestroyed();
 
@@ -255,7 +255,7 @@ public class QuickJSContext {
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);
-    private native JSObject parseJSON(long context, String json);
+    private native Object parseJSON(long context, String json);
     private native byte[] compile(long context, String sourceCode, String fileName); // Bytecode compile
     private native Object execute(long context, byte[] bytecode); // Bytecode execute
 

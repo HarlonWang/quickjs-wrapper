@@ -196,7 +196,7 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
 
         QuickJSContext context = createContext();
-        JSObject result = context.parseJSON(text);
+        JSObject result = (JSObject) context.parseJSON(text);
         assertEquals("270", result.getProperty("leadsId"));
 
         context.getGlobalObject().setProperty("test", result);
@@ -210,7 +210,7 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
         QuickJSContext context = createContext();
         JSObject a = (JSObject) context.evaluate("var a = {}; a;");
-        a.setProperty("test", context.parseJSON(text));
+        a.setProperty("test", (JSObject) context.parseJSON(text));
         Object ret = context.evaluate("a.test.leadsId;");
         assertEquals("270", ret);
         context.destroy();
@@ -221,7 +221,7 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
         QuickJSContext context = createContext();
         JSObject a = (JSObject) context.evaluate("var a = {b: {}}; a;");
-        a.getJSObject("b").setProperty("test", context.parseJSON(text));
+        a.getJSObject("b").setProperty("test", (JSObject) context.parseJSON(text));
         Object ret = context.evaluate("a.b.test.leadsId;");
         assertEquals("270", ret);
         context.destroy();
@@ -993,12 +993,30 @@ public class QuickJSTest {
         QuickJSContext context = createContext();
         context.getGlobalObject().setProperty("getData", args -> {
             JSArray jsArray = context.createNewJSArray();
-            JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+            JSObject jsObject = (JSObject) context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
             jsArray.set(jsObject, 0);
             jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
             return jsArray;
         });
         context.evaluate("var array = getData();console.log(JSON.stringify(array));console.log(array[0]);");
+        context.destroy();
+    }
+
+    @Test
+    public void testJSONParse() {
+        QuickJSContext context = createContext();
+        String ret = (String) context.parseJSON("\"test\"");
+        assertEquals(ret, "test");
+        context.destroy();
+    }
+
+    @Test
+    public void testExceptionWhenParse() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("unexpected token: 'test'");
+
+        QuickJSContext context = createContext();
+        context.parseJSON("test");
         context.destroy();
     }
 
