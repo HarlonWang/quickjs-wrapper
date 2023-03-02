@@ -21,9 +21,13 @@ public final class QuickJSLoader {
         void error(String info);
     }
 
-    static final Console DEFAULT_CONSOLE = new Console() {
+    static final class AndroidConsole implements Console {
 
-        final String tag = "quickjs";
+        private final String tag;
+
+        public AndroidConsole(String tag) {
+            this.tag = tag;
+        }
 
         @Override
         public void log(String info) {
@@ -49,36 +53,35 @@ public final class QuickJSLoader {
         public void error(String info) {
             Log.e(tag, info);
         }
-    };
+    }
 
     public static void initConsoleLog(QuickJSContext context) {
-        initConsoleLog(context, null);
+        initConsoleLog(context, new AndroidConsole("quickjs"));
+    }
+
+    public static void initConsoleLog(QuickJSContext context, String tag) {
+        initConsoleLog(context, new AndroidConsole(tag));
     }
 
     public static void initConsoleLog(QuickJSContext context, Console console) {
-        if (console == null) {
-            console = DEFAULT_CONSOLE;
-        }
-
-        Console finalConsole = console;
         context.getGlobalObject().setProperty("nativeLog", args -> {
             if (args.length == 2) {
                 String level = (String) args[0];
                 String info = (String) args[1];
                 switch (level) {
                     case "info":
-                        finalConsole.info(info);
+                        console.info(info);
                         break;
                     case "warn":
-                        finalConsole.warn(info);
+                        console.warn(info);
                         break;
                     case "error":
-                        finalConsole.error(info);
+                        console.error(info);
                         break;
                     case "log":
                     case "debug":
                     default:
-                        finalConsole.debug(info);
+                        console.debug(info);
                         break;
                 }
             }
