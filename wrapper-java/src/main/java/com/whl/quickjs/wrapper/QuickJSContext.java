@@ -169,14 +169,6 @@ public class QuickJSContext {
         return call(context, func.getPointer(), objPointer, args);
     }
 
-    Object call2(JSObject func, long objPointer, Object[] args) {
-        checkSameThread();
-        checkDestroyed();
-
-        return call(context, func.getPointer(), objPointer, args);
-    }
-
-
     /**
      * Automatically manage the release of objects，
      * the hold method is equivalent to call the

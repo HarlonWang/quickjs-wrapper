@@ -13,8 +13,4 @@ public class JSFunction extends JSObject {
         return getContext().call(this, objPointer, args);
     }
 
-    public Object call2(Object[] args) {
-        return getContext().call2(this, objPointer, args);
-    }
-
 }
