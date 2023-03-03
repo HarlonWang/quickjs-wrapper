@@ -989,6 +989,20 @@ public class QuickJSTest {
     }
 
     @Test
+    public void testNativeCallWithAsyncFuncResult() {
+        QuickJSContext context = createContext();
+        context.evaluate("async function test() {return \"123\";} var a = test();");
+        JSFunction test = context.getGlobalObject().getJSFunction("test");
+        JSObject promise = (JSObject) test.call();
+        JSFunction then = promise.getJSFunction("then");
+        then.call((JSCallFunction) args -> {
+            System.out.println(args[0]);
+            return null;
+        });
+        context.destroy();
+    }
+
+    @Test
     public void testJSArraySetParseJSON() {
         QuickJSContext context = createContext();
         context.getGlobalObject().setProperty("getData", args -> {

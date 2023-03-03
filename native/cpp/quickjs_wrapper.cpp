@@ -580,7 +580,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     vector<JSValue> arguments;
     for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
         jobject arg = env->GetObjectArrayElement(args, numArgs);
-        auto jsArg = toJSValue(env, arg);
+        auto jsArg = toJSValue(env, thiz, arg);
         if (JS_IsException(jsArg)) {
             return nullptr;
         }
@@ -608,7 +608,11 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     // JS_FreeValue(context, jsFunc);
 
     for (JSValue argument : arguments) {
-        if (!JS_IsObject(argument)) {
+        if (JS_IsObject(argument)) {
+            if (JS_IsFunction(context, argument)) {
+                JS_FreeValue(context, argument);
+            }
+        } else {
             JS_FreeValue(context, argument);
         }
     }
@@ -658,7 +662,7 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
 
 void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
-    JSValue child = toJSValue(env, value);
+    JSValue child = toJSValue(env, thiz, value);
     JS_SetPropertyUint32(context, jsObj, index, JS_DupValue(context, child));
 }
 
@@ -742,7 +746,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jniEnv->DeleteLocalRef(funcClass);
     jniEnv->DeleteLocalRef(javaArgs);
 
-    JSValue jsValue = toJSValue(jniEnv, result);
+    JSValue jsValue = toJSValue(jniEnv, thiz, result);
 
     if (JS_IsObject(jsValue)) {
         // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
@@ -752,7 +756,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     return jsValue;
 }
 
-JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
+JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) const {
     if (!value) {
         return JS_UNDEFINED;
     }
@@ -774,6 +778,19 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject value) const {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
         result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
+    } else if (env->IsInstanceOf(value, jsCallFunctionClass)) {
+        // todo 需要和 setProperty 里的逻辑收拢
+        // 这里的 obj 是用来获取 JSFuncCallback 对象的
+        JSValue obj = JS_NewObjectClass(context, js_func_callback_class_id);
+        result = JS_NewCFunctionData(context, jsFnCallback, 1, 0, 1, &obj);
+        // JS_NewCFunctionData 有 dupValue obj，这里需要对 obj 计数减一，保持计数平衡
+        JS_FreeValue(context, obj);
+
+        auto *jsFc = new JSFuncCallback;
+        jsFc->value = env->NewGlobalRef(value);
+        jsFc->thiz = env->NewGlobalRef(thiz);
+
+        JS_SetOpaque(obj, jsFc);
     } else {
         const auto typeName = getJavaName(env, classType);
         // Throw an exception for unsupported argument type.

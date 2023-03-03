@@ -18,7 +18,7 @@ using namespace std;
 class QuickJSWrapper {
 private:
     jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold = true);
-    JSValue toJSValue(JNIEnv *env, jobject value) const;
+    JSValue toJSValue(JNIEnv *env, jobject thiz, jobject value) const;
 
 public:
     JNIEnv *jniEnv;
