@@ -991,7 +991,7 @@ public class QuickJSTest {
     @Test
     public void testNativeCallWithAsyncFuncResult() {
         QuickJSContext context = createContext();
-        context.evaluate("async function test() {return \"123\";} var a = test();");
+        context.evaluate("async function test() {return \"123\";}");
         JSFunction test = context.getGlobalObject().getJSFunction("test");
         JSObject promise = (JSObject) test.call();
         JSFunction then = promise.getJSFunction("then");
