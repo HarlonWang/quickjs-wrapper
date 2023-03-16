@@ -603,15 +603,11 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
 
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
 
-    JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data()); ;
+    JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data());
     if (JS_IsException(ret)) {
         throwJSException(env, context);
         return nullptr;
     }
-
-    // todo refactor
-    // JS_FreeValue(context, jsObj);
-    // JS_FreeValue(context, jsFunc);
 
     for (JSValue argument : freeArguments) {
         JS_FreeValue(context, argument);
