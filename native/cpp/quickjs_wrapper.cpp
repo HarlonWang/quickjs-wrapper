@@ -742,7 +742,6 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
         result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
     } else if (env->IsInstanceOf(value, jsCallFunctionClass)) {
-        // todo 需要和 setProperty 里的逻辑收拢
         // 这里的 obj 是用来获取 JSFuncCallback 对象的
         JSValue obj = JS_NewObjectClass(context, js_func_callback_class_id);
         result = JS_NewCFunctionData(context, jsFnCallback, 1, 0, 1, &obj);
