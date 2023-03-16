@@ -581,6 +581,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
         jobject arg = env->GetObjectArrayElement(args, numArgs);
         auto jsArg = toJSValue(env, thiz, arg);
+        env->DeleteLocalRef(arg);
         if (JS_IsException(jsArg)) {
             return nullptr;
         }
@@ -663,66 +664,29 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
 void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JSValue child = toJSValue(env, thiz, value);
+    env->DeleteLocalRef(value);
     JS_SetPropertyUint32(context, jsObj, index, JS_DupValue(context, child));
 }
 
 void
 QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring name, jobject value) const {
-    JSValue propValue;
     const char* propName = env->GetStringUTFChars(name, JNI_FALSE);
-
-    if (value == nullptr) {
-        propValue = JS_UNDEFINED;
-    } else {
-        auto classType = env->GetObjectClass(value);
-        if (env->IsAssignableFrom(classType, stringClass)) {
-            const auto s = env->GetStringUTFChars((jstring)(value), JNI_FALSE);
-            propValue = JS_NewString(context, s);
-            env->ReleaseStringUTFChars((jstring)(value), s);
-        } else if (env->IsAssignableFrom(classType, doubleClass)) {
-            propValue = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
-        } else if (env->IsAssignableFrom(classType, integerClass)) {
-            propValue = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
-        } else if (env->IsAssignableFrom(classType, longClass)) {
-            propValue = JS_NewInt64(context, env->CallLongMethod(value, longGetValue));
-        } else if (env->IsAssignableFrom(classType, booleanClass)) {
-            propValue = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
-        } else {
-            if (env->IsInstanceOf(value, jsCallFunctionClass)) {
-                // 这里的 obj 是用来获取 JSFuncCallback 对象的
-                JSValue obj = JS_NewObjectClass(context, js_func_callback_class_id);
-                propValue = JS_NewCFunctionData(context, jsFnCallback, 1, 0, 1, &obj);
-                // JS_NewCFunctionData 有 dupValue obj，这里需要对 obj 计数减一，保持计数平衡
-                JS_FreeValue(context, obj);
-
-                // 通过 JS_NewCFunctionData 创建的 fn 对象的 name 属性值被定义为 Empty 了，
-                // 这里需要额外定义下，不然 js 层拿到的 fn.name 的值为空.
-                JSAtom name_atom = JS_NewAtom(context, propName);
-                JSAtom name_atom_key = JS_NewAtom(context, "name");
-                JS_DefinePropertyValue(context, propValue, name_atom_key,
-                                       JS_AtomToString(context, name_atom), JS_PROP_CONFIGURABLE);
-                JS_FreeAtom(context, name_atom);
-                JS_FreeAtom(context, name_atom_key);
-
-                auto *jsFc = new JSFuncCallback;
-                jsFc->value = env->NewGlobalRef(value);
-                jsFc->thiz = env->NewGlobalRef(thiz);
-
-                JS_SetOpaque(obj, jsFc);
-
-            } else if(env->IsInstanceOf(value, jsObjectClass)) {
-                propValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
-                // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。
-                JS_DupValue(context, propValue);
-            } else {
-                const auto typeName = getJavaName(env, classType);
-                // Throw an exception for unsupported argument type.
-                throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
-                                   typeName.c_str());
-                return;
-            }
-        }
+    JSValue propValue = toJSValue(env, thiz, value);
+    if(env->IsInstanceOf(value, jsObjectClass)) {
+        // 这里需要手动增加引用计数，不然 QuickJS 垃圾回收会报 assertion "p->ref_count > 0" 的错误。
+        JS_DupValue(context, propValue);
+    } else if (env->IsInstanceOf(value, jsCallFunctionClass)) {
+        // 通过 JS_NewCFunctionData 创建的 fn 对象的 name 属性值被定义为 Empty 了，
+        // 这里需要额外定义下，不然 js 层拿到的 fn.name 的值为空.
+        JSAtom name_atom = JS_NewAtom(context, propName);
+        JSAtom name_atom_key = JS_NewAtom(context, "name");
+        JS_DefinePropertyValue(context, propValue, name_atom_key,
+                               JS_AtomToString(context, name_atom), JS_PROP_CONFIGURABLE);
+        JS_FreeAtom(context, name_atom);
+        JS_FreeAtom(context, name_atom_key);
     }
+
+    env->DeleteLocalRef(value);
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JS_SetPropertyStr(context, jsObj, propName, propValue);
@@ -747,6 +711,7 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jniEnv->DeleteLocalRef(javaArgs);
 
     JSValue jsValue = toJSValue(jniEnv, thiz, result);
+    jniEnv->DeleteLocalRef(result);
 
     if (JS_IsObject(jsValue)) {
         // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
@@ -757,24 +722,22 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
 }
 
 JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) const {
-    if (!value) {
+    if (value == nullptr) {
         return JS_UNDEFINED;
     }
 
-    auto classType = env->GetObjectClass(value);
-
     JSValue result;
-    if (env->IsAssignableFrom(classType, stringClass)) {
+    if (env->IsInstanceOf(value, stringClass)) {
         const auto s = env->GetStringUTFChars((jstring)(value), JNI_FALSE);
         result = JS_NewString(context, s);
         env->ReleaseStringUTFChars((jstring)(value), s);
-    } else if (env->IsAssignableFrom(classType, doubleClass)) {
+    } else if (env->IsInstanceOf(value, doubleClass)) {
         result = JS_NewFloat64(context, env->CallDoubleMethod(value, doubleGetValue));
-    } else if (env->IsAssignableFrom(classType, integerClass)) {
+    } else if (env->IsInstanceOf(value, integerClass)) {
         result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
-    } else if(env->IsAssignableFrom(classType, longClass)) {
+    } else if(env->IsInstanceOf(value, longClass)) {
         result = JS_NewInt64(context, env->CallLongMethod(value, longGetValue));
-    } else if (env->IsAssignableFrom(classType, booleanClass)) {
+    } else if (env->IsInstanceOf(value, booleanClass)) {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
         result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
@@ -792,15 +755,14 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
 
         JS_SetOpaque(obj, jsFc);
     } else {
+        auto classType = env->GetObjectClass(value);
         const auto typeName = getJavaName(env, classType);
+        env->DeleteLocalRef(classType);
         // Throw an exception for unsupported argument type.
         throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                            typeName.c_str());
         result = JS_EXCEPTION;
     }
-
-    env->DeleteLocalRef(classType);
-    env->DeleteLocalRef(value);
 
     return result;
 }
