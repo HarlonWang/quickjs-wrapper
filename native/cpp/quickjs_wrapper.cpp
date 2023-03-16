@@ -578,13 +578,18 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
                              jobjectArray args) {
     int argc = env->GetArrayLength(args);
     vector<JSValue> arguments;
+    vector<JSValue> freeArguments;
     for (int numArgs = 0; numArgs < argc && !env->ExceptionCheck(); numArgs++) {
         jobject arg = env->GetObjectArrayElement(args, numArgs);
         auto jsArg = toJSValue(env, thiz, arg);
-        env->DeleteLocalRef(arg);
         if (JS_IsException(jsArg)) {
             return nullptr;
         }
+
+        if (env->IsInstanceOf(arg, jsCallFunctionClass)) {
+            freeArguments.push_back(jsArg);
+        }
+        env->DeleteLocalRef(arg);
 
         arguments.push_back(jsArg);
     }
@@ -608,15 +613,13 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
     // JS_FreeValue(context, jsObj);
     // JS_FreeValue(context, jsFunc);
 
-    for (JSValue argument : arguments) {
-        if (JS_IsObject(argument)) {
-            if (JS_IsFunction(context, argument)) {
-                JS_FreeValue(context, argument);
-            }
-        } else {
-            JS_FreeValue(context, argument);
-        }
+    for (JSValue argument : freeArguments) {
+        JS_FreeValue(context, argument);
     }
+
+    // release vector by swap.
+    vector<JSValue>().swap(arguments);
+    vector<JSValue>().swap(freeArguments);
 
     if (!executePendingJobLoop(env, runtime, context)) {
         JS_FreeValue(context, ret);
