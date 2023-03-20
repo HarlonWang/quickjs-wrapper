@@ -50,7 +50,19 @@
 
 - `void gc_decref_child(JSRuntime *, JSGCObjectHeader *): assertion "p->ref_count > 0" failed`
     - 原因：某个对象引用计数为未加一，导致减一的时候校验失败
-    - 排查方式：先打印出 `gc_decref_child` 里 `p->ref_count <= 0` 的对象信息，因为执行到方法时，对象一般已经释放，会显示为 `null`，但是可以看到指针信息，可以选择以下任一方式定位到具体对象信息
+    - 排查方式：先打印出 `gc_decref_child` 里 `p->ref_count <= 0` 的对象信息：
+        ```c
+            static void gc_decref_child(JSRuntime *rt, JSGCObjectHeader *p)
+            {
+                // 打印异常对象信息
+                if (p->ref_count <= 0) {
+                    JS_DumpGCObject(rt, p)
+                }
+                assert(p->ref_count > 0);
+                ...
+            }
+        ```
+        因为执行到方法时，对象一般已经释放，会显示为 `null`，但是可以看到指针信息，可以选择以下任一方式定位到具体对象信息：
         - 方式1：打开 `quickjs.c` 里的 DUMP_FREE 开关，打印出所有的 `free` 对象，然后指针去匹配查找到释放前的对象信息
         - 方式2：找到 `__JS_FreeValueRT` 方法，并注释以下代码，不释放对象，这样在 `gc_decref_child` 里就可以看到对象的具体信息。              
     
