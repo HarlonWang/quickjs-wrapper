@@ -49,4 +49,15 @@ public class QuickJSCompileTest {
         context.destroy();
     }
 
+    @Test
+    public void testFreeValueReturnedOfExecute() {
+        QuickJSLoader.startRedirectingStdoutStderr("quickjs_android");
+        QuickJSContext context = QuickJSContext.create();
+        QuickJSLoader.initConsoleLog(context);
+
+        byte[] bytes = context.compile("() => { console.log('test'); }");
+        context.execute(bytes);
+        context.destroy();
+    }
+
 }
