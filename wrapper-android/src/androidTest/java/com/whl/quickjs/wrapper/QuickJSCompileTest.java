@@ -55,7 +55,7 @@ public class QuickJSCompileTest {
         QuickJSContext context = QuickJSContext.create();
         QuickJSLoader.initConsoleLog(context);
 
-        byte[] bytes = context.compile("() => { console.log('test'); }");
+        byte[] bytes = context.compile("test = () => { console.log('test'); }");
         context.execute(bytes);
         context.destroy();
     }
