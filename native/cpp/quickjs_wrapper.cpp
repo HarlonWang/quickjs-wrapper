@@ -855,7 +855,6 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
         result = nullptr;
         throwJSException(env, context);
     }
-    JS_FreeValue(context, val);
 
     return result;
 }
