@@ -710,12 +710,14 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     jniEnv->DeleteLocalRef(javaArgs);
 
     JSValue jsValue = toJSValue(jniEnv, thiz, result);
-    jniEnv->DeleteLocalRef(result);
 
-    if (JS_IsObject(jsValue)) {
-        // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
+    // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
+    if (JS_IsObject(jsValue) && !jniEnv->IsInstanceOf(result, jsCallFunctionClass)) {
         JS_DupValue(context, jsValue);
     }
+
+    jniEnv->DeleteLocalRef(result);
+
 
     return jsValue;
 }

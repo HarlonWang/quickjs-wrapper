@@ -1044,4 +1044,12 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testReturnJSCallback() {
+        QuickJSContext context = createContext();
+        context.getGlobalObject().setProperty("test", args -> (JSCallFunction) args1 -> "123");
+        context.evaluate("console.log(test()());");
+        context.destroy();
+    }
+
 }
