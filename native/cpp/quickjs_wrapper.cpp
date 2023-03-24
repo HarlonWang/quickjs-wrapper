@@ -564,7 +564,7 @@ jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstr
     JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
 
     const char *propsName = env->GetStringUTFChars(name, JNI_FALSE);
-    JSValue propsValue = JS_GetPropertyStr(context, jsObject, propsName);;
+    JSValue propsValue = JS_GetPropertyStr(context, jsObject, propsName);
     env->ReleaseStringUTFChars(name, propsName);
     if (JS_IsException(propsValue)) {
         throwJSException(env, context);
