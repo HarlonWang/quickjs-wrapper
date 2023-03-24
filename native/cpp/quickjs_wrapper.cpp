@@ -586,9 +586,13 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
             return nullptr;
         }
 
-        if (env->IsInstanceOf(arg, jsCallFunctionClass)) {
+        // 基础类型(例如 string )和 Java callback 类型需要使用完 free.
+        if (env->IsInstanceOf(arg, stringClass) || env->IsInstanceOf(arg, doubleClass) ||
+            env->IsInstanceOf(arg, integerClass) || env->IsInstanceOf(arg, longClass) ||
+            env->IsInstanceOf(arg, booleanClass) || env->IsInstanceOf(arg, jsCallFunctionClass)) {
             freeArguments.push_back(jsArg);
         }
+
         env->DeleteLocalRef(arg);
 
         arguments.push_back(jsArg);
