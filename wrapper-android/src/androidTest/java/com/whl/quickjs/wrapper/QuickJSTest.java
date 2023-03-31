@@ -1054,16 +1054,15 @@ public class QuickJSTest {
 
     @Test
     public void testPromiseCrash() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("我来自Exception的值");
         QuickJSContext jsContext = createContext();
         JSObject pofeng = jsContext.createNewJSObject();
         JSObject gol = jsContext.getGlobalObject();
         gol.setProperty("pofeng", pofeng);
-        pofeng.setProperty("getSystemInfo", new JSCallFunction() {
-            @Override
-            public Object call(Object... args) {
-                ((JSFunction) ((JSObject) args[0]).getJSObject("success")).call("我来自Exception的值");
-                return "我来自Java的值";
-            }
+        pofeng.setProperty("getSystemInfo", args -> {
+            ((JSFunction) ((JSObject) args[0]).getJSObject("success")).call("我来自Exception的值");
+            return "我来自Java的值";
         });
 
         String js = "new Promise((resolve, reject) => {\n" +
