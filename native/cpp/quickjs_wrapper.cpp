@@ -543,6 +543,10 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
+    if (env->ExceptionCheck()) {
+        return nullptr;
+    }
+
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
