@@ -353,6 +353,10 @@ static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) 
 }
 
 static bool executePendingJobLoop(JNIEnv *env, JSRuntime *rt, JSContext *ctx) {
+    if (env->ExceptionCheck()) {
+        return false;
+    }
+
     JSContext *ctx1;
     bool success = true;
     int err;
@@ -540,10 +544,6 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
 
     if (!executePendingJobLoop(env, runtime, context)) {
         JS_FreeValue(context, result);
-        return nullptr;
-    }
-
-    if (env->ExceptionCheck()) {
         return nullptr;
     }
 
