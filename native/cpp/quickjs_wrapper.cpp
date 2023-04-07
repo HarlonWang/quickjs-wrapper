@@ -722,8 +722,6 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
     }
 
     jniEnv->DeleteLocalRef(result);
-
-
     return jsValue;
 }
 
