@@ -204,7 +204,6 @@ ProGuard users must manually add the options from [consumer-rules.pro](/wrapper-
 ## Concurrency
 JavaScript runtimes are single threaded. All execution in the JavaScript runtime is guaranteed thread safe, by way of Java synchronization.
 
-
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/HarlonWang/quickjs-wrapper.svg)](https://starchart.cc/HarlonWang/quickjs-wrapper)
