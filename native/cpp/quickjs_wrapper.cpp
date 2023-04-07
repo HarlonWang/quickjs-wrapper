@@ -671,7 +671,6 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
 void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JSValue child = toJSValue(env, thiz, value);
-    env->DeleteLocalRef(value);
     JS_SetPropertyUint32(context, jsObj, index, JS_DupValue(context, child));
 }
 
@@ -692,8 +691,6 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
         JS_FreeAtom(context, name_atom);
         JS_FreeAtom(context, name_atom_key);
     }
-
-    env->DeleteLocalRef(value);
 
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JS_SetPropertyStr(context, jsObj, propName, propValue);
