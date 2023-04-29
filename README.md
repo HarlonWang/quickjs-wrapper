@@ -80,7 +80,7 @@ QuickJSContext context = QuickJSContext.create();
 
 ```Java
 QuickJSContext context = QuickJSContext.create();
-context.destroy(context);
+context.destroy();
 ```
 
 ### Evaluating JavaScript
