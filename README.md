@@ -208,7 +208,7 @@ JavaScript runtimes are single threaded. All execution in the JavaScript runtime
 If your product uses quickjs-wrapper, welcome to contribute by creating a pull request or let me know through other contacts! 
 
 ## Find this repository useful?
-Support it by joining __[stargazers](https://github.com/HarlonWang/quickjs-wrapper/stargazers)__ for this repository. :star: <br>
+Support it by joining __[stargazers](https://github.com/HarlonWang/quickjs-wrapper/stargazers)__ for this repository. <br>
 Also, __[follow me](https://github.com/HarlonWang)__ on GitHub for my next creations! 
 
 ## Stargazers over time
