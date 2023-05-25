@@ -15,7 +15,6 @@ public final class QuickJSLoader {
 
     public interface Console {
         void log(String info);
-        void debug(String info);
         void info(String info);
         void warn(String info);
         void error(String info);
@@ -31,11 +30,6 @@ public final class QuickJSLoader {
 
         @Override
         public void log(String info) {
-            Log.d(tag, info);
-        }
-
-        @Override
-        public void debug(String info) {
             Log.d(tag, info);
         }
 
@@ -81,7 +75,7 @@ public final class QuickJSLoader {
                     case "log":
                     case "debug":
                     default:
-                        console.debug(info);
+                        console.log(info);
                         break;
                 }
             }

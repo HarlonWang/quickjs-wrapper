@@ -39,11 +39,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -67,11 +62,6 @@ public class ConsoleLogTest {
             @Override
             public void log(String info) {
                 assertEquals("123", info);
-            }
-
-            @Override
-            public void debug(String info) {
-
             }
 
             @Override
@@ -101,11 +91,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -129,11 +114,6 @@ public class ConsoleLogTest {
             @Override
             public void log(String info) {
                 assertEquals("false", info);
-            }
-
-            @Override
-            public void debug(String info) {
-
             }
 
             @Override
@@ -163,11 +143,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -191,11 +166,6 @@ public class ConsoleLogTest {
             @Override
             public void log(String info) {
                 assertEquals("function ()", info);
-            }
-
-            @Override
-            public void debug(String info) {
-
             }
 
             @Override
@@ -225,11 +195,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -253,11 +218,6 @@ public class ConsoleLogTest {
             @Override
             public void log(String info) {
                 assertEquals("null", info);
-            }
-
-            @Override
-            public void debug(String info) {
-
             }
 
             @Override
@@ -287,11 +247,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -315,11 +270,6 @@ public class ConsoleLogTest {
             @Override
             public void log(String info) {
                 assertEquals("obj -> , { name: HarlonWang }", info);
-            }
-
-            @Override
-            public void debug(String info) {
-
             }
 
             @Override
@@ -349,11 +299,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -380,11 +325,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -407,11 +347,6 @@ public class ConsoleLogTest {
         QuickJSLoader.initConsoleLog(context, new QuickJSLoader.Console() {
             @Override
             public void log(String info) {
-
-            }
-
-            @Override
-            public void debug(String info) {
                 assertEquals("debug", info);
             }
 
@@ -442,11 +377,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
                 assertEquals("info", info);
             }
@@ -469,11 +399,6 @@ public class ConsoleLogTest {
         QuickJSLoader.initConsoleLog(context, new QuickJSLoader.Console() {
             @Override
             public void log(String info) {
-
-            }
-
-            @Override
-            public void debug(String info) {
 
             }
 
@@ -504,11 +429,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -532,11 +452,6 @@ public class ConsoleLogTest {
             @Override
             public void log(String info) {
                 assertEquals(596, info.length());
-            }
-
-            @Override
-            public void debug(String info) {
-
             }
 
             @Override
@@ -571,11 +486,6 @@ public class ConsoleLogTest {
             }
 
             @Override
-            public void debug(String info) {
-
-            }
-
-            @Override
             public void info(String info) {
 
             }
@@ -597,5 +507,4 @@ public class ConsoleLogTest {
                 "\tconsole.log('----', err);\n" +
                 "}");
     }
-
 }
