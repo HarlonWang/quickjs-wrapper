@@ -717,9 +717,9 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
 
     JSValue jsValue = toJSValue(jniEnv, thiz, result);
 
-    // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
+    // JS 对象作为方法返回值，会计数减一，这里需要把 map 里的 value 也移除掉。避免销毁的时候重复计数减一。
     if (JS_IsObject(jsValue) && !jniEnv->IsInstanceOf(result, jsCallFunctionClass)) {
-        JS_DupValue(context, jsValue);
+        removeValue(reinterpret_cast<jlong>(JS_VALUE_GET_PTR(jsValue)));
     }
 
     jniEnv->DeleteLocalRef(result);
@@ -781,6 +781,16 @@ void QuickJSWrapper::freeValue(jlong value) {
 
         JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
         JS_FreeValue(context, jsObj);
+    }
+}
+
+void QuickJSWrapper::removeValue(jlong value) {
+    // current only free exist value in map.
+    // todo refactor
+    map<jlong, JSValue>::iterator exist;
+    exist = values.find(value);
+    if (exist != values.end()) {
+        values.erase(exist);
     }
 }
 
