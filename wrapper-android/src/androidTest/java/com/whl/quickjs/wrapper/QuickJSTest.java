@@ -8,11 +8,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
-
 import androidx.test.core.app.ApplicationProvider;
-
 import com.whl.quickjs.android.QuickJSLoader;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -1074,6 +1071,22 @@ public class QuickJSTest {
                 "        })";
         jsContext.evaluate(js);
         jsContext.destroy();
+    }
+
+    @Test
+    public void testJSCallFunctionReleased() {
+        QuickJSContext jsContext = createContext();
+        for (int i = 0; i < 100; i++) {
+            JSObject jsObject = jsContext.createNewJSObject();
+            JSCallFunction function = args -> null;
+            jsObject.setProperty("test", function);
+            jsObject.release();
+        }
+
+        // QuickJSLoader.initConsoleLog 方法里有调用过一次 setProperty，总数还剩1个
+        assertEquals(1, jsContext.getCallFunctionMapSize());
+        jsContext.destroy();
+        assertEquals(0, jsContext.getCallFunctionMapSize());
     }
 
 }

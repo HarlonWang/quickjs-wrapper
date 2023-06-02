@@ -78,7 +78,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_get(JNIEnv *env, jobject thiz, jlong
 }extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz, jlong runtime) {
-    auto *wrapper = new(std::nothrow) QuickJSWrapper(env, reinterpret_cast<JSRuntime *>(runtime));
+    auto *wrapper = new(std::nothrow) QuickJSWrapper(env, thiz, reinterpret_cast<JSRuntime *>(runtime));
     if (!wrapper || !wrapper->context || !wrapper->runtime) {
         delete wrapper;
         wrapper = nullptr;

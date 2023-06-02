@@ -94,20 +94,12 @@ static string getJSErrorStr(JSContext *ctx) {
 // js function callback
 static JSClassID js_func_callback_class_id;
 
-typedef struct {
-    jobject value;
-    jobject thiz;
-} JSFuncCallback;
-
 static void jsFuncCallbackFinalizer(JSRuntime *rt, JSValue val) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(rt));
     if (wrapper) {
-        auto *jsFc = reinterpret_cast<JSFuncCallback *>(JS_GetOpaque2(wrapper->context, val, js_func_callback_class_id));
-        if (jsFc) {
-            wrapper->jniEnv->DeleteGlobalRef(jsFc->thiz);
-            wrapper->jniEnv->DeleteGlobalRef(jsFc->value);
-            delete jsFc;
-        }
+        int *callbackId = (int *)(JS_GetOpaque2(wrapper->context, val, js_func_callback_class_id));
+        wrapper->removeCallFunction(*callbackId);
+        delete callbackId;
     }
 }
 
@@ -121,9 +113,10 @@ static JSValue jsFnCallback(JSContext *ctx,
                             int argc, JSValueConst *argv,
                             int magic, JSValue *func_data) {
 
-    auto *jsFc = reinterpret_cast<JSFuncCallback *>(JS_GetOpaque2(ctx, func_data[0], js_func_callback_class_id));
+    int callbackId = *((int *)JS_GetOpaque2(ctx, func_data[0], js_func_callback_class_id));
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
-    return wrapper->jsFuncCall(jsFc->value, jsFc->thiz, this_obj, argc, argv);
+    JSValue value = wrapper->jsFuncCall(callbackId, this_obj, argc, argv);
+    return value;
 }
 
 static void initJSFuncCallback(JSContext *ctx) {
@@ -393,9 +386,10 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     }
 }
 
-QuickJSWrapper::QuickJSWrapper(JNIEnv *env, JSRuntime *rt) {
+QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jniEnv = env;
     runtime = rt;
+    jniThiz = jniEnv->NewGlobalRef(thiz);
 
     // init ES6Module
     JS_SetModuleLoaderFunc(runtime, jsModuleNormalizeFunc, jsModuleLoaderFunc, nullptr);
@@ -421,6 +415,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, JSRuntime *rt) {
     jsFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
     jsCallFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
     jsModuleClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSModule")));
+    quickjsContextClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/QuickJSContext")));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -439,9 +434,24 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, JSRuntime *rt) {
     jsConvertModuleName = jniEnv->GetStaticMethodID(jsModuleClass, "convertModuleName",
                                               "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
     jsGetModuleScript = jniEnv->GetStaticMethodID(jsModuleClass, "getModuleScript", "(Ljava/lang/String;)Ljava/lang/String;");
+
+    callFunctionBackM = jniEnv->GetMethodID(quickjsContextClass, "callFunctionBack", "(I[Ljava/lang/Object;)Ljava/lang/Object;");
+    removeCallFunctionM = jniEnv->GetMethodID(quickjsContextClass, "removeCallFunction", "(I)V");
+    callFunctionHashCodeM = jniEnv->GetMethodID(jsCallFunctionClass, "hashCode", "()I");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
+    map<jlong, JSValue>::iterator i;
+    for (i = values.begin(); i != values.end(); ++i) {
+        JSValue item = i->second;
+        JS_FreeValue(context, item);
+    }
+    values.clear();
+
+    JS_FreeContext(context);
+    JS_FreeRuntime(runtime);
+
+    jniEnv->DeleteGlobalRef(jniThiz);
     jniEnv->DeleteGlobalRef(objectClass);
     jniEnv->DeleteGlobalRef(doubleClass);
     jniEnv->DeleteGlobalRef(integerClass);
@@ -453,16 +463,6 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsFunctionClass);
     jniEnv->DeleteGlobalRef(jsCallFunctionClass);
     jniEnv->DeleteGlobalRef(jsModuleClass);
-
-    map<jlong, JSValue>::iterator i;
-    for (i = values.begin(); i != values.end(); ++i) {
-        JSValue item = i->second;
-        JS_FreeValue(context, item);
-    }
-    values.clear();
-
-    JS_FreeContext(context);
-    JS_FreeRuntime(runtime);
 }
 
 jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold){
@@ -699,23 +699,20 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
     env->ReleaseStringUTFChars(name, propName);
 }
 
-JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv){
+JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv){
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
-        auto java_arg = toJavaObject(jniEnv, thiz, this_val, argv[i], false);
+        auto java_arg = toJavaObject(jniEnv, jniThiz, this_val, argv[i], false);
         jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, java_arg);
         jniEnv->DeleteLocalRef(java_arg);
     }
 
-    auto funcClass = jniEnv->GetObjectClass(func_value);
-    auto funcMethodId = jniEnv->GetMethodID(funcClass, "call", "([Ljava/lang/Object;)Ljava/lang/Object;");
-    auto result = jniEnv->CallObjectMethod(func_value, funcMethodId, javaArgs);
+    auto result = jniEnv->CallObjectMethod(jniThiz, callFunctionBackM, callback_id, javaArgs);
 
-    jniEnv->DeleteLocalRef(funcClass);
     jniEnv->DeleteLocalRef(javaArgs);
 
-    JSValue jsValue = toJSValue(jniEnv, thiz, result);
+    JSValue jsValue = toJSValue(jniEnv, jniThiz, result);
 
     // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
     if (JS_IsObject(jsValue) && !jniEnv->IsInstanceOf(result, jsCallFunctionClass)) {
@@ -724,6 +721,10 @@ JSValue QuickJSWrapper::jsFuncCall(jobject func_value, jobject thiz, JSValueCons
 
     jniEnv->DeleteLocalRef(result);
     return jsValue;
+}
+
+void QuickJSWrapper::removeCallFunction(int callback_id) const {
+    jniEnv->CallVoidMethod(jniThiz, removeCallFunctionM, callback_id);
 }
 
 JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) const {
@@ -753,11 +754,8 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
         // JS_NewCFunctionData 有 dupValue obj，这里需要对 obj 计数减一，保持计数平衡
         JS_FreeValue(context, obj);
 
-        auto *jsFc = new JSFuncCallback;
-        jsFc->value = env->NewGlobalRef(value);
-        jsFc->thiz = env->NewGlobalRef(thiz);
-
-        JS_SetOpaque(obj, jsFc);
+        int *callbackId = new int(jniEnv->CallIntMethod(value, callFunctionHashCodeM));
+        JS_SetOpaque(obj, callbackId);
     } else {
         auto classType = env->GetObjectClass(value);
         const auto typeName = getJavaName(env, classType);

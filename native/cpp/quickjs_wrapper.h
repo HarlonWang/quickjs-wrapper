@@ -22,6 +22,7 @@ private:
 
 public:
     JNIEnv *jniEnv;
+    jobject jniThiz;
     JSRuntime *runtime;
     JSContext *context;
 
@@ -39,6 +40,7 @@ public:
     jclass jsFunctionClass;
     jclass jsCallFunctionClass;
     jclass jsModuleClass;
+    jclass quickjsContextClass;
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
@@ -57,7 +59,11 @@ public:
     jmethodID jsGetModuleScript;
     jmethodID jsConvertModuleName;
 
-    QuickJSWrapper(JNIEnv *env, JSRuntime *rt);
+    jmethodID callFunctionBackM;
+    jmethodID removeCallFunctionM;
+    jmethodID callFunctionHashCodeM;
+
+    QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt);
     ~QuickJSWrapper();
 
     jobject evaluate(JNIEnv*, jobject thiz, jstring script, jstring file_name);
@@ -69,7 +75,8 @@ public:
     jint length(JNIEnv *env, jlong value) const;
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
     void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
-    JSValue jsFuncCall(jobject func_value, jobject thiz, JSValueConst this_val, int argc, JSValueConst *argv);
+    JSValue jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv);
+    void removeCallFunction(int callback_id) const;
     void freeValue(jlong);
     void dupValue(jlong) const;
     void freeDupValue(jlong) const;

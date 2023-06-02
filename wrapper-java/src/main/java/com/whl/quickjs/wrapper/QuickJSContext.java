@@ -1,6 +1,7 @@
 package com.whl.quickjs.wrapper;
 
 import java.io.File;
+import java.util.HashMap;
 
 public class QuickJSContext {
 
@@ -44,6 +45,7 @@ public class QuickJSContext {
     };
     private final long currentThreadId;
     private boolean destroyed = false;
+    private final HashMap<Integer, JSCallFunction> callFunctionMap = new HashMap<>();
 
     private QuickJSContext() {
         try {
@@ -89,6 +91,7 @@ public class QuickJSContext {
         checkDestroyed();
 
         nativeCleaner.forceClean();
+        callFunctionMap.clear();
         destroyContext(context);
         destroyed = true;
     }
@@ -109,7 +112,43 @@ public class QuickJSContext {
         checkSameThread();
         checkDestroyed();
 
+        if (value instanceof JSCallFunction) {
+            // Todo 优化：可以只传 callFunctionId 给到 JNI.
+            putCallFunction((JSCallFunction) value);
+        }
+
         setProperty(context, jsObj.getPointer(), name, value);
+    }
+
+    private void putCallFunction(JSCallFunction callFunction) {
+        int callFunctionId = callFunction.hashCode();
+        callFunctionMap.put(callFunctionId, (JSCallFunction) callFunction);
+    }
+
+    /**
+     * 该方法只提供给 Native 层回调.
+     * @param callFunctionId JSCallFunction 对象标识
+     */
+    public void removeCallFunction(int callFunctionId) {
+        callFunctionMap.remove(callFunctionId);
+    }
+
+    /**
+     * 该方法只提供给 Native 层回调.
+     * @param callFunctionId JSCallFunction 对象标识
+     * @param args JS 到 Java 的参数映射
+     */
+    public Object callFunctionBack(int callFunctionId, Object... args) {
+        checkSameThread();
+        checkDestroyed();
+
+        JSCallFunction callFunction = callFunctionMap.get(callFunctionId);
+        Object ret = callFunction.call(args);
+        if (ret instanceof JSCallFunction) {
+            putCallFunction((JSCallFunction) ret);
+        }
+
+        return ret;
     }
 
     public void freeValue(JSObject jsObj) {
@@ -117,6 +156,14 @@ public class QuickJSContext {
         checkDestroyed();
 
         freeValue(context, jsObj.getPointer());
+    }
+
+    /**
+     * @VisibleForTesting
+     * 该方法仅供单元测试使用
+     */
+    int getCallFunctionMapSize() {
+        return callFunctionMap.size();
     }
 
     /**
@@ -165,6 +212,13 @@ public class QuickJSContext {
     Object call(JSObject func, long objPointer, Object... args) {
         checkSameThread();
         checkDestroyed();
+
+        for (int i = 0; i < args.length; i++) {
+            Object arg = args[i];
+            if (arg instanceof JSCallFunction) {
+                putCallFunction((JSCallFunction) arg);
+            }
+        }
 
         return call(context, func.getPointer(), objPointer, args);
     }
