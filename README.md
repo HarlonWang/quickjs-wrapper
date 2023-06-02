@@ -151,7 +151,7 @@ JavaScript
 
 ```JavaScript
 var repository = {
-	name: 'hello string',
+	name: 'QuickJS Wrapper',
 	created: 2022,
 	version: 1.1,
 	signing_enabled: true,
@@ -163,7 +163,7 @@ Java
 ```Java
 JSObject globalObject = context.getGlobalObject();
 JSObject obj1 = globalObject.getJSObjectProperty("repository");
-obj1.getString("name"); // hello
+obj1.getString("name"); // QuickJS Wrapper
 obj1.getInteger("created"); // 2022
 obj1.getDouble("version"); // 1.1
 obj1.getBoolean("signing_enabled"); // true
