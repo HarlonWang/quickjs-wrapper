@@ -125,49 +125,49 @@ Java
 
 ```java
 JSObject globalObj = context.getGlobalObject();
-JSObject obj1 = context.createNewJSObject();
-obj1.setProperty("stringProperty", "hello");
-obj1.setProperty("intProperty", 1);
-obj1.setProperty("doubleProperty", 0.1);
-obj1.setProperty("booleanProperty", true);
-obj1.setProperty("functionProperty", (JSCallFunction) args -> {
-    return args[0] + "Wang";
+JSObject repository = globalObj.createNewJSObject();
+obj1.setProperty("name", "QuickJS Wrapper");
+obj1.setProperty("created", 2022);
+obj1.setProperty("version", 1.1);
+obj1.setProperty("signing_enabled", true);
+obj1.setProperty("getUrl", (JSCallFunction) args -> {
+    return "https://github.com/HarlonWang/quickjs-wrapper";
 });
-globalObj.setProperty("obj1", obj1);
+globalObj.setProperty("repository", repository);
 ```
 
 JavaScript
 
 ```javascript
-obj1.stringProperty; // hello string
-obj1.intProperty; // 1
-obj1.doubleProperty; // 0.1
-obj1.booleanProperty; // true
-obj1.functionProperty('Harlon'); // HarlonWang
+repository.name; // QuickJS Wrapper
+repository.created; // 2022
+repository.version; // 1.1
+repository.signing_enabled; // true
+repository.getUrl(); // https://github.com/HarlonWang/quickjs-wrapper
 ```                
 
 ### Get Property
 JavaScript
 
 ```JavaScript
-var obj1 = {
-	stringProperty: 'hello string',
-	intProperty: 1,
-	doubleProperty: 0.1,
-	booleanProperty: true,
-	functionProperty: (name) => { return name + 'Wang'; }
+var repository = {
+	name: 'hello string',
+	created: 2022,
+	version: 1.1,
+	signing_enabled: true,
+	getUrl: (name) => { return 'https://github.com/HarlonWang/quickjs-wrapper'; }
 }
 ```
 Java
 
 ```Java
 JSObject globalObject = context.getGlobalObject();
-JSObject obj1 = globalObject.getJSObjectProperty("obj1");
-obj1.getString("stringProperty"); // hello
-obj1.getInteger("intProperty"); // 1
-obj1.getDouble("doubleProperty"); // 0.1
-obj1.getBoolean("booleanProperty"); // true
-obj1.getJSFunction("functionProperty").call("Harlon"); // HarlonWang
+JSObject obj1 = globalObject.getJSObjectProperty("repository");
+obj1.getString("name"); // hello
+obj1.getInteger("created"); // 2022
+obj1.getDouble("version"); // 1.1
+obj1.getBoolean("signing_enabled"); // true
+obj1.getJSFunction("getUrl").call(); // https://github.com/HarlonWang/quickjs-wrapper
 ```
 
 ### Compile ByteCode
