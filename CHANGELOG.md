@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.19.0 *(2023-06-05)*
+## 0.19.1 *(2023-06-05)*
 
 - 修复 `Attempt to remove non-JNI local reference` 的错误警告
 - 修复 `QuickJSWrapper` 析构函数执行时可能会出现的 `use deleted global reference` 异常
