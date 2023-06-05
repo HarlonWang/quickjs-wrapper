@@ -26,6 +26,8 @@ subprojects {
 
         apply plugin: "com.vanniktech.maven.publish"
 
+        group = "wang.harlon.quickjs"
+
         mavenPublishing {
             publishToMavenCentral(SonatypeHost.S01)
 
