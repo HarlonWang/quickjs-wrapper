@@ -2,6 +2,7 @@ package com.whl.quickjs.wrapper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public class JSObject {
 
@@ -255,7 +256,12 @@ public class JSObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JSObject jsObject = (JSObject) o;
-        return pointer == jsObject.pointer && isReleased == jsObject.isReleased && context == jsObject.context;
+        return pointer == jsObject.pointer;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(new long[]{pointer});
     }
 
 }
