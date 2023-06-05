@@ -1,3 +1,5 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -21,7 +23,42 @@ allprojects {
 
 subprojects {
     if (project.name != "app") {
+
         apply plugin: "com.vanniktech.maven.publish"
+
+        mavenPublishing {
+            publishToMavenCentral(SonatypeHost.DEFAULT)
+            // or when publishing to https://s01.oss.sonatype.org
+            publishToMavenCentral(SonatypeHost.S01)
+
+            signAllPublications()
+
+            pom {
+                name = "QuickJS Wrapper"
+                description = "Quickjs wrapper library for Android/JVM."
+                inceptionYear = "2022"
+                url = "https://github.com/HarlonWang/quickjs-wrapper"
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "HarlonWang"
+                        name = "Harlon Wang"
+                        url = "https://github.com/HarlonWang"
+                    }
+                }
+                scm {
+                    url = "https://github.com/HarlonWang/quickjs-wrapper"
+                    connection = "scm:git:git://github.com/HarlonWang/quickjs-wrapper.git"
+                    developerConnection = "scm:git:ssh://github.com/HarlonWang/quickjs-wrapper.git"
+                }
+            }
+        }
     }
 }
 
