@@ -106,19 +106,13 @@ QuickJSLoader.initConsoleLog(context);
 - `double`
 - `String`
 - `null`
+- `long`
+    > Because there is no Long type corresponding to Java in JavaScript, the conversion of Long type is special. Long value can be directly transferred from Java to JavaScript, which will be converted to BigInt64.
 
 #### Mutual conversion of JS object types
 - `JSObject` represents a JavaScript object
 - `JSFunction` represents a JavaScript function
 - `JSArray` represents a JavaScript Array
-
-#### About Long Type
-Because there is no Long type corresponding to Java in JavaScript, the conversion of Long type is special.
-- Long value can be directly transferred from Java to JavaScript, which will be converted to Int64 bit。
-- To convert a value from JavaScript to Java into a Long type, you need to use the Double type, as shown in the following example:
-    ```Java
-    ((Double)target).longValue());
-    ```
 
 ### Set Property
 Java
@@ -219,4 +213,4 @@ Also, __[follow me](https://github.com/HarlonWang)__ on GitHub for my next creat
 
 - [quickjs-java](https://github.com/cashapp/quickjs-java)
 - [quack](https://github.com/koush/quack)
-- [quickjs-android](https://github.com/taoweiji/quickjs-android)                
+- [quickjs-android](https://github.com/taoweiji/quickjs-android)

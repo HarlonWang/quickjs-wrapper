@@ -495,6 +495,15 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             break;
         }
 
+        case JS_TAG_BIG_INT: {
+            int64_t e;
+            JS_ToBigInt64(context, &e, value);
+            jvalue v;
+            v.j = e;
+            result = env->CallStaticObjectMethodA(longClass, longValueOf, &v);
+            break;
+        }
+
         case JS_TAG_FLOAT64: {
             jvalue v;
             v.d = static_cast<jdouble>(JS_VALUE_GET_FLOAT64(value));
@@ -743,7 +752,7 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
     } else if (env->IsInstanceOf(value, integerClass)) {
         result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
     } else if(env->IsInstanceOf(value, longClass)) {
-        result = JS_NewInt64(context, env->CallLongMethod(value, longGetValue));
+        result = JS_NewBigInt64(context, env->CallLongMethod(value, longGetValue));
     } else if (env->IsInstanceOf(value, booleanClass)) {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else if (env->IsInstanceOf(value, jsObjectClass)) {

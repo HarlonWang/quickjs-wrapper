@@ -145,6 +145,11 @@ public class JSObject {
         return value instanceof Double ? (Double) value : null;
     }
 
+    public Long getLong(String name) {
+        Object value = getProperty(name);
+        return value instanceof Long ? (Long) value : null;
+    }
+
     /**
      * See {@link JSObject#getDouble(String)}
      */

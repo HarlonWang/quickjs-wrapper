@@ -57,6 +57,7 @@ public class QuickJSTest {
         obj1.setProperty("stringProperty", "hello");
         obj1.setProperty("intProperty", 1);
         obj1.setProperty("doubleProperty", 0.1);
+        obj1.setProperty("longProperty", 1686026400093L);
         obj1.setProperty("booleanProperty", true);
         obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
         obj1.setProperty("nullProperty", (String) null);
@@ -65,6 +66,7 @@ public class QuickJSTest {
         assertEquals("hello", context.evaluate("obj1.stringProperty;"));
         assertEquals(1, context.evaluate("obj1.intProperty;"));
         assertEquals(0.1, context.evaluate("obj1.doubleProperty;"));
+        assertEquals(1686026400093L, context.evaluate("obj1.longProperty;"));
         assertEquals(true, context.evaluate("obj1.booleanProperty;"));
         assertEquals("HarlonWang", context.evaluate("obj1.functionProperty(\"Harlon\");"));
         assertNull(context.evaluate("obj1.nullProperty;"));
@@ -79,15 +81,17 @@ public class QuickJSTest {
                 "\tstringProperty: 'hello',\n" +
                 "\tintProperty: 1,\n" +
                 "\tdoubleProperty: 0.1,\n" +
+                "\tlongProperty: 1686026400093n,\n" +
                 "\tbooleanProperty: true,\n" +
                 "\tnullProperty: null,\n" +
                 "\tfunctionProperty: (name) => { return name + 'Wang'; }\n" +
                 "}");
         JSObject globalObject = context.getGlobalObject();
         JSObject obj1 = globalObject.getJSObject("obj1");
-        assertEquals("hello", obj1.getProperty("stringProperty"));
+        assertEquals("hello", obj1.getString("stringProperty"));
         assertEquals(1, obj1.getProperty("intProperty"));
         assertEquals(0.1, obj1.getProperty("doubleProperty"));
+        assertEquals(1686026400093L, obj1.getProperty("longProperty"));
         assertEquals(true, obj1.getProperty("booleanProperty"));
         assertNull(obj1.getProperty("nullProperty"));
         assertEquals("HarlonWang", obj1.getJSFunction("functionProperty").call("Harlon"));
@@ -894,13 +898,21 @@ public class QuickJSTest {
     @Test
     public void testLongValue() {
         QuickJSContext context = createContext();
+
+        // Java -> JavaScript
         long currentTime = System.currentTimeMillis();
-        context.getGlobalObject().setProperty("getLongValue", args -> currentTime);
+        context.getGlobalObject().setProperty("longValue", args -> currentTime);
         context.getGlobalObject().setProperty("assert", args -> {
-            assertEquals(currentTime, ((Double)args[0]).longValue());
+            long actual = (long) args[0];
+            assertEquals(currentTime, actual);
             return null;
         });
-        context.evaluate("var l = getLongValue();assert(l);");
+        context.evaluate("assert(longValue());");
+
+        // JavaScript -> Java
+        context.evaluate("var a = 1686026400093n;");
+        assertEquals(1686026400093L, (long)context.getGlobalObject().getLong("a"));
+
         context.destroy();
     }
 
@@ -1087,6 +1099,18 @@ public class QuickJSTest {
         assertEquals(1, jsContext.getCallFunctionMapSize());
         jsContext.destroy();
         assertEquals(0, jsContext.getCallFunctionMapSize());
+    }
+
+    @Test
+    public void testLongMaxValue() {
+        QuickJSContext context = createContext();
+        context.getGlobalObject().setProperty("assert", args -> {
+            assertEquals(Long.MAX_VALUE, args[0]);
+            return null;
+        });
+        context.getGlobalObject().setProperty("longMaxValue", args -> Long.MAX_VALUE);
+        context.evaluate("assert(longMaxValue());");
+        context.destroy();
     }
 
 }
