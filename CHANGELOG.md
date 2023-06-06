@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.19.2 *(2023-06-06)*
+
+- 特性：支持 `Long` 类型数据在 JavaScript 中的传递
+
 ## 0.19.1 *(2023-06-05)*
 
 - 修复 `Attempt to remove non-JNI local reference` 的错误警告
