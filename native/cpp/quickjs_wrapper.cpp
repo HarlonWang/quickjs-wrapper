@@ -437,7 +437,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
 
     callFunctionBackM = jniEnv->GetMethodID(quickjsContextClass, "callFunctionBack", "(I[Ljava/lang/Object;)Ljava/lang/Object;");
     removeCallFunctionM = jniEnv->GetMethodID(quickjsContextClass, "removeCallFunction", "(I)V");
-    callFunctionHashCodeM = jniEnv->GetMethodID(jsCallFunctionClass, "hashCode", "()I");
+    callFunctionHashCodeM = jniEnv->GetMethodID(objectClass, "hashCode", "()I");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
