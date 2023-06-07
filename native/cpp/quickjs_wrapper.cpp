@@ -3,7 +3,6 @@
 //
 #include "quickjs_wrapper.h"
 #include "../quickjs/cutils.h"
-#include <cstring>
 
 // util
 static string getJavaName(JNIEnv* env, jobject javaClass) {
