@@ -16,6 +16,7 @@ public class QuickJSFreeValueTest {
     @Before
     public void setup() {
         QuickJSLoader.init();
+        QuickJSLoader.startRedirectingStdoutStderr("quickjs");
         context = QuickJSContext.create();
     }
 

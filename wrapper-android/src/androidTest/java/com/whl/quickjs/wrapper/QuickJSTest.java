@@ -10,8 +10,16 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
 import androidx.test.core.app.ApplicationProvider;
 import com.whl.quickjs.android.QuickJSLoader;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class QuickJSTest {
 
@@ -1110,6 +1118,67 @@ public class QuickJSTest {
         });
         context.getGlobalObject().setProperty("longMaxValue", args -> Long.MAX_VALUE);
         context.evaluate("assert(longMaxValue());");
+        context.destroy();
+    }
+
+    @Test
+    public void testParseObjectReleased() {
+        int maxSize = 100000;
+
+        QuickJSContext context = createContext();
+        StringBuilder builder = new StringBuilder();
+        builder.append("\"");
+        for (int i = 0; i < maxSize; i++) {
+            builder.append("s");
+        }
+        builder.append("\"");
+        context.parse(builder.toString());
+
+        Context androidContext = ApplicationProvider.getApplicationContext();
+        File file = new File(androidContext.getCacheDir(), "dump_memory.txt");
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        context.dumpMemoryUsage(file);
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            StringBuilder stringBuilder = new StringBuilder();
+
+            char[] buffer = new char[10];
+            while (reader.read(buffer) != -1) {
+                stringBuilder.append(new String(buffer));
+                buffer = new char[10];
+            }
+            reader.close();
+            String content = stringBuilder.toString();
+            // Log.d("ParseReleased", content);
+
+            // allocated size should be < max size, if released.
+            Matcher matcher = Pattern.compile("memory.allocated.*block").matcher(content);
+            if (matcher.find()) {
+                String group = matcher.group();
+                String[] split = group.split(" ");
+                List<String> split2 = new ArrayList<>();
+                for (String s : split) {
+                    String item = s.trim();
+                    if (!TextUtils.isEmpty(item)) {
+                        split2.add(item);
+                    }
+                }
+
+                String allocatedSize = split2.get(3);
+                assertTrue(Integer.parseInt(allocatedSize) < maxSize);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         context.destroy();
     }
 

@@ -69,17 +69,24 @@ static string getJSErrorStr(JSContext *ctx, JSValueConst error) {
         tryToTriggerOnError(ctx, &error);
 
         JSValue message = JS_GetPropertyStr(ctx, error, "message");
-        jsException = JS_ToCString(ctx, message);
+        const char *msg_str = JS_ToCString(ctx, message);
+        jsException += msg_str;
+        JS_FreeCString(ctx, msg_str);
         JS_FreeValue(ctx, message);
 
         val = JS_GetPropertyStr(ctx, error, "stack");
         if (!JS_IsUndefined(val)) {
             jsException += "\n";
-            jsException += jsDumpObj(ctx, val);
+
+            const char *stack_str = JS_ToCString(ctx, val);
+            jsException += stack_str;
+            JS_FreeCString(ctx, stack_str);
         }
         JS_FreeValue(ctx, val);
     } else {
-        jsException = jsDumpObj(ctx, error);
+        const char *error_str = JS_ToCString(ctx, error);
+        jsException += error_str;
+        JS_FreeCString(ctx, error_str);
     }
     return jsException;
 }
@@ -466,7 +473,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(quickjsContextClass);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool hold){
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool non_js_callback){
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -478,6 +485,10 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             const char* string = JS_ToCString(context, value);
             result = env->NewStringUTF(string);
             JS_FreeCString(context, string);
+            if (non_js_callback) {
+                // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
+                JS_FreeValue(context, value);
+            }
             break;
         }
 
@@ -522,7 +533,12 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
                 result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
             }
 
-            if (hold) {
+            if (non_js_callback) {
+                // 这里对 JSObject 的引用计数做了处理：
+                // 1. 判断是否有该对象，如果没有就保存到 values 里
+                // 2. 如果已经有该对象，则对其进行计数减一
+                // 3. 这样，可以保证该对象引用计数一直只会加一次
+                // 4. 如果没有主动释放，会在 destroy 的时候进行减一
                 if (values.count(value_ptr) == 0) {
                     values.insert(pair<jlong, JSValue>(value_ptr, value));
                 } else{
@@ -682,7 +698,13 @@ jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) 
 void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
     JSValue child = toJSValue(env, thiz, value);
-    JS_SetPropertyUint32(context, jsObj, index, JS_DupValue(context, child));
+    if (JS_IsString(child)) {
+        // JSString 类型不需要 JS_DupValue
+        JS_SetPropertyUint32(context, jsObj, index, child);
+    } else {
+        JS_SetPropertyUint32(context, jsObj, index, JS_DupValue(context, child));
+    }
+
 }
 
 void
