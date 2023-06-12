@@ -1185,8 +1185,18 @@ public class QuickJSTest {
     @Test
     public void testArrayAt() {
         QuickJSContext context = createContext();
-        int ret = (int) context.evaluate("[0, 1].at(1);");
-        assertEquals(1, ret);
+        int ret0 = (int) context.evaluate("[5, 12, 8, 130, 44].at(2);");
+        // Expected output: "Using an index of 2 the item returned is 8"
+        assertEquals(8, ret0);
+
+        int ret1 = (int) context.evaluate("[5, 12, 8, 130, 44].at(-2);");
+        // Expected output: "Using an index of -2 item returned is 130"
+        assertEquals(130, ret1);
+
+        // index < -array.length 或 index >= array.length，则总是返回 undefined
+        assertTrue((Boolean) context.evaluate("[5, 12, 8, 130, 44].at(5) === undefined"));
+        assertTrue((Boolean) context.evaluate("[5, 12, 8, 130, 44].at(-6) === undefined"));
+
         context.destroy();
     }
 
