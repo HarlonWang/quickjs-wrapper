@@ -1182,4 +1182,12 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testArrayAt() {
+        QuickJSContext context = createContext();
+        int ret = (int) context.evaluate("[0, 1].at(1);");
+        assertEquals(1, ret);
+        context.destroy();
+    }
+
 }
