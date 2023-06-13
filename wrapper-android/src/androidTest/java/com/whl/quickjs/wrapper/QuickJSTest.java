@@ -1200,4 +1200,12 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testDumpObjects() {
+        QuickJSContext context = createContext();
+        context.dumpObjects();
+        context.dumpMemoryUsage();
+        context.destroy();
+    }
+
 }

@@ -35,6 +35,16 @@ public class QuickJSContext {
         dumpMemoryUsage(runtime, target.getAbsolutePath());
     }
 
+    // will use stdout to print.
+    public void dumpMemoryUsage() {
+        dumpMemoryUsage(runtime, null);
+    }
+
+    // will use stdout to print.
+    public void dumpObjects() {
+        dumpObjects(runtime);
+    }
+
     private final long runtime;
     private final long context;
     private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
@@ -306,6 +316,7 @@ public class QuickJSContext {
     private native void runGC(long runtime);
     private native void setMemoryLimit(long runtime, int size);
     private native void dumpMemoryUsage(long runtime, String fileName);
+    private native void dumpObjects(long runtime);
 
     // context
     private native long createContext(long runtime);

@@ -214,17 +214,30 @@ JNIEXPORT void JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_dumpMemoryUsage(JNIEnv *env, jclass clazz,
                                                             jlong runtime, jstring file_name) {
     auto *rt = reinterpret_cast<JSRuntime*>(runtime);
-    const char *path = env->GetStringUTFChars(file_name, JNI_FALSE);
-    auto file = fopen(path, "w");
-    env->ReleaseStringUTFChars(file_name, path);
-    if (!file) {
-        env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File cannot be null");
-        return;
+
+    if (file_name == nullptr) {
+        JSMemoryUsage stats;
+        JS_ComputeMemoryUsage(rt, &stats);
+        JS_DumpMemoryUsage(stdout, &stats, rt);
+    } else {
+        const char *path = env->GetStringUTFChars(file_name, JNI_FALSE);
+        auto file = fopen(path, "w");
+        env->ReleaseStringUTFChars(file_name, path);
+        if (!file) {
+            env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File cannot be null");
+            return;
+        }
+
+        JSMemoryUsage stats;
+        JS_ComputeMemoryUsage(rt, &stats);
+        JS_DumpMemoryUsage(file, &stats, rt);
+
+        fclose(file);
     }
-
-    JSMemoryUsage stats;
-    JS_ComputeMemoryUsage(rt, &stats);
-    JS_DumpMemoryUsage(file, &stats, rt);
-
-    fclose(file);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thiz, jlong runtime) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    JS_DumpObjects(rt);
 }
