@@ -103,16 +103,25 @@ QuickJSLoader.initConsoleLog(context);
 #### Java and JavaScript can directly convert to each other for the following basic types
 - `boolean`
 - `int`
+- `long`
 - `double`
 - `String`
 - `null`
-- `long`
-    > Because there is no Long type corresponding to Java in JavaScript, the conversion of Long type is special. Long value can be directly transferred from Java to JavaScript, which will be converted to BigInt64.
 
 #### Mutual conversion of JS object types
 - `JSObject` represents a JavaScript object
 - `JSFunction` represents a JavaScript function
 - `JSArray` represents a JavaScript Array
+
+#### About Long type
+There is no Long type in JavaScript, the conversion of Long type is special.
+
+- Java --> JavaScript
+    - The Long value <= Number.MAX_SAFE_INTEGER, will be convert to Number type.
+    - The Long value > Number.MAX_SAFE_INTEGER, will be convert to BigInt type.
+    - Number.MIN_SAFE_INTEGER is the same to above.
+
+- JavaScript --> Java: Number(Int64) or BigInt --> Long type
 
 ### Set Property
 Java
