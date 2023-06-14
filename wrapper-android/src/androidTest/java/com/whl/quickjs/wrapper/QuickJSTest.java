@@ -1122,6 +1122,55 @@ public class QuickJSTest {
     }
 
     @Test
+    public void testMaxSafeInteger() {
+        QuickJSContext context = createContext();
+        context.getGlobalObject().setProperty("assertEquals", args -> {
+            assertEquals(args[0], args[1]);
+            return null;
+        });
+
+        context.getGlobalObject().setProperty("minThanMSF", args -> 9007199254740990L);
+        context.getGlobalObject().setProperty("equalThanMSF", args -> 9007199254740991L);
+        context.getGlobalObject().setProperty("maxThanMSF", args -> 9007199254740993L);
+
+        context.evaluate("assertEquals(typeof minThanMSF(), 'number'); assertEquals(minThanMSF(), 9007199254740990);");
+        context.evaluate("assertEquals(typeof equalThanMSF(), 'number'); assertEquals(equalThanMSF(), 9007199254740991);");
+        context.evaluate("assertEquals(typeof maxThanMSF(), 'bigint'); assertEquals(maxThanMSF(), 9007199254740993n);");
+
+        context.getGlobalObject().setProperty("minThanMinSF", args -> -9007199254740993L);
+        context.getGlobalObject().setProperty("equalThanMinSF", args -> -9007199254740991L);
+        context.getGlobalObject().setProperty("maxThanMinSF", args -> -9007199254740990L);
+
+        context.evaluate("assertEquals(typeof minThanMinSF(), 'bigint'); assertEquals(minThanMinSF(), -9007199254740993n);");
+        context.evaluate("assertEquals(typeof equalThanMinSF(), 'number'); assertEquals(equalThanMinSF(), -9007199254740991);");
+        context.evaluate("assertEquals(typeof maxThanMinSF(), 'number'); assertEquals(maxThanMinSF(), -9007199254740990);");
+
+        context.destroy();
+    }
+
+    @Test
+    public void testNumberWithLongType() {
+        QuickJSContext context = createContext();
+        Object d = context.evaluate("3.214;");
+        assertEquals("Double", d.getClass().getSimpleName());
+        assertEquals(3.214, d);
+
+        Object i = context.evaluate("123;");
+        assertEquals("Integer", i.getClass().getSimpleName());
+        assertEquals(123, i);
+
+        Object l = context.evaluate("Number.MAX_SAFE_INTEGER;");
+        assertEquals("Long", l.getClass().getSimpleName());
+        assertEquals(9007199254740991L, l);
+
+        Object l1 = context.evaluate("BigInt(Number.MAX_SAFE_INTEGER) + 2n;");
+        assertEquals("Long", l1.getClass().getSimpleName());
+        assertEquals(9007199254740993L, l1);
+
+        context.destroy();
+    }
+
+    @Test
     public void testParseObjectReleased() {
         int maxSize = 100000;
 

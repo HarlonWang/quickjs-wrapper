@@ -5,6 +5,8 @@
 #include "../quickjs/cutils.h"
 #include <cstring>
 
+#define MAX_SAFE_INTEGER (((int64_t)1 << 53) - 1)
+
 // util
 static string getJavaName(JNIEnv* env, jobject javaClass) {
     auto classType = env->GetObjectClass(javaClass);
@@ -509,8 +511,15 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
 
         case JS_TAG_FLOAT64: {
             jvalue v;
-            v.d = static_cast<jdouble>(JS_VALUE_GET_FLOAT64(value));
-            result = env->CallStaticObjectMethodA(doubleClass, doubleValueOf, &v);
+            double d = JS_VALUE_GET_FLOAT64(value);
+            bool isInteger = floor(d) == d;
+            if (isInteger) {
+                v.j = static_cast<jlong>(d);
+                result = env->CallStaticObjectMethodA(longClass, longValueOf, &v);
+            } else {
+                v.d = static_cast<jdouble>(d);
+                result = env->CallStaticObjectMethodA(doubleClass, doubleValueOf, &v);
+            }
             break;
         }
 
@@ -766,7 +775,12 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
     } else if (env->IsInstanceOf(value, integerClass)) {
         result = JS_NewInt32(context, env->CallIntMethod(value, integerGetValue));
     } else if(env->IsInstanceOf(value, longClass)) {
-        result = JS_NewBigInt64(context, env->CallLongMethod(value, longGetValue));
+        jlong l_val = env->CallLongMethod(value, longGetValue);
+        if (l_val > MAX_SAFE_INTEGER || l_val < -MAX_SAFE_INTEGER) {
+            result = JS_NewBigInt64(context, l_val);
+        } else {
+            result = JS_NewInt64(context, l_val);
+        }
     } else if (env->IsInstanceOf(value, booleanClass)) {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
