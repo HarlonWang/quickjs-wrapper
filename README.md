@@ -195,7 +195,7 @@ JSObject obj = context.createNewJSObject();
 ### Create JSArray in Java
 ```Java
 QuickJSContext context = QuickJSContext.create();
-JSObject obj = context.createNewJSArray();
+JSArray array = context.createNewJSArray();
 ```
 
 ### How to return Function to JavaScript in Java
