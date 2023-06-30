@@ -59,6 +59,17 @@ dependencies {
 
 </details>
 
+## Building the Project
+This repository use git submodules and so when you are checking out the app, you'll need to ensure the submodules are initialized properly. You can use the `--recursive` flag when cloning the project to do this.
+```git
+git clone --recursive https://github.com/HarlonWang/quickjs-wrapper.git
+```
+
+Alternatively, if you already have the project checked out, you can initialize the submodules manually.
+```git
+git submodule update --init
+```
+
 ## Usage
 
 ### Initialization
