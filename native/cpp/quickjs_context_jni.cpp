@@ -2,6 +2,7 @@
 #include <string>
 #include "quickjs_wrapper.h"
 #include <vector>
+#include "./../quickjs/quickjs.h"
 
 extern "C"
 JNIEXPORT void JNICALL
