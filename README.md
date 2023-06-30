@@ -198,6 +198,16 @@ QuickJSContext context = QuickJSContext.create();
 JSObject obj = context.createNewJSArray();
 ```
 
+### How to return Function to JavaScript in Java
+```Java
+QuickJSContext context = createContext();
+context.getGlobalObject().setProperty("test", args -> (JSCallFunction) args1 -> "123");
+context.evaluate("console.log(test()());");
+```
+
+Also, you can view it in `QuickJSTest.testReturnJSCallback` code
+
+
 ### Compile ByteCode
 
 ```Java
