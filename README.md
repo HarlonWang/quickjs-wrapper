@@ -138,8 +138,9 @@ There is no Long type in JavaScript, the conversion of Long type is special.
 Java
 
 ```java
+QuickJSContext context = QuickJSContext.create();
 JSObject globalObj = context.getGlobalObject();
-JSObject repository = globalObj.createNewJSObject();
+JSObject repository = context.createNewJSObject();
 obj1.setProperty("name", "QuickJS Wrapper");
 obj1.setProperty("created", 2022);
 obj1.setProperty("version", 1.1);
@@ -175,13 +176,26 @@ var repository = {
 Java
 
 ```Java
+QuickJSContext context = QuickJSContext.create();
 JSObject globalObject = context.getGlobalObject();
-JSObject obj1 = globalObject.getJSObjectProperty("repository");
-obj1.getString("name"); // QuickJS Wrapper
-obj1.getInteger("created"); // 2022
-obj1.getDouble("version"); // 1.1
-obj1.getBoolean("signing_enabled"); // true
-obj1.getJSFunction("getUrl").call(); // https://github.com/HarlonWang/quickjs-wrapper
+JSObject repository = globalObject.getJSObject("repository");
+repository.getString("name"); // QuickJS Wrapper
+repository.getInteger("created"); // 2022
+repository.getDouble("version"); // 1.1
+repository.getBoolean("signing_enabled"); // true
+repository.getJSFunction("getUrl").call(); // https://github.com/HarlonWang/quickjs-wrapper
+```
+
+### Create JSObject in Java
+```Java
+QuickJSContext context = QuickJSContext.create();
+JSObject obj = context.createNewJSObject();
+```
+
+### Create JSArray in Java
+```Java
+QuickJSContext context = QuickJSContext.create();
+JSObject obj = context.createNewJSArray();
 ```
 
 ### Compile ByteCode
