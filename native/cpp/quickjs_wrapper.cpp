@@ -4,7 +4,7 @@
 #include "quickjs_wrapper.h"
 #include "../quickjs/cutils.h"
 #include <cstring>
-#include <math.h>
+#include <cmath>
 
 #define MAX_SAFE_INTEGER (((int64_t)1 << 53) - 1)
 
