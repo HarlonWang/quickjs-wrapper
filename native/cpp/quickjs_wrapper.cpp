@@ -33,18 +33,6 @@ static void throwJavaException(JNIEnv *env, const char *exceptionClass, const ch
     env->DeleteLocalRef(e);
 }
 
-static const char* jsDumpObj(JSContext *ctx, JSValueConst val)
-{
-    const char *str;
-
-    str = JS_ToCString(ctx, val);
-    if (str) {
-        return str;
-    } else {
-        return "[exception]";
-    }
-}
-
 static void tryToTriggerOnError(JSContext *ctx, JSValueConst *error) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue onerror = JS_GetPropertyStr(ctx, global, "onError");
