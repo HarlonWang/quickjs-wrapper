@@ -230,16 +230,17 @@ public class JSObject {
         context.hold(this);
     }
 
+    /**
+     * 这里与 JavaScript 的 toString 方法保持一致
+     * 返回结果参考：https://262.ecma-international.org/14.0/#sec-tostring
+     * @return toString in JavaScript.
+     */
     @Override
     public String toString() {
         checkReleased();
 
-        Object formatString = context.evaluate("__format_string;");
-        if (formatString instanceof JSFunction) {
-            return (String) ((JSFunction) formatString).call(this);
-        }
-
-        return super.toString();
+        JSFunction toString = getJSFunction("toString");
+        return (String) toString.call();
     }
 
     public String stringify() {
