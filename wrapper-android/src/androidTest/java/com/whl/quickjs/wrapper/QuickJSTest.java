@@ -940,6 +940,21 @@ public class QuickJSTest {
     }
 
     @Test
+    public void dumpObjectsTest() {
+        QuickJSContext context = createContext();
+        context.evaluate("var testDumpObject = {data: 'I am test data'};");
+        Context androidContext = ApplicationProvider.getApplicationContext();
+        File file = new File(androidContext.getCacheDir(), "dump_objects.txt");
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        context.dumpObjects(file);
+        context.destroy();
+    }
+
+    @Test
     public void testGetNativeFuncName() {
         QuickJSContext context = createContext();
 

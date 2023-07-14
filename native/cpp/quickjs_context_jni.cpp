@@ -237,7 +237,26 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_dumpMemoryUsage(JNIEnv *env, jclass 
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thiz, jlong runtime) {
+Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thiz, jlong runtime,
+                                                        jstring file_name) {
     auto *rt = reinterpret_cast<JSRuntime*>(runtime);
-    JS_DumpObjects(rt);
+
+    if (file_name == nullptr) {
+        JS_DumpObjects(rt);
+    } else {
+        const char *path = env->GetStringUTFChars(file_name, JNI_FALSE);
+        // 这里重定向打印日志到指定文件，方便查看。
+        // todo 打印完需要再恢复到控制台打印，参考：https://cloud.tencent.com/developer/article/1544633
+        auto file = freopen(path, "w", stdout);
+        env->ReleaseStringUTFChars(file_name, path);
+        if (!file) {
+            env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "File cannot be null");
+            return;
+        }
+
+        JS_DumpObjects(rt);
+
+        fclose(file);
+    }
+
 }

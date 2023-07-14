@@ -40,9 +40,17 @@ public class QuickJSContext {
         dumpMemoryUsage(runtime, null);
     }
 
+    public void dumpObjects(File target) {
+        if (target == null || !target.exists()) {
+            return;
+        }
+
+        dumpObjects(runtime, target.getAbsolutePath());
+    }
+
     // will use stdout to print.
     public void dumpObjects() {
-        dumpObjects(runtime);
+        dumpObjects(runtime, null);
     }
 
     private final long runtime;
@@ -316,7 +324,7 @@ public class QuickJSContext {
     private native void runGC(long runtime);
     private native void setMemoryLimit(long runtime, int size);
     private native void dumpMemoryUsage(long runtime, String fileName);
-    private native void dumpObjects(long runtime);
+    private native void dumpObjects(long runtime, String fileName);
 
     // context
     private native long createContext(long runtime);
