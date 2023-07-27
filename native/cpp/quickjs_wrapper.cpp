@@ -739,6 +739,16 @@ JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int a
     // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
     if (JS_IsObject(jsValue) && !jniEnv->IsInstanceOf(result, jsCallFunctionClass)) {
         JS_DupValue(context, jsValue);
+
+        // todo 这里有一个引用计数优化点
+        // 1. 通过 Java 层创建的 JSObject 会被计数加1，上面的 JS_DupValue 会加1，
+        // 2. 也就是会有两次引用，在函数执行完会减1，因为还有一次引用不会被释放。
+        // 3. 优化方式一：注释掉上面的 JS_DupValue 代码，放开下面的注释代码。
+//        map<jlong, JSValue>::iterator exist;
+//        exist = values.find(reinterpret_cast<jlong>(JS_VALUE_GET_PTR(jsValue)));
+//        if (exist != values.end()) {
+//            values.erase(exist);
+//        }
     }
 
     jniEnv->DeleteLocalRef(result);
