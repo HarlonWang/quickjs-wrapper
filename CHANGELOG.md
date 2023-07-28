@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.21.0 *(2023-07-28)*
+- 优化：DumpObjects 日志输出到指定文件中方便查看
+- 优化：JSObject.toString 和 JavaScript 保持一致
+- 文档：修证书写错误
+
 ## 0.20.2 *(2023-06-30)*
 - 修复: cmake 构建提示 floor 方法的头文件缺失问题
 
