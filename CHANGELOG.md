@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.21.1 *(2023-08-01)*
+- 修复：字节码执行中没有调用 `executePendingJobLoop`
+
 ## 0.21.0 *(2023-07-28)*
 - 优化：DumpObjects 日志输出到指定文件中方便查看
 - 优化：JSObject.toString 和 JavaScript 保持一致
