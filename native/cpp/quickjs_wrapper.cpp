@@ -889,6 +889,12 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) 
     }
 
     auto val = JS_EvalFunction(context, obj);
+
+    if (!executePendingJobLoop(env, runtime, context)) {
+        JS_FreeValue(context, val);
+        return nullptr;
+    }
+
     jobject result;
     if (!JS_IsException(val)) {
         result = toJavaObject(env, thiz, obj, val);

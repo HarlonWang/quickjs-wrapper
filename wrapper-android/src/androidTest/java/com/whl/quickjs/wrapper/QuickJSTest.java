@@ -1252,4 +1252,15 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testAsyncErrorInByteCode() {
+        thrown.expect(QuickJSException.class);
+        thrown.expectMessage("'aa' is not defined");
+
+        QuickJSContext context = createContext();
+        byte[] bytes = context.compile("async function test() { aa; } test();");
+        context.execute(bytes);
+        context.destroy();
+    }
+
 }
