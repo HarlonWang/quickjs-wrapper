@@ -57,7 +57,6 @@ public:
     jmethodID jsArrayInit;
     jmethodID jsFunctionInit;
     jmethodID jsGetModuleScript;
-    jmethodID jsConvertModuleName;
 
     jmethodID callFunctionBackM;
     jmethodID removeCallFunctionM;

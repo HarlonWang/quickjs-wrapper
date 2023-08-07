@@ -124,20 +124,6 @@ static void initJSFuncCallback(JSContext *ctx) {
 }
 
 // js module
-static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
-                                            const char *module_name, void *opaque) {
-    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
-    auto env = wrapper->jniEnv;
-
-    jobject result = env->CallStaticObjectMethod(wrapper->jsModuleClass, wrapper->jsConvertModuleName,
-                                                    env->NewStringUTF(module_base_name),
-                                                    env->NewStringUTF(module_name));
-    if (result == nullptr) {
-        return nullptr;
-    }
-    return (char *) env->GetStringUTFChars((jstring) result, nullptr);
-}
-
 static JSModuleDef *
 jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
@@ -383,7 +369,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jniThiz = jniEnv->NewGlobalRef(thiz);
 
     // init ES6Module
-    JS_SetModuleLoaderFunc(runtime, jsModuleNormalizeFunc, jsModuleLoaderFunc, nullptr);
+    JS_SetModuleLoaderFunc(runtime, nullptr, jsModuleLoaderFunc, nullptr);
 
     JS_SetHostPromiseRejectionTracker(runtime, promiseRejectionTracker, &unhandledRejections);
 
@@ -421,8 +407,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)V");
-    jsConvertModuleName = jniEnv->GetStaticMethodID(jsModuleClass, "convertModuleName",
-                                              "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+
     jsGetModuleScript = jniEnv->GetStaticMethodID(jsModuleClass, "getModuleScript", "(Ljava/lang/String;)Ljava/lang/String;");
 
     callFunctionBackM = jniEnv->GetMethodID(quickjsContextClass, "callFunctionBack", "(I[Ljava/lang/Object;)Ljava/lang/Object;");
