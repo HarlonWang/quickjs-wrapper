@@ -282,15 +282,26 @@ public class QuickJSContext {
         return parseJSON(context, json);
     }
 
-    public byte[] compile(String sourceCode) {
-        return compile(sourceCode, UNKNOWN_FILE);
+    public byte[] compile(String source) {
+        return compile(source, UNKNOWN_FILE);
     }
 
-    public byte[] compile(String sourceCode, String fileName) {
+    public byte[] compile(String source, String fileName) {
         checkSameThread();
         checkDestroyed();
 
-        return compile(context, sourceCode, fileName);
+        return compile(context, source, fileName, false);
+    }
+
+    public byte[] compileModule(String source) {
+        return compileModule(source, UNKNOWN_FILE);
+    }
+
+    public byte[] compileModule(String source, String fileName) {
+        checkSameThread();
+        checkDestroyed();
+
+        return compile(context, source, fileName, true);
     }
 
     public Object execute(byte[] code) {
@@ -342,7 +353,7 @@ public class QuickJSContext {
     private native void dupValue(long context, long objValue);
     private native void freeDupValue(long context, long objValue);
     private native Object parseJSON(long context, String json);
-    private native byte[] compile(long context, String sourceCode, String fileName); // Bytecode compile
+    private native byte[] compile(long context, String sourceCode, String fileName, boolean isModule); // Bytecode compile
     private native Object execute(long context, byte[] bytecode); // Bytecode execute
 
     // destroy context and runtime

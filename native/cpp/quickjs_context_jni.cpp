@@ -129,7 +129,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_parseJSON(JNIEnv *env, jobject thiz,
 }extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_compile(JNIEnv *env, jobject thiz, jlong context,
-                                                    jstring source_code, jstring file_name) {
+                                                    jstring source_code, jstring file_name, jboolean isModule) {
     if (source_code == nullptr) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Source code cannot be null");
         return nullptr;
@@ -141,7 +141,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_compile(JNIEnv *env, jobject thiz, j
     }
 
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->compile(env, source_code, file_name);
+    return wrapper->compile(env, source_code, file_name, isModule);
 }extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_execute(JNIEnv *env, jobject thiz, jlong context,

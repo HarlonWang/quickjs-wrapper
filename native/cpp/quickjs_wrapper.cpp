@@ -828,10 +828,14 @@ jobject QuickJSWrapper::parseJSON(JNIEnv *env, jobject thiz, jstring json) {
     return result;
 }
 
-jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source, jstring file_name) const {
+jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source, jstring file_name, jboolean isModule) const {
     const auto sourceCode = env->GetStringUTFChars(source, JNI_FALSE);
     const auto fileName = env->GetStringUTFChars(file_name, JNI_FALSE);
-    auto compiled = JS_Eval(context, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY);
+    auto eval_flags =  JS_EVAL_FLAG_COMPILE_ONLY;
+    if (isModule) {
+        eval_flags = JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY;
+    }
+    auto compiled = JS_Eval(context, sourceCode, strlen(sourceCode), fileName, eval_flags);
     env->ReleaseStringUTFChars(source, sourceCode);
     env->ReleaseStringUTFChars(file_name, fileName);
 

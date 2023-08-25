@@ -60,4 +60,18 @@ public class QuickJSCompileTest {
         context.destroy();
     }
 
+    @Test
+    public void testCompileModule() {
+        JSModule.setModuleLoader(new JSModule.ModuleLoader() {
+            @Override
+            public String getModuleScript(String moduleName) {
+                return "export const a = {name: 'test'};";
+            }
+        });
+        QuickJSContext context = QuickJSContext.create();
+        byte[] bytes = context.compileModule("import {a} from 'a.js'; if(a.name !== 'test') { throw new Error('failed') }");
+        context.execute(bytes);
+        context.destroy();
+    }
+
 }
