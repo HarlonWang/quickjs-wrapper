@@ -14,9 +14,10 @@ public class QuickJSModuleTest {
     @Test
     public void testModule() {
         QuickJSLoader.init();
-        JSModule.setModuleLoader(new JSModule.ModuleLoader() {
+        QuickJSContext context = QuickJSContext.create();
+        context.setModuleLoader(new QuickJSContext.DefaultModuleLoader() {
             @Override
-            public String getModuleScript(String moduleName) {
+            public String getModuleStringCode(String moduleName) {
                 if (moduleName.equals("a.js")) {
                     return "export var name = 'Jack';\n" +
                             "export var age = 18;";
@@ -24,7 +25,6 @@ public class QuickJSModuleTest {
                 return null;
             }
         });
-        QuickJSContext context = QuickJSContext.create();
         context.getGlobalObject().setProperty("assertName", args -> {
             assertEquals("Jack", args[0]);
             return null;

@@ -130,20 +130,48 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     auto env = wrapper->jniEnv;
     auto arg = env->NewStringUTF(module_name);
 
-    auto result = env->CallStaticObjectMethod(wrapper->jsModuleClass, wrapper->jsGetModuleScript, arg);
-    const auto script = env->GetStringUTFChars((jstring)(result), JNI_FALSE);
+    // module loader handle.
+    jobject moduleLoader = env->CallObjectMethod(wrapper->jniThiz, env->GetMethodID(wrapper->quickjsContextClass, "getModuleLoader", "()Lcom/whl/quickjs/wrapper/ModuleLoader;"));
+    bool isBytecodeModule = env->CallBooleanMethod(moduleLoader, env->GetMethodID(wrapper->moduleLoaderClass, "isBytecodeMode", "()Z"));
 
-    int scriptLen = env->GetStringUTFLength((jstring) result);
+    if (isBytecodeModule) {
+        jmethodID getModuleBytecode = env->GetMethodID(wrapper->moduleLoaderClass, "getModuleBytecode", "(Ljava/lang/String;)[B");
 
-    if (script == nullptr) {
-        return nullptr;
+        auto byteCode = (jbyteArray) (env->CallObjectMethod(moduleLoader, getModuleBytecode, arg));
+        const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
+        const auto bufferLength = env->GetArrayLength(byteCode);
+        const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+        auto obj = JS_ReadObject(ctx, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
+        env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
+
+        if (JS_IsException(obj)) {
+            // wrapper->throwJSException(env, ctx);
+            return nullptr;
+        }
+
+        if (JS_ResolveModule(ctx, obj)) {
+            // TODO throwJsExceptionFmt(env, this, "Failed to resolve JS module");
+            return nullptr;
+        }
+
+        void *m = JS_VALUE_GET_PTR(obj);
+        JS_FreeValue(ctx, obj);
+        return (JSModuleDef *) m;
+    } else {
+        jmethodID getModuleStringCode = env->GetMethodID(wrapper->moduleLoaderClass, "getModuleStringCode", "(Ljava/lang/String;)Ljava/lang/String;");
+
+        auto result = env->CallObjectMethod(moduleLoader, getModuleStringCode, arg);
+        const auto script = env->GetStringUTFChars((jstring)(result), JNI_FALSE);
+        int scriptLen = env->GetStringUTFLength((jstring) result);
+        if (script == nullptr) {
+            return nullptr;
+        }
+        JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
+                                   JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+        void *m = JS_VALUE_GET_PTR(func_val);
+        JS_FreeValue(ctx, func_val);
+        return (JSModuleDef *) m;
     }
-
-    JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
-                               JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
-    void *m = JS_VALUE_GET_PTR(func_val);
-    JS_FreeValue(ctx, func_val);
-    return (JSModuleDef *) m;
 }
 
 // It is usually show object on the console.
@@ -390,8 +418,8 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jsArrayClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSArray")));
     jsFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSFunction")));
     jsCallFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
-    jsModuleClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSModule")));
     quickjsContextClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/QuickJSContext")));
+    moduleLoaderClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/ModuleLoader")));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -407,8 +435,6 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
     jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)V");
-
-    jsGetModuleScript = jniEnv->GetStaticMethodID(jsModuleClass, "getModuleScript", "(Ljava/lang/String;)Ljava/lang/String;");
 
     callFunctionBackM = jniEnv->GetMethodID(quickjsContextClass, "callFunctionBack", "(I[Ljava/lang/Object;)Ljava/lang/Object;");
     removeCallFunctionM = jniEnv->GetMethodID(quickjsContextClass, "removeCallFunction", "(I)V");
@@ -437,7 +463,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsArrayClass);
     jniEnv->DeleteGlobalRef(jsFunctionClass);
     jniEnv->DeleteGlobalRef(jsCallFunctionClass);
-    jniEnv->DeleteGlobalRef(jsModuleClass);
+    jniEnv->DeleteGlobalRef(moduleLoaderClass);
     jniEnv->DeleteGlobalRef(quickjsContextClass);
 }
 

@@ -5,6 +5,31 @@ import java.util.HashMap;
 
 public class QuickJSContext {
 
+    public static abstract class DefaultModuleLoader implements ModuleLoader {
+
+        @Override
+        public boolean isBytecodeMode() {
+            return false;
+        }
+
+        @Override
+        public byte[] getModuleBytecode(String moduleName) {
+            return null;
+        }
+    }
+
+    public static abstract class BytecodeModuleLoader implements ModuleLoader {
+        @Override
+        public boolean isBytecodeMode() {
+            return true;
+        }
+
+        @Override
+        public String getModuleStringCode(String moduleName) {
+            return null;
+        }
+    }
+
     private static final String UNKNOWN_FILE = "unknown.js";
 
     public static QuickJSContext create() {
@@ -65,6 +90,8 @@ public class QuickJSContext {
     private boolean destroyed = false;
     private final HashMap<Integer, JSCallFunction> callFunctionMap = new HashMap<>();
 
+    private ModuleLoader moduleLoader;
+
     private QuickJSContext() {
         try {
             runtime = createRuntime();
@@ -80,6 +107,25 @@ public class QuickJSContext {
         if (!isSameThread) {
             throw new QuickJSException("Must be call same thread in QuickJSContext.create!");
         }
+    }
+
+    public void setModuleLoader(ModuleLoader moduleLoader) {
+        checkSameThread();
+        checkDestroyed();
+
+        if (moduleLoader == null) {
+            throw new NullPointerException("The moduleLoader can not be set null!");
+        }
+
+        this.moduleLoader = moduleLoader;
+    }
+
+    public ModuleLoader getModuleLoader() {
+        if (moduleLoader == null) {
+            throw new NullPointerException("The moduleLoader can not be set null!");
+        }
+
+        return moduleLoader;
     }
 
     private void checkDestroyed() {
@@ -317,7 +363,7 @@ public class QuickJSContext {
 
         return evaluateModule(context, script, moduleName);
     }
-    
+
     public Object evaluateModule(String script) {
         return evaluateModule(script, UNKNOWN_FILE);
     }

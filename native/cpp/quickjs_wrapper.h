@@ -39,8 +39,8 @@ public:
     jclass jsArrayClass;
     jclass jsFunctionClass;
     jclass jsCallFunctionClass;
-    jclass jsModuleClass;
     jclass quickjsContextClass;
+    jclass moduleLoaderClass;
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
@@ -56,7 +56,6 @@ public:
     jmethodID jsObjectInit;
     jmethodID jsArrayInit;
     jmethodID jsFunctionInit;
-    jmethodID jsGetModuleScript;
 
     jmethodID callFunctionBackM;
     jmethodID removeCallFunctionM;

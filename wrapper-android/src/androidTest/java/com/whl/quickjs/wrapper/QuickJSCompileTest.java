@@ -62,14 +62,15 @@ public class QuickJSCompileTest {
 
     @Test
     public void testCompileModule() {
-        JSModule.setModuleLoader(new JSModule.ModuleLoader() {
+        QuickJSContext context = QuickJSContext.create();
+        QuickJSLoader.initConsoleLog(context);
+        context.setModuleLoader(new QuickJSContext.BytecodeModuleLoader() {
             @Override
-            public String getModuleScript(String moduleName) {
-                return "export const a = {name: 'test'};";
+            public byte[] getModuleBytecode(String moduleName) {
+                return context.compileModule("export const a = {name: 'test'};", moduleName);
             }
         });
-        QuickJSContext context = QuickJSContext.create();
-        byte[] bytes = context.compileModule("import {a} from 'a.js'; if(a.name !== 'test') { throw new Error('failed') }");
+        byte[] bytes = context.compileModule("import {a} from 'a.js'; if(a.name !== 'test') { throw new Error('failed') }", "aaa.js");
         context.execute(bytes);
         context.destroy();
     }
