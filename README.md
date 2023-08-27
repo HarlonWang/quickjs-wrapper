@@ -218,11 +218,23 @@ context.execute(code);
 ### ESModule
 Java
 ```Java
-JSModule.setModuleLoader(new JSModule.Loader() {
+// 1. string code mode
+context.setModuleLoader(new QuickJSContext.DefaultModuleLoader() {
     @Override
-    public String getModuleScript(String moduleName) {
-        return "export var name = 'Hello world';\n" +
-                "export var age = 18;";
+    public String getModuleStringCode(String moduleName) {
+       if (moduleName.equals("a.js")) {
+           return "export var name = 'Jack';\n" +
+                   "export var age = 18;";
+       }
+       return null;
+    }
+});
+
+// 2. bytecode mode
+context.setModuleLoader(new QuickJSContext.BytecodeModuleLoader() {
+    @Override
+    public byte[] getModuleBytecode(String moduleName) {
+        return context.compileModule("export var name = 'Jack';export var age = 18;", moduleName);
     }
 });
 ```
