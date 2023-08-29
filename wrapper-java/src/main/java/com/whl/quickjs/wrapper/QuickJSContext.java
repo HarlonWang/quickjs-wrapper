@@ -109,6 +109,10 @@ public class QuickJSContext {
         }
     }
 
+    public long getCurrentThreadId() {
+        return currentThreadId;
+    }
+
     public void setModuleLoader(ModuleLoader moduleLoader) {
         checkSameThread();
         checkDestroyed();
