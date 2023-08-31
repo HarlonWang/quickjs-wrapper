@@ -118,17 +118,13 @@ public class QuickJSContext {
         checkDestroyed();
 
         if (moduleLoader == null) {
-            throw new NullPointerException("The moduleLoader can not be set null!");
+            throw new NullPointerException("The moduleLoader can not be null!");
         }
 
         this.moduleLoader = moduleLoader;
     }
 
     public ModuleLoader getModuleLoader() {
-        if (moduleLoader == null) {
-            throw new NullPointerException("The moduleLoader can not be set null!");
-        }
-
         return moduleLoader;
     }
 

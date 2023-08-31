@@ -22,17 +22,6 @@ static string getJavaName(JNIEnv* env, jobject javaClass) {
     return str;
 }
 
-static void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
-    char msg[512];
-    va_list args;
-    va_start (args, fmt);
-    vsnprintf(msg, sizeof(msg), fmt, args);
-    va_end (args);
-    jclass e = env->FindClass(exceptionClass);
-    env->ThrowNew(e, msg);
-    env->DeleteLocalRef(e);
-}
-
 static void tryToTriggerOnError(JSContext *ctx, JSValueConst *error) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue onerror = JS_GetPropertyStr(ctx, global, "onError");
@@ -89,6 +78,35 @@ static string getJSErrorStr(JSContext *ctx) {
     return error_str;
 }
 
+static void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...) {
+    char msg[512];
+    va_list args;
+    va_start (args, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, args);
+    va_end (args);
+    jclass e = env->FindClass(exceptionClass);
+    env->ThrowNew(e, msg);
+    env->DeleteLocalRef(e);
+}
+
+static void throwJSException(JNIEnv *env, const char* msg) {
+    jclass e = env->FindClass("com/whl/quickjs/wrapper/QuickJSException");
+    jmethodID init = env->GetMethodID(e, "<init>", "(Ljava/lang/String;Z)V");
+    jstring ret = env->NewStringUTF(msg);
+    auto t = (jthrowable)env->NewObject(e, init, ret, JNI_TRUE);
+    env->Throw(t);
+    env->DeleteLocalRef(e);
+}
+
+static void throwJSException(JNIEnv *env, JSContext *ctx) {
+    if (env->ExceptionCheck()) {
+        return;
+    }
+
+    string error = getJSErrorStr(ctx);
+    throwJSException(env, error.c_str());
+}
+
 // js function callback
 static JSClassID js_func_callback_class_id;
 
@@ -132,25 +150,35 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
 
     // module loader handle.
     jobject moduleLoader = env->CallObjectMethod(wrapper->jniThiz, env->GetMethodID(wrapper->quickjsContextClass, "getModuleLoader", "()Lcom/whl/quickjs/wrapper/ModuleLoader;"));
+    if (moduleLoader == nullptr) {
+        JS_ThrowInternalError(ctx, "Failed to load module, the ModuleLoader can not be null!");
+        return (JSModuleDef *) JS_VALUE_GET_PTR(JS_EXCEPTION);
+    }
+
     bool isBytecodeModule = env->CallBooleanMethod(moduleLoader, env->GetMethodID(wrapper->moduleLoaderClass, "isBytecodeMode", "()Z"));
 
     if (isBytecodeModule) {
         jmethodID getModuleBytecode = env->GetMethodID(wrapper->moduleLoaderClass, "getModuleBytecode", "(Ljava/lang/String;)[B");
 
-        auto byteCode = (jbyteArray) (env->CallObjectMethod(moduleLoader, getModuleBytecode, arg));
-        const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
-        const auto bufferLength = env->GetArrayLength(byteCode);
-        const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
-        auto obj = JS_ReadObject(ctx, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
-        env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
-
-        if (JS_IsException(obj)) {
-            // wrapper->throwJSException(env, ctx);
+        auto bytecode = (jbyteArray) (env->CallObjectMethod(moduleLoader, getModuleBytecode, arg));
+        if (bytecode == nullptr) {
+            throwJSException(env, "Failed to load module, cause bytecode was null!");
             return nullptr;
         }
 
+        const auto buffer = env->GetByteArrayElements(bytecode, nullptr);
+        const auto bufferLength = env->GetArrayLength(bytecode);
+        const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+        auto obj = JS_ReadObject(ctx, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
+        env->ReleaseByteArrayElements(bytecode, buffer, JNI_ABORT);
+
+        if (JS_IsException(obj)) {
+            throwJSException(env, ctx);
+            return (JSModuleDef *) JS_VALUE_GET_PTR(JS_EXCEPTION);
+        }
+
         if (JS_ResolveModule(ctx, obj)) {
-            // TODO throwJsExceptionFmt(env, this, "Failed to resolve JS module");
+            throwJSException(env, "Failed to resolve JS module");
             return nullptr;
         }
 
@@ -161,11 +189,13 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
         jmethodID getModuleStringCode = env->GetMethodID(wrapper->moduleLoaderClass, "getModuleStringCode", "(Ljava/lang/String;)Ljava/lang/String;");
 
         auto result = env->CallObjectMethod(moduleLoader, getModuleStringCode, arg);
-        const auto script = env->GetStringUTFChars((jstring)(result), JNI_FALSE);
-        int scriptLen = env->GetStringUTFLength((jstring) result);
-        if (script == nullptr) {
+        if (result == nullptr) {
+            throwJSException(env, "Failed to load module, cause string code was null!");
             return nullptr;
         }
+
+        const auto script = env->GetStringUTFChars((jstring)(result), JNI_FALSE);
+        int scriptLen = env->GetStringUTFLength((jstring) result);
         JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
                                    JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
         void *m = JS_VALUE_GET_PTR(func_val);
@@ -317,20 +347,6 @@ static void initPolyfillDate(JSContext *ctx) {
 })();
 )lit";
     JS_Eval(ctx, polyfill_date, strlen(polyfill_date), "polyfill_date.js", JS_EVAL_TYPE_GLOBAL);
-}
-
-static void throwJSException(JNIEnv *env, const char* msg) {
-    jclass e = env->FindClass("com/whl/quickjs/wrapper/QuickJSException");
-    jmethodID init = env->GetMethodID(e, "<init>", "(Ljava/lang/String;Z)V");
-    jstring ret = env->NewStringUTF(msg);
-    auto t = (jthrowable)env->NewObject(e, init, ret, JNI_TRUE);
-    env->Throw(t);
-    env->DeleteLocalRef(e);
-}
-
-static void throwJSException(JNIEnv *env, JSContext *ctx) {
-    string error = getJSErrorStr(ctx);
-    throwJSException(env, error.c_str());
 }
 
 static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) {
