@@ -274,11 +274,11 @@ public final class QuickJSLoader {
                 "    let trailer = ''\n" +
                 "    if (value.length > opt.maxStringLength) {\n" +
                 "        const remaining = value.length - opt.maxStringLength\n" +
-                "        value = value.splice(0, opt.maxStringLength)\n" +
+                "        value = value.slice(0, opt.maxStringLength)\n" +
                 "        trailer = `... ${remaining} more character${remaining > 1 ? 's' : ''}`\n" +
                 "    }\n" +
                 "\n" +
-                "    return `'${value + trailer}'`\n" +
+                "    return `'${value}'${trailer}`\n" +
                 "}", "format.js");
         context.evaluate("const console = {\n" +
                 "    log: (...args) => printLog(\"log\", ...args),\n" +
