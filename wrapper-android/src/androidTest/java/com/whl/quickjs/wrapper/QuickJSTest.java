@@ -532,6 +532,12 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("'aa.splice' is not a function"));
         }
 
+        try {
+            context.evaluate("const assert = {}; const format22 = () => {};assert.match(format22(), 123);");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'assert.match' is not a function"));
+        }
+
         context.destroy();
     }
 
