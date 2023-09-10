@@ -526,6 +526,12 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("'navigsateTo' is not a function"));
         }
 
+        try {
+            context.evaluate("'aa'.splice(0, 1)");
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("'aa.splice' is not a function"));
+        }
+
         context.destroy();
     }
 
