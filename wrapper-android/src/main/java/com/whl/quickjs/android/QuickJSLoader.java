@@ -87,10 +87,6 @@ public final class QuickJSLoader {
                 "const TAB = \"  \"\n" +
                 "const SPACE = \" \"\n" +
                 "\n" +
-                "const isRegExp = (v) => {\n" +
-                "    return Object.prototype.toString.call(v) === '[object RegExp]';\n" +
-                "}\n" +
-                "\n" +
                 "function format(value, opt) {\n" +
                 "    const defaultOpt = {\n" +
                 "        maxStringLength: 10000,\n" +
@@ -154,7 +150,7 @@ public final class QuickJSLoader {
                 "}\n" +
                 "\n" +
                 "function formatObject(value, opt, recurseTimes) {\n" +
-                "    if (isRegExp(value)) {\n" +
+                "    if (value instanceof RegExp) {\n" +
                 "        return `${value.toString()}`\n" +
                 "    }\n" +
                 "\n" +
@@ -294,6 +290,8 @@ public final class QuickJSLoader {
                 "            return `${value}`\n" +
                 "        case \"undefined\":\n" +
                 "            return \"undefined\"\n" +
+                "        case \"symbol\":\n" +
+                "            return `${value.toString()}`\n" +
                 "        default:\n" +
                 "            return value.toString\n" +
                 "    }\n" +
