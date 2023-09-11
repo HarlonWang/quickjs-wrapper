@@ -83,7 +83,11 @@ public final class QuickJSLoader {
             return null;
         });
         // todo 临时使用，后续改为模块导入方式
-        context.evaluate("const isRegExp = (v) => {\n" +
+        context.evaluate("const LINE = \"\\n\"\n" +
+                "const TAB = \"  \"\n" +
+                "const SPACE = \" \"\n" +
+                "\n" +
+                "const isRegExp = (v) => {\n" +
                 "    return Object.prototype.toString.call(v) === '[object RegExp]';\n" +
                 "}\n" +
                 "\n" +
@@ -92,7 +96,8 @@ public final class QuickJSLoader {
                 "        maxStringLength: 10000,\n" +
                 "        depth: 2,\n" +
                 "        maxArrayLength: 100,\n" +
-                "        seen: []\n" +
+                "        seen: [],\n" +
+                "        reduceStringLength: 100\n" +
                 "    }\n" +
                 "    if (!opt) {\n" +
                 "        opt = defaultOpt\n" +
@@ -173,26 +178,50 @@ public final class QuickJSLoader {
                 "        return formatArray(value, opt, recurseTimes)\n" +
                 "    }\n" +
                 "\n" +
+                "    if (value instanceof Float64Array) {\n" +
+                "        return `Float64Array(1) [ ${value} ]`\n" +
+                "    }\n" +
+                "\n" +
+                "    if (value instanceof BigInt64Array) {\n" +
+                "        return `BigInt64Array(1) [ ${value}n ]`\n" +
+                "    }\n" +
+                "\n" +
                 "    if (value instanceof Map) {\n" +
                 "        return formatMap(value, opt, recurseTimes)\n" +
                 "    }\n" +
                 "\n" +
+                "    return formatProperty(value, opt, recurseTimes)\n" +
+                "}\n" +
+                "\n" +
+                "function formatProperty(value, opt, recurseTimes) {\n" +
                 "    let string = ''\n" +
-                "    for (const key in value) {\n" +
+                "    string += '{'\n" +
+                "    const keys = Object.keys(value)\n" +
+                "    const length = keys.length\n" +
+                "    for (let i = 0; i < length; i++) {\n" +
+                "        if (i === 0) {\n" +
+                "            string += SPACE\n" +
+                "        }\n" +
+                "        string += LINE\n" +
+                "        string += TAB.repeat(recurseTimes)\n" +
+                "\n" +
+                "        const key = keys[i]\n" +
                 "        string += `${key}: `\n" +
                 "        string += formatValue(value[key], opt, recurseTimes)\n" +
-                "        string += ','\n" +
-                "        string += ' '\n" +
+                "        if (i < length -1) {\n" +
+                "            string += ','\n" +
+                "        }\n" +
+                "        string += SPACE\n" +
                 "    }\n" +
                 "\n" +
-                "    if (string.length > 0) {\n" +
-                "        // 这里需要删除下最后多余的逗号\n" +
-                "        string = '{ ' + string.substr(0, string.length - 2) + ' '\n" +
-                "    } else {\n" +
-                "        string = '{'\n" +
-                "    }\n" +
-                "\n" +
+                "    string += LINE\n" +
+                "    string += TAB.repeat(recurseTimes - 1)\n" +
                 "    string += '}'\n" +
+                "\n" +
+                "    if (string.length < opt.reduceStringLength) {\n" +
+                "        string = string.replaceAll(LINE, \"\").replaceAll(TAB, \"\")\n" +
+                "    }\n" +
+                "\n" +
                 "    return string\n" +
                 "}\n" +
                 "\n" +
@@ -272,7 +301,7 @@ public final class QuickJSLoader {
                 "\n" +
                 "function formatString(value, opt) {\n" +
                 "    let trailer = ''\n" +
-                "    if (value.length > opt.maxStringLength) {\n" +
+                "    if (opt.maxStringLength && value.length > opt.maxStringLength) {\n" +
                 "        const remaining = value.length - opt.maxStringLength\n" +
                 "        value = value.slice(0, opt.maxStringLength)\n" +
                 "        trailer = `... ${remaining} more character${remaining > 1 ? 's' : ''}`\n" +
