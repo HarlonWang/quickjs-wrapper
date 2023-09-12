@@ -325,6 +325,8 @@ public class QuickJSContext {
     }
 
     public Object parse(String json) {
+        checkSameThread();
+        checkDestroyed();
         return parseJSON(context, json);
     }
 
