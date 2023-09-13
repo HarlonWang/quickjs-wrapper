@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class QuickJSContext {
 
-    public static abstract class DefaultModuleLoader implements ModuleLoader {
+    public static abstract class DefaultModuleLoader extends ModuleLoader {
 
         @Override
         public boolean isBytecodeMode() {
@@ -18,7 +18,7 @@ public class QuickJSContext {
         }
     }
 
-    public static abstract class BytecodeModuleLoader implements ModuleLoader {
+    public static abstract class BytecodeModuleLoader extends ModuleLoader {
         @Override
         public boolean isBytecodeMode() {
             return true;

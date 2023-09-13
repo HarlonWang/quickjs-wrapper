@@ -18,7 +18,7 @@ public class QuickJSModuleTest {
         context.setModuleLoader(new QuickJSContext.DefaultModuleLoader() {
             @Override
             public String getModuleStringCode(String moduleName) {
-                if (moduleName.equals("a.js")) {
+                if (moduleName.equals("./a.js")) {
                     return "export var name = 'Jack';\n" +
                             "export var age = 18;";
                 }

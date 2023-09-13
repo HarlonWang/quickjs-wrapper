@@ -142,6 +142,29 @@ static void initJSFuncCallback(JSContext *ctx) {
 }
 
 // js module
+static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
+                                   const char *module_name, void *opaque) {
+    auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
+    auto env = wrapper->jniEnv;
+
+    // module loader handle.
+    jobject moduleLoader = env->CallObjectMethod(wrapper->jniThiz, env->GetMethodID(wrapper->quickjsContextClass, "getModuleLoader", "()Lcom/whl/quickjs/wrapper/ModuleLoader;"));
+    if (moduleLoader == nullptr) {
+        JS_ThrowInternalError(ctx, "Failed to load module, the ModuleLoader can not be null!");
+        return nullptr;
+    }
+    jmethodID moduleNormalizeName = env->GetMethodID(wrapper->moduleLoaderClass, "moduleNormalizeName", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+
+    auto result = env->CallObjectMethod(moduleLoader, moduleNormalizeName, env->NewStringUTF(module_base_name), env->NewStringUTF(module_name));
+    if (result == nullptr) {
+        throwJSException(env, "Failed to load module, cause moduleName was null!");
+        return nullptr;
+    }
+
+    // todo 这里作为返回值，没有调用 ReleaseStringUTFChars，quickjs.c 里面会对 char* 进行释放，需要 check 下是否有释放？
+    return (char *) env->GetStringUTFChars((jstring) result, nullptr);
+}
+
 static JSModuleDef *
 jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     auto wrapper = reinterpret_cast<const QuickJSWrapper*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
@@ -413,7 +436,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jniThiz = jniEnv->NewGlobalRef(thiz);
 
     // init ES6Module
-    JS_SetModuleLoaderFunc(runtime, nullptr, jsModuleLoaderFunc, nullptr);
+    JS_SetModuleLoaderFunc(runtime, jsModuleNormalizeFunc, jsModuleLoaderFunc, nullptr);
 
     JS_SetHostPromiseRejectionTracker(runtime, promiseRejectionTracker, &unhandledRejections);
 
