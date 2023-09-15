@@ -1,4 +1,4 @@
-globalThis.console.stdout = globalThis.print
+globalThis.console.stdout = (level, msg) => globalThis.print(msg)
 
 const assert = {
     strictEqual: function (actual, expected) {

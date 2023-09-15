@@ -231,11 +231,8 @@
 // Then console init.
 {
     globalThis.console = {
-        stdout: function () {
-            throw new Error("When invoke console.log, you should be set a stdout of platform to console.stdout.")
-        },
-        stderr: function () {
-            throw new Error("When invoke console.error, you should be set a stderr method of platform to console.stdout.")
+        stdout: function (level, msg) {
+            throw new Error("When invoke console stuff, you should be set a stdout of platform to console.stdout.")
         },
         log: function (...args) {
             this.print("log", ...args)
@@ -259,7 +256,7 @@
                 msg += globalThis.format(value)
             })
 
-            level === "error" ? this.stderr(msg) : this.stdout(msg)
+            this.stdout(level, msg)
         }
     }
 }
