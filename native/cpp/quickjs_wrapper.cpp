@@ -228,76 +228,6 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     }
 }
 
-// It is usually show object on the console.
-static void initFormatObject(JSContext *ctx) {
-    const char* format_string_script = R"lit(function __format_string(a) {
-    var stack = [];
-    var string = '';
-
-    function format_rec(a) {
-        var n, i, keys, key, type;
-
-        type = typeof(a);
-        if (type === "object") {
-            if (a === null) {
-                string += a;
-            } else if(a instanceof Error) {
-                string += a.toString();
-            } else if (stack.indexOf(a) >= 0) {
-                string += "[circular]";
-            } else {
-                stack.push(a);
-                if (Array.isArray(a)) {
-                    n = a.length;
-                    string += "[ ";
-                    for(i = 0; i < n; i++) {
-                        if (i !== 0)
-                            string += ", ";
-                        if (i in a) {
-                            format_rec(a[i]);
-                        } else {
-                            string += "<empty>";
-                        }
-                        if (i > 20) {
-                            string += "...";
-                            break;
-                        }
-                    }
-                    string += " ]";
-                } else {
-                    keys = Object.keys(a);
-                    n = keys.length;
-                    string += "{ ";
-                    for(i = 0; i < n; i++) {
-                        if (i !== 0)
-                            string += ", ";
-                        key = keys[i];
-                        string = string + key + ": ";
-                        format_rec(a[key]);
-                    }
-                    string += " }";
-                }
-                stack.pop(a);
-            }
-        } else if (type === "string") {
-            string += a;
-        } else if (type === "number") {
-            string += a.toString();
-        } else if (type === "symbol") {
-            string += String(a);
-        } else if (type === "function") {
-            string = string + "function " + a.name + "()";
-        } else {
-            string += a;
-        }
-    }
-    format_rec(a);
-
-    return string;
-})lit";
-    JS_Eval(ctx, format_string_script, strlen(format_string_script), "__format_string.js", JS_EVAL_TYPE_GLOBAL);
-}
-
 static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) {
     string error;
     while (!wrapper->unhandledRejections.empty()) {
@@ -370,7 +300,6 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
 
     JS_SetRuntimeOpaque(runtime, this);
     initJSFuncCallback(context);
-    initFormatObject(context);
     loadExtendLibraries(context);
 
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
