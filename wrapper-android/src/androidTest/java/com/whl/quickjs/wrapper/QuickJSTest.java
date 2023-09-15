@@ -2,6 +2,8 @@ package com.whl.quickjs.wrapper;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,6 +25,35 @@ import java.util.regex.Pattern;
 
 public class QuickJSTest {
 
+    static final class LogcatConsole implements QuickJSContext.Console {
+
+        private final String tag;
+
+        public LogcatConsole(String tag) {
+            this.tag = tag;
+        }
+
+        @Override
+        public void log(String info) {
+            Log.d(tag, info);
+        }
+
+        @Override
+        public void info(String info) {
+            Log.i(tag, info);
+        }
+
+        @Override
+        public void warn(String info) {
+            Log.w(tag, info);
+        }
+
+        @Override
+        public void error(String info) {
+            Log.e(tag, info);
+        }
+    }
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -34,7 +65,7 @@ public class QuickJSTest {
 
     public static QuickJSContext createContext() {
         QuickJSContext context = QuickJSContext.create();
-        QuickJSLoader.initConsoleLog(context);
+        context.setConsole(new LogcatConsole("console-test"));
         return context;
     }
 

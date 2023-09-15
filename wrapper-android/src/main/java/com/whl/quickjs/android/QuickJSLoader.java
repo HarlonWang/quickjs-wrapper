@@ -13,18 +13,11 @@ public final class QuickJSLoader {
         System.loadLibrary("quickjs-android-wrapper");
     }
 
-    public interface Console {
-        void log(String info);
-        void info(String info);
-        void warn(String info);
-        void error(String info);
-    }
-
-    static final class AndroidConsole implements Console {
+    static final class LogcatConsole implements QuickJSContext.Console {
 
         private final String tag;
 
-        public AndroidConsole(String tag) {
+        public LogcatConsole(String tag) {
             this.tag = tag;
         }
 
@@ -49,39 +42,28 @@ public final class QuickJSLoader {
         }
     }
 
+    /**
+     * See {@link QuickJSContext#setConsole(QuickJSContext.Console)}
+     */
+    @Deprecated
     public static void initConsoleLog(QuickJSContext context) {
-        initConsoleLog(context, new AndroidConsole("quickjs"));
+        initConsoleLog(context, new LogcatConsole("quickjs"));
     }
 
+    /**
+     * See {@link QuickJSContext#setConsole(QuickJSContext.Console)}
+     */
+    @Deprecated
     public static void initConsoleLog(QuickJSContext context, String tag) {
-        initConsoleLog(context, new AndroidConsole(tag));
+        initConsoleLog(context, new LogcatConsole(tag));
     }
 
-    public static void initConsoleLog(QuickJSContext context, Console console) {
-        context.getGlobalObject().getJSObject("console").setProperty("stdout", args -> {
-            if (args.length == 2) {
-                String level = (String) args[0];
-                String info = (String) args[1];
-                switch (level) {
-                    case "info":
-                        console.info(info);
-                        break;
-                    case "warn":
-                        console.warn(info);
-                        break;
-                    case "error":
-                        console.error(info);
-                        break;
-                    case "log":
-                    case "debug":
-                    default:
-                        console.log(info);
-                        break;
-                }
-            }
-
-            return null;
-        });
+    /**
+     * See {@link QuickJSContext#setConsole(QuickJSContext.Console)}
+     */
+    @Deprecated
+    public static void initConsoleLog(QuickJSContext context, QuickJSContext.Console console) {
+        context.setConsole(console);
     }
 
     /**

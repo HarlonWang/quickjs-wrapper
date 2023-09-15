@@ -5,6 +5,13 @@ import java.util.HashMap;
 
 public class QuickJSContext {
 
+    public interface Console {
+        void log(String info);
+        void info(String info);
+        void warn(String info);
+        void error(String info);
+    }
+
     public static abstract class DefaultModuleLoader extends ModuleLoader {
 
         @Override
@@ -38,6 +45,37 @@ public class QuickJSContext {
 
     public boolean isLiveObject(JSObject jsObj) {
         return isLiveObject(runtime, jsObj.getPointer());
+    }
+
+    public void setConsole(Console console) {
+        if (console == null) {
+            return;
+        }
+
+        getGlobalObject().getJSObject("console").setProperty("stdout", args -> {
+            if (args.length == 2) {
+                String level = (String) args[0];
+                String info = (String) args[1];
+                switch (level) {
+                    case "info":
+                        console.info(info);
+                        break;
+                    case "warn":
+                        console.warn(info);
+                        break;
+                    case "error":
+                        console.error(info);
+                        break;
+                    case "log":
+                    case "debug":
+                    default:
+                        console.log(info);
+                        break;
+                }
+            }
+
+            return null;
+        });
     }
 
     public void setMaxStackSize(int maxStackSize) {
