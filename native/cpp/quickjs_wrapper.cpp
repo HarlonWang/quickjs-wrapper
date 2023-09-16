@@ -91,6 +91,10 @@ static void throwJavaException(JNIEnv *env, const char *exceptionClass, const ch
 }
 
 static void throwJSException(JNIEnv *env, const char* msg) {
+    if (env->ExceptionCheck()) {
+        return;
+    }
+
     jclass e = env->FindClass("com/whl/quickjs/wrapper/QuickJSException");
     jmethodID init = env->GetMethodID(e, "<init>", "(Ljava/lang/String;Z)V");
     jstring ret = env->NewStringUTF(msg);
@@ -100,10 +104,6 @@ static void throwJSException(JNIEnv *env, const char* msg) {
 }
 
 static void throwJSException(JNIEnv *env, JSContext *ctx) {
-    if (env->ExceptionCheck()) {
-        return;
-    }
-
     string error = getJSErrorStr(ctx);
     throwJSException(env, error.c_str());
 }
