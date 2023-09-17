@@ -5,7 +5,7 @@ const TAB = "    "
 
 const DIR_EXTEND_LIBRARIES = "./wrapper-js/extend/libraries/"
 const DIR_CPP = "./native/cpp/"
-const FILE_CPP = DIR_CPP + "quickjs_extend_libraries.cpp"
+const FILE_CPP = DIR_CPP + "quickjs_extend_libraries.h"
 
 if (existDir(FILE_CPP)) {
     removeFile(FILE_CPP)
@@ -46,7 +46,7 @@ if (existDir(FILE_CPP)) {
     code += LINE.repeat(2)
 
     // 定义入口方法
-    code += "void loadExtendLibraries(JSContext *ctx) {"
+    code += "static inline void loadExtendLibraries(JSContext *ctx) {"
     code += LINE
 
     code += TAB

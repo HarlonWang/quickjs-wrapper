@@ -3,7 +3,7 @@
 //
 #include "quickjs_wrapper.h"
 #include "../quickjs/cutils.h"
-#include "quickjs_extend_libraries.cpp"
+#include "quickjs_extend_libraries.h"
 #include <cstring>
 #include <cmath>
 
