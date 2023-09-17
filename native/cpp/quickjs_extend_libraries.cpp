@@ -1,3 +1,6 @@
+#ifndef QUICKJS_EXTEND_LIBRARIES
+#define QUICKJS_EXTEND_LIBRARIES
+
 #include <string>
 #include "../quickjs/quickjs.h"
 
@@ -339,3 +342,5 @@ void loadExtendLibraries(JSContext *ctx) {
     JS_Eval(ctx, DATE_POLYFILL, strlen(DATE_POLYFILL), "date-polyfill.js", JS_EVAL_TYPE_GLOBAL);
     JS_FreeValue(ctx, JS_Eval(ctx, CONSOLE, strlen(CONSOLE), "console.js", JS_EVAL_TYPE_GLOBAL));
 }
+
+#endif //QUICKJS_EXTEND_LIBRARIES

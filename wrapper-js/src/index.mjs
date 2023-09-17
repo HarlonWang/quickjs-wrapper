@@ -16,6 +16,10 @@ if (existDir(FILE_CPP)) {
 
     // 以下开始写入扩展库代码
 
+    code += "#ifndef QUICKJS_EXTEND_LIBRARIES" + LINE
+    code += "#define QUICKJS_EXTEND_LIBRARIES" + LINE
+    code += LINE
+
     // include 引用文件
     code += `#include <string>` + LINE
     code += `#include "../quickjs/quickjs.h"` + LINE
@@ -55,6 +59,9 @@ if (existDir(FILE_CPP)) {
 
     // 入口方法结尾
     code += "}"
+
+    code += LINE.repeat(2)
+    code += "#endif //QUICKJS_EXTEND_LIBRARIES"
 
     writeToFile(FILE_CPP, code)
 })()
