@@ -17,8 +17,9 @@ if (existDir(FILE_CPP)) {
     // 以下开始写入扩展库代码
 
     // include 引用文件
-    code += "#include \"../quickjs/quickjs.h\""
-    code += LINE.repeat(2)
+    code += `#include <string>` + LINE
+    code += `#include "../quickjs/quickjs.h"` + LINE
+    code += LINE
 
     // 写入 date-polyfill.js
     const datePVarName = "DATE_POLYFILL"

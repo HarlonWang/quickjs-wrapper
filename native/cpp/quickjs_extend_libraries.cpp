@@ -1,3 +1,4 @@
+#include <string>
 #include "../quickjs/quickjs.h"
 
 const char *DATE_POLYFILL = R"lit((() => {
