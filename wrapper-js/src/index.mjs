@@ -29,7 +29,7 @@ if (existDir(FILE_CPP)) {
     code += ")lit\";"
     code += LINE
 
-    code += LINE.repeat(2)
+    code += LINE
 
     // 写入 console.js
     const consoleVarName = "CONSOLE"

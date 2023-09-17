@@ -71,7 +71,6 @@ const char *DATE_POLYFILL = R"lit((() => {
     Date = new Proxy(Date, handler);
 })();)lit";
 
-
 const char *CONSOLE = R"lit(// Init format at first.
 {
     const LINE = "\n"
