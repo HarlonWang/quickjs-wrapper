@@ -5,10 +5,10 @@ const TAB = "    "
 
 const DIR_EXTEND_LIBRARIES = "./wrapper-js/extend/libraries/"
 const DIR_CPP = "./native/cpp/"
-const FILE_CPP = DIR_CPP + "quickjs_extend_libraries.h"
+const FILE_H = DIR_CPP + "quickjs_extend_libraries.h"
 
-if (existDir(FILE_CPP)) {
-    removeFile(FILE_CPP)
+if (existDir(FILE_H)) {
+    removeFile(FILE_H)
 }
 
 (function init() {
@@ -52,7 +52,7 @@ if (existDir(FILE_CPP)) {
     code += TAB
     code += `JS_Eval(ctx, ${datePVarName}, strlen(${datePVarName}), "date-polyfill.js", JS_EVAL_TYPE_GLOBAL);`
     code += LINE
-    
+
     code += TAB
     code += `JS_FreeValue(ctx, JS_Eval(ctx, ${consoleVarName}, strlen(${consoleVarName}), "console.js", JS_EVAL_TYPE_GLOBAL));`
     code += LINE
@@ -63,5 +63,5 @@ if (existDir(FILE_CPP)) {
     code += LINE.repeat(2)
     code += "#endif //QUICKJS_EXTEND_LIBRARIES"
 
-    writeToFile(FILE_CPP, code)
+    writeToFile(FILE_H, code)
 })()
