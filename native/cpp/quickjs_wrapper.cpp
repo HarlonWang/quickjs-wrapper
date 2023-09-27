@@ -780,12 +780,17 @@ jbyteArray QuickJSWrapper::compile(JNIEnv *env, jstring source, jstring file_nam
     return result;
 }
 
-jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray byteCode) {
-    const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
-    const auto bufferLength = env->GetArrayLength(byteCode);
+jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray bytecode) {
+    if(bytecode == nullptr) {
+        throwJSException(env, "bytecode can not be null");
+        return nullptr;
+    }
+
+    const auto buffer = env->GetByteArrayElements(bytecode, nullptr);
+    const auto bufferLength = env->GetArrayLength(bytecode);
     const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
     auto obj = JS_ReadObject(context, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
-    env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
+    env->ReleaseByteArrayElements(bytecode, buffer, JNI_ABORT);
 
     if (JS_IsException(obj)) {
         throwJSException(env, context);
