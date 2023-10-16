@@ -254,9 +254,6 @@ ProGuard users must manually add the options from [consumer-rules.pro](/wrapper-
 ## Concurrency
 JavaScript runtimes are single threaded. All execution in the JavaScript runtime is guaranteed thread safe, by way of Java synchronization.
 
-## Communication
-<img src="/images/qrcode_1696672445005.jpg" height="513" width="288"/>
-
 ## Find this repository useful?
 Support it by joining __[stargazers](https://github.com/HarlonWang/quickjs-wrapper/stargazers)__ for this repository. <br>
 Also, __[follow me](https://github.com/HarlonWang)__ on GitHub for my next creations! 
