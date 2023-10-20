@@ -254,6 +254,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thi
             return;
         }
 
+        JSMemoryUsage stats;
+        JS_ComputeMemoryUsage(rt, &stats);
+        JS_DumpMemoryUsage(stdout, &stats, rt);
+
         JS_DumpObjects(rt);
 
         fclose(file);
