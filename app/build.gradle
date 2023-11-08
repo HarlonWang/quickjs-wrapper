@@ -29,6 +29,7 @@ android {
     sourceSets {
         androidTest.root '../wrapper-android/src/androidTest'
         androidTest.java.srcDirs '../wrapper-android/src/androidTest/java'
+        androidTest.assets.srcDirs '../wrapper-android/src/androidTest/assets'
     }
 }
 
