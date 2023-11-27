@@ -39,14 +39,14 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getGlobalObject(JNIEnv *env, jobject
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_getProperty(JNIEnv *env, jobject thiz, jlong context, jlong value,
-                                                 jstring name) {
+                                                 jstring name, jboolean isFreeValue) {
     if (name == nullptr) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Property Name cannot be null");
         return nullptr;
     }
 
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->getProperty(env, thiz, value, name);
+    return wrapper->getProperty(env, thiz, value, name, isFreeValue);
 }
 
 extern "C"

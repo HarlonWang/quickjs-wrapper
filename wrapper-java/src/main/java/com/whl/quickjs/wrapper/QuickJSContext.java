@@ -205,9 +205,13 @@ public class QuickJSContext {
     }
 
     public Object getProperty(JSObject jsObj, String name) {
+        return getProperty(jsObj, name, true);
+    }
+
+    public Object getProperty(JSObject jsObj, String name, boolean isFreeValue) {
         checkSameThread();
         checkDestroyed();
-        return getProperty(context, jsObj.getPointer(), name);
+        return getProperty(context, jsObj.getPointer(), name, isFreeValue);
     }
 
     public void setProperty(JSObject jsObj, String name, Object value) {
@@ -429,7 +433,7 @@ public class QuickJSContext {
     private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
     private native Object call(long context, long func, long thisObj, Object[] args);
-    private native Object getProperty(long context, long objValue, String name);
+    private native Object getProperty(long context, long objValue, String name, boolean isFreeValue);
     private native void setProperty(long context, long objValue, String name, Object value);
     private native String stringify(long context, long objValue);
     private native int length(long context, long objValue);
