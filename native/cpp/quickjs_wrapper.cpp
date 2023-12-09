@@ -156,11 +156,17 @@ static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
     }
     jmethodID moduleNormalizeName = env->GetMethodID(wrapper->moduleLoaderClass, "moduleNormalizeName", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 
-    auto result = env->CallObjectMethod(moduleLoader, moduleNormalizeName, env->NewStringUTF(module_base_name), env->NewStringUTF(module_name));
+    jstring j_module_base_name =  env->NewStringUTF(module_base_name);
+    jstring j_module_name = env->NewStringUTF(module_name);
+    auto result = env->CallObjectMethod(moduleLoader, moduleNormalizeName, j_module_base_name, j_module_name);
     if (result == nullptr) {
         throwJSException(env, "Failed to load module, cause moduleName was null!");
         return nullptr;
     }
+
+    env->DeleteLocalRef(j_module_base_name);
+    env->DeleteLocalRef(j_module_name);
+    env->DeleteLocalRef(moduleLoader);
 
     // todo 这里作为返回值，没有调用 ReleaseStringUTFChars，quickjs.c 里面会对 char* 进行释放，需要 check 下是否有释放？
     return (char *) env->GetStringUTFChars((jstring) result, nullptr);
@@ -181,6 +187,7 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
 
     bool isBytecodeModule = env->CallBooleanMethod(moduleLoader, env->GetMethodID(wrapper->moduleLoaderClass, "isBytecodeMode", "()Z"));
 
+    void *m;
     if (isBytecodeModule) {
         jmethodID getModuleBytecode = env->GetMethodID(wrapper->moduleLoaderClass, "getModuleBytecode", "(Ljava/lang/String;)[B");
 
@@ -206,9 +213,9 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
             return nullptr;
         }
 
-        void *m = JS_VALUE_GET_PTR(obj);
+        m = JS_VALUE_GET_PTR(obj);
         JS_FreeValue(ctx, obj);
-        return (JSModuleDef *) m;
+        env->DeleteLocalRef(bytecode);
     } else {
         jmethodID getModuleStringCode = env->GetMethodID(wrapper->moduleLoaderClass, "getModuleStringCode", "(Ljava/lang/String;)Ljava/lang/String;");
 
@@ -222,10 +229,13 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
         int scriptLen = env->GetStringUTFLength((jstring) result);
         JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
                                    JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
-        void *m = JS_VALUE_GET_PTR(func_val);
+        m = JS_VALUE_GET_PTR(func_val);
         JS_FreeValue(ctx, func_val);
-        return (JSModuleDef *) m;
     }
+
+    env->DeleteLocalRef(arg);
+    env->DeleteLocalRef(moduleLoader);
+    return (JSModuleDef *) m;
 }
 
 static bool throwIfUnhandledRejections(QuickJSWrapper *wrapper, JSContext *ctx) {
