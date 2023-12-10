@@ -264,3 +264,9 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thi
     }
 
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_finalize(JNIEnv *env, jobject thiz, jlong context) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    wrapper->finalize(env);
+}

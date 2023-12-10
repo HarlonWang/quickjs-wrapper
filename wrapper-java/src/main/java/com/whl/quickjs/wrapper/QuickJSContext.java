@@ -423,6 +423,10 @@ public class QuickJSContext {
         evaluate(errorScript);
     }
 
+    public void finalizeValues() {
+        finalize(context);
+    }
+
     // runtime
     private native long createRuntime();
     private native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
@@ -450,6 +454,7 @@ public class QuickJSContext {
     private native Object parseJSON(long context, String json);
     private native byte[] compile(long context, String sourceCode, String fileName, boolean isModule); // Bytecode compile
     private native Object execute(long context, byte[] bytecode); // Bytecode execute
+    private native void finalize(long context);
 
     // destroy context and runtime
     private native void destroyContext(long context);

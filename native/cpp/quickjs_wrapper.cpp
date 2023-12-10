@@ -853,3 +853,14 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     JS_FreeValue(context, global);
     return jsObj;
 }
+
+void QuickJSWrapper::finalize(JNIEnv *env) {
+    map<jlong, JSValue>::iterator i;
+    for (i = values.begin(); i != values.end(); ++i) {
+        JSValue item = i->second;
+        JS_FreeValue(context, item);
+    }
+    values.clear();
+
+    JS_RunGC(runtime);
+}

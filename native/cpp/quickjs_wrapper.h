@@ -86,6 +86,7 @@ public:
     jobject execute(JNIEnv*, jobject, jbyteArray);
 
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
+    void finalize(JNIEnv*);
 };
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H
