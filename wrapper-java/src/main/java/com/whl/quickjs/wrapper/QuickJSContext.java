@@ -302,11 +302,16 @@ public class QuickJSContext {
     }
 
     public Object get(JSArray jsArray, int index) {
+        return get(jsArray, index, true);
+    }
+
+    public Object get(JSArray jsArray, int index, boolean isFreeValue) {
         checkSameThread();
         checkDestroyed();
 
-        return get(context, jsArray.getPointer(), index);
+        return get(context, jsArray.getPointer(), index, isFreeValue);
     }
+
 
     public void set(JSArray jsArray, Object value, int index) {
         checkSameThread();
@@ -437,7 +442,7 @@ public class QuickJSContext {
     private native void setProperty(long context, long objValue, String name, Object value);
     private native String stringify(long context, long objValue);
     private native int length(long context, long objValue);
-    private native Object get(long context, long objValue, int index);
+    private native Object get(long context, long objValue, int index, boolean isFreeValue);
     private native void set(long context, long objValue, Object value, int index);
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);

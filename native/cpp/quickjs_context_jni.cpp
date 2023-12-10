@@ -72,9 +72,9 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_length(JNIEnv *env, jobject thiz, jl
 }extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_get(JNIEnv *env, jobject thiz, jlong context, jlong value,
-                                         jint index) {
+                                         jint index, jboolean isFreeValue) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->get(env, thiz, value, index);
+    return wrapper->get(env, thiz, value, index, isFreeValue);
 }extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_createContext(JNIEnv *env, jobject thiz, jlong runtime) {

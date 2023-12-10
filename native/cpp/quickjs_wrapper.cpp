@@ -593,11 +593,11 @@ jint QuickJSWrapper::length(JNIEnv *env, jlong value) const {
     return JS_VALUE_GET_INT(length);
 }
 
-jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) {
+jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index, jboolean isFreeValue) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     JSValue child = JS_GetPropertyUint32(context, jsObj, index);
 
-    return toJavaObject(env, thiz, jsObj, child);
+    return toJavaObject(env, thiz, jsObj, child, isFreeValue);
 }
 
 void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index) {

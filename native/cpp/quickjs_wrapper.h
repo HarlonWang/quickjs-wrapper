@@ -71,7 +71,7 @@ public:
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring jsonStringify(JNIEnv *env, jlong value) const;
     jint length(JNIEnv *env, jlong value) const;
-    jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
+    jobject get(JNIEnv *env, jobject thiz, jlong value, jint index, jboolean isFreeValue = true);
     void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
     JSValue jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv);
     void removeCallFunction(int callback_id) const;
