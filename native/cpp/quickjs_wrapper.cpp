@@ -473,9 +473,18 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
         }
 
         case JS_TAG_STRING: {
-            const char* string = JS_ToCString(context, value);
-            result = env->NewStringUTF(string);
-            JS_FreeCString(context, string);
+            const char *str;
+            size_t len;
+            str = JS_ToCStringLen(context, &len, value);
+
+            jbyteArray jba = env->NewByteArray(len);
+            env->SetByteArrayRegion(jba, 0, len, reinterpret_cast<const jbyte *>(str));
+
+            result = env->NewObject(stringClass,
+                                    env->GetMethodID(stringClass, "<init>",
+                                                     "([B)V"), jba);
+            JS_FreeCString(context, str);
+            env->DeleteLocalRef(jba);
             break;
         }
 
