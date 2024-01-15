@@ -649,11 +649,19 @@ jstring QuickJSWrapper::jsonStringify(JNIEnv *env, jlong value) const {
         return nullptr;
     }
 
-    auto result = JS_ToCString(context, obj);
+    const char *str;
+    size_t len;
+
+    str = JS_ToCStringLen(context, &len, obj);
+    jbyteArray jba = env->NewByteArray(len);
+    env->SetByteArrayRegion(jba, 0, len, reinterpret_cast<const jbyte *>(str));
+    jstring ret = static_cast<jstring>(env->NewObject(stringClass,
+                                                      env->GetMethodID(stringClass, "<init>",
+                                                                       "([B)V"), jba));
     JS_FreeValue(context, obj);
-    jstring string =env->NewStringUTF(result);
-    JS_FreeCString(context, result);
-    return string;
+    JS_FreeCString(context, str);
+    env->DeleteLocalRef(jba);
+    return ret;
 }
 
 jint QuickJSWrapper::length(JNIEnv *env, jlong value) const {
