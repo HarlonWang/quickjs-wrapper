@@ -1,9 +1,16 @@
 package com.whl.quickjs.wrapper;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 
-public class QuickJSContext {
+public class QuickJSContext implements Closeable {
+
+    @Override
+    public void close() throws IOException {
+        destroy();
+    }
 
     public interface Console {
         void log(String info);
