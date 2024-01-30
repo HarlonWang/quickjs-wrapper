@@ -22,6 +22,7 @@ if (existDir(FILE_H)) {
 
     // include 引用文件
     code += `#include <string>` + LINE
+    code += `#include <cstring>` + LINE
     code += `#include "../quickjs/quickjs.h"` + LINE
     code += LINE
 

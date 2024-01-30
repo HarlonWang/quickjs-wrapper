@@ -2,6 +2,7 @@
 #define QUICKJS_EXTEND_LIBRARIES
 
 #include <string>
+#include <cstring>
 #include "../quickjs/quickjs.h"
 
 const char *DATE_POLYFILL = R"lit((() => {
@@ -312,6 +313,9 @@ const char *CONSOLE = R"lit(// Init format at first.
         },
         log: function (...args) {
             this.print("log", ...args)
+        },
+        debug: function() {
+            this.print("debug", ...args)
         },
         info: function (...args) {
             this.print("info", ...args)
