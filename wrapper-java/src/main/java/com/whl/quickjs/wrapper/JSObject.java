@@ -222,7 +222,7 @@ public class JSObject {
     public void release() {
         checkReleased();
 
-        context.freeValue(this);
+//        context.freeValue(this);
         isReleased = true;
     }
 
