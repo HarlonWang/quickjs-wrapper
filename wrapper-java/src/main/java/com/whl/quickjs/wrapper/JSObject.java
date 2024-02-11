@@ -202,8 +202,7 @@ public class JSObject {
     }
 
     public JSArray getNames() {
-        JSFunction getOwnPropertyNames = (JSFunction) context.evaluate("Object.getOwnPropertyNames");
-        return (JSArray) getOwnPropertyNames.call(this);
+        return (JSArray) context.getOwnPropertyNames(this);
     }
 
     /**
@@ -211,8 +210,7 @@ public class JSObject {
      */
     @Deprecated
     public JSArray getOwnPropertyNames() {
-        JSFunction getOwnPropertyNames = (JSFunction) context.evaluate("Object.getOwnPropertyNames");
-        return (JSArray) getOwnPropertyNames.call(this);
+        return (JSArray) context.getOwnPropertyNames(this);
     }
 
     /**

@@ -853,3 +853,25 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     JS_FreeValue(context, global);
     return jsObj;
 }
+
+jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj) {
+    const char *getOwnPropertyNames = "Object.getOwnPropertyNames";
+    JSValue func = JS_Eval(context, getOwnPropertyNames, strlen(getOwnPropertyNames), getOwnPropertyNames, JS_EVAL_TYPE_GLOBAL);
+    if (JS_IsException(func)) {
+        throwJSException(env, context);
+        JS_FreeValue(context, func);
+        return nullptr;
+    }
+
+    JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(obj));
+    JSValue ret = JS_Call(context, func, JS_NULL, 1, &jsObject);
+    JS_FreeValue(context, func);
+    if (JS_IsException(ret)) {
+        throwJSException(env, context);
+        JS_FreeValue(context, ret);
+        return nullptr;
+    }
+
+    JSValue nullValue = JS_NULL;
+    return toJavaObject(env, thiz, nullValue, ret, true);
+}

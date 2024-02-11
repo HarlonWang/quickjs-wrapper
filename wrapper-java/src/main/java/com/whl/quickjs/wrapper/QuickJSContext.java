@@ -421,6 +421,10 @@ public class QuickJSContext implements Closeable {
         evaluate(errorScript);
     }
 
+    public Object getOwnPropertyNames(JSObject object) {
+        return getOwnPropertyNames(context, object.getPointer());
+    }
+
     // runtime
     private native long createRuntime();
     private native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
@@ -448,6 +452,7 @@ public class QuickJSContext implements Closeable {
     private native Object parseJSON(long context, String json);
     private native byte[] compile(long context, String sourceCode, String fileName, boolean isModule); // Bytecode compile
     private native Object execute(long context, byte[] bytecode); // Bytecode execute
+    private native Object getOwnPropertyNames(long context, long objValue);
 
     // destroy context and runtime
     private native void destroyContext(long context);
