@@ -80,9 +80,6 @@ public class QuickJSTest {
         QuickJSContext context = createContext();
         context.evaluate("var a = 123;");
 
-        JSObject gloObj = context.getGlobalObject();
-        gloObj.release();
-
         JSObject globalObject = context.getGlobalObject();
         assertEquals(123, globalObject.getProperty("a"));
         context.destroy();

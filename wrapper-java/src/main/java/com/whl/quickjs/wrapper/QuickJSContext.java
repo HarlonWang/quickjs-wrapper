@@ -136,6 +136,7 @@ public class QuickJSContext implements Closeable {
     private final HashMap<Integer, JSCallFunction> callFunctionMap = new HashMap<>();
 
     private ModuleLoader moduleLoader;
+    private JSObject globalObject;
 
     private QuickJSContext() {
         try {
@@ -192,7 +193,12 @@ public class QuickJSContext implements Closeable {
     public JSObject getGlobalObject() {
         checkSameThread();
         checkDestroyed();
-        return getGlobalObject(context);
+
+        if (globalObject == null) {
+            globalObject = getGlobalObject(context);
+        }
+
+        return globalObject;
     }
 
     public void destroy() {
