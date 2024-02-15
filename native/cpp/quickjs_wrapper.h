@@ -17,7 +17,7 @@ using namespace std;
 
 class QuickJSWrapper {
 private:
-    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool non_js_callback = true);
+    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool isFreeValue = true);
     JSValue toJSValue(JNIEnv *env, jobject thiz, jobject value) const;
 
 public:
@@ -62,12 +62,12 @@ public:
 
     jobject evaluate(JNIEnv*, jobject thiz, jstring script, jstring file_name);
     jobject getGlobalObject(JNIEnv*, jobject thiz) const;
-    jobject getProperty(JNIEnv*, jobject thiz, jlong value, jstring name);
+    jobject getProperty(JNIEnv*, jobject thiz, jlong value, jstring name, jboolean isFreeValue = true);
     void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value) const;
     jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
     jstring jsonStringify(JNIEnv *env, jlong value) const;
     jint length(JNIEnv *env, jlong value) const;
-    jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);
+    jobject get(JNIEnv *env, jobject thiz, jlong value, jint index, jboolean isFreeValue = true);
     void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
     JSValue jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv);
     void removeCallFunction(int callback_id) const;

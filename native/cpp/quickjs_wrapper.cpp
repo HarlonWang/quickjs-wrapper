@@ -391,7 +391,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(quickjsContextClass);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool non_js_callback){
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool isFreeValue){
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -403,7 +403,7 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             const char* string = JS_ToCString(context, value);
             result = env->NewStringUTF(string);
             JS_FreeCString(context, string);
-            if (non_js_callback) {
+            if (isFreeValue) {
                 // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
                 JS_FreeValue(context, value);
             }
@@ -458,7 +458,7 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
                 result = newObject(env, thiz, quickjsContextClass, value_ptr);
             }
 
-            if (non_js_callback) {
+            if (isFreeValue) {
                 // 这里对 JSObject 的引用计数做了处理：
                 // 1. 判断是否有该对象，如果没有就保存到 values 里
                 // 2. 如果已经有该对象，则对其进行计数减一
@@ -516,7 +516,7 @@ jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
     return result;
 }
 
-jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstring name) {
+jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstring name, jboolean isFreeValue) {
     JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
 
     const char *propsName = env->GetStringUTFChars(name, JNI_FALSE);
@@ -527,7 +527,7 @@ jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstr
         return nullptr;
     }
 
-    return toJavaObject(env, thiz, jsObject, propsValue);
+    return toJavaObject(env, thiz, jsObject, propsValue, isFreeValue);
 }
 
 jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj,
@@ -613,11 +613,11 @@ jint QuickJSWrapper::length(JNIEnv *env, jlong value) const {
     return JS_VALUE_GET_INT(length);
 }
 
-jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index) {
+jobject QuickJSWrapper::get(JNIEnv *env, jobject thiz, jlong value, jint index, jboolean isFreeValue) {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     JSValue child = JS_GetPropertyUint32(context, jsObj, index);
 
-    return toJavaObject(env, thiz, jsObj, child);
+    return toJavaObject(env, thiz, jsObj, child, isFreeValue);
 }
 
 void QuickJSWrapper::set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index) {

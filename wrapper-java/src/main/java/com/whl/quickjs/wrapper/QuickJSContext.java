@@ -243,9 +243,13 @@ public class QuickJSContext implements Closeable {
     }
 
     public Object getProperty(JSObject jsObj, String name) {
+        return getProperty(jsObj, name, true);
+    }
+
+    public Object getProperty(JSObject jsObj, String name, boolean isFreeValue) {
         checkSameThread();
         checkDestroyed();
-        return getProperty(context, jsObj.getPointer(), name);
+        return getProperty(context, jsObj.getPointer(), name, isFreeValue);
     }
 
     public void setProperty(JSObject jsObj, String name, Object value) {
@@ -336,10 +340,14 @@ public class QuickJSContext implements Closeable {
     }
 
     public Object get(JSArray jsArray, int index) {
+        return get(jsArray, index, true);
+    }
+
+    public Object get(JSArray jsArray, int index, boolean isFreeValue) {
         checkSameThread();
         checkDestroyed();
 
-        return get(context, jsArray.getPointer(), index);
+        return get(context, jsArray.getPointer(), index, isFreeValue);
     }
 
     public void set(JSArray jsArray, Object value, int index) {
@@ -471,11 +479,11 @@ public class QuickJSContext implements Closeable {
     private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
     private native Object call(long context, long func, long thisObj, Object[] args);
-    private native Object getProperty(long context, long objValue, String name);
+    private native Object getProperty(long context, long objValue, String name, boolean isFreeValue);
     private native void setProperty(long context, long objValue, String name, Object value);
     private native String stringify(long context, long objValue);
     private native int length(long context, long objValue);
-    private native Object get(long context, long objValue, int index);
+    private native Object get(long context, long objValue, int index, boolean isFreeValue);
     private native void set(long context, long objValue, Object value, int index);
     private native void freeValue(long context, long objValue);
     private native void dupValue(long context, long objValue);
