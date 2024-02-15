@@ -296,6 +296,30 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     }
 }
 
+static jobject newObject(JNIEnv *env, jobject thiz, jclass qClass, jlong pointer) {
+    jmethodID creatorMethod =  env->GetMethodID(qClass, "getCreator", "()Lcom/whl/quickjs/wrapper/JSObjectCreator;");
+    jobject creator = env->CallObjectMethod(thiz, creatorMethod);
+    jobject jsObject = env->CallObjectMethod(creator, env->GetMethodID(env->FindClass("com/whl/quickjs/wrapper/JSObjectCreator"), "newObject",
+                                                                       "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSObject;"), thiz, pointer);
+    return jsObject;
+}
+
+static jobject newArray(JNIEnv *env, jobject thiz, jclass qClass, jlong pointer) {
+    jmethodID creatorMethod =  env->GetMethodID(qClass, "getCreator", "()Lcom/whl/quickjs/wrapper/JSObjectCreator;");
+    jobject creator = env->CallObjectMethod(thiz, creatorMethod);
+    jobject jsArray = env->CallObjectMethod(creator, env->GetMethodID(env->FindClass("com/whl/quickjs/wrapper/JSObjectCreator"), "newArray",
+                                                                      "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSArray;"), thiz, pointer);
+    return jsArray;
+}
+
+static jobject newFunction(JNIEnv *env, jobject thiz, jclass qClass, jlong objPointer, jlong pointer) {
+    jmethodID creatorMethod =  env->GetMethodID(qClass, "getCreator", "()Lcom/whl/quickjs/wrapper/JSObjectCreator;");
+    jobject creator = env->CallObjectMethod(thiz, creatorMethod);
+    jobject jsFunction = env->CallObjectMethod(creator, env->GetMethodID(env->FindClass("com/whl/quickjs/wrapper/JSObjectCreator"), "newFunction",
+                                                                         "(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)Lcom/whl/quickjs/wrapper/JSFunction;"), thiz, pointer, objPointer);
+    return jsFunction;
+}
+
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jniEnv = env;
     runtime = rt;
@@ -335,10 +359,6 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     longGetValue = jniEnv->GetMethodID(longClass, "longValue", "()J");
     doubleGetValue = jniEnv->GetMethodID(doubleClass, "doubleValue", "()D");
     jsObjectGetValue = jniEnv->GetMethodID(jsObjectClass, "getPointer", "()J");
-
-    jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)V");
 
     callFunctionBackM = jniEnv->GetMethodID(quickjsContextClass, "callFunctionBack", "(I[Ljava/lang/Object;)Ljava/lang/Object;");
     removeCallFunctionM = jniEnv->GetMethodID(quickjsContextClass, "removeCallFunction", "(I)V");
@@ -431,11 +451,11 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
             if (JS_IsFunction(context, value)) {
                 auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
-                result = env->NewObject(jsFunctionClass, jsFunctionInit, thiz, obj_ptr, value_ptr);
+                result = newFunction(env, thiz, quickjsContextClass, obj_ptr, value_ptr);
             } else if (JS_IsArray(context, value)) {
-                result = env->NewObject(jsArrayClass, jsArrayInit, thiz, value_ptr);
+                result = newArray(env, thiz, quickjsContextClass, value_ptr);
             } else {
-                result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
+                result = newObject(env, thiz, quickjsContextClass, value_ptr);
             }
 
             if (non_js_callback) {
@@ -490,7 +510,7 @@ jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
     JSValue value = JS_GetGlobalObject(context);
 
     auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
-    jobject result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
+    jobject result = newObject(env, thiz, quickjsContextClass, value_ptr);
 
     JS_FreeValue(context, value);
     return result;

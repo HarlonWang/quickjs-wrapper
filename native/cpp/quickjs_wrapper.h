@@ -53,10 +53,6 @@ public:
     jmethodID doubleGetValue;
     jmethodID jsObjectGetValue;
 
-    jmethodID jsObjectInit;
-    jmethodID jsArrayInit;
-    jmethodID jsFunctionInit;
-
     jmethodID callFunctionBackM;
     jmethodID removeCallFunctionM;
     jmethodID callFunctionHashCodeM;

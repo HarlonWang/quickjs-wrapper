@@ -47,7 +47,26 @@ public class QuickJSContext implements Closeable {
     private static final String UNKNOWN_FILE = "unknown.js";
 
     public static QuickJSContext create() {
-        return new QuickJSContext();
+        return new QuickJSContext(new JSObjectCreator() {
+            @Override
+            public JSObject newObject(QuickJSContext context, long pointer) {
+                return new QuickJSObject(context, pointer);
+            }
+
+            @Override
+            public JSArray newArray(QuickJSContext context, long pointer) {
+                return new QuickJSArray(context, pointer);
+            }
+
+            @Override
+            public JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer) {
+                return new QuickJSFunction(context, pointer, thisPointer);
+            }
+        });
+    }
+
+    public static QuickJSContext create(JSObjectCreator creator) {
+        return new QuickJSContext(creator);
     }
 
     public boolean isLiveObject(JSObject jsObj) {
@@ -118,6 +137,10 @@ public class QuickJSContext implements Closeable {
         dumpObjects(runtime, target.getAbsolutePath());
     }
 
+    public JSObjectCreator getCreator() {
+        return creator;
+    }
+
     // will use stdout to print.
     public void dumpObjects() {
         dumpObjects(runtime, null);
@@ -137,9 +160,11 @@ public class QuickJSContext implements Closeable {
 
     private ModuleLoader moduleLoader;
     private JSObject globalObject;
+    private JSObjectCreator creator;
 
-    private QuickJSContext() {
+    private QuickJSContext(JSObjectCreator creator) {
         try {
+            this.creator = creator;
             runtime = createRuntime();
             context = createContext(runtime);
         } catch (UnsatisfiedLinkError e) {
