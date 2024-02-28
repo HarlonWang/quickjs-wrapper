@@ -41,6 +41,7 @@ public:
     jclass jsCallFunctionClass;
     jclass quickjsContextClass;
     jclass moduleLoaderClass;
+    jclass creatorClass;
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
@@ -56,6 +57,10 @@ public:
     jmethodID callFunctionBackM;
     jmethodID removeCallFunctionM;
     jmethodID callFunctionHashCodeM;
+    jmethodID creatorM;
+    jmethodID newObjectM;
+    jmethodID newArrayM;
+    jmethodID newFunctionM;
 
     QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt);
     ~QuickJSWrapper();
