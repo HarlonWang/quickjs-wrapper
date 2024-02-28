@@ -51,7 +51,7 @@ if (existDir(FILE_H)) {
     code += LINE
 
     code += TAB
-    code += `JS_Eval(ctx, ${datePVarName}, strlen(${datePVarName}), "date-polyfill.js", JS_EVAL_TYPE_GLOBAL);`
+    code += `JS_FreeValue(ctx, JS_Eval(ctx, ${datePVarName}, strlen(${datePVarName}), "date-polyfill.js", JS_EVAL_TYPE_GLOBAL));`
     code += LINE
 
     code += TAB
