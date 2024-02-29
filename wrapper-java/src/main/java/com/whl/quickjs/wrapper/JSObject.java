@@ -12,14 +12,30 @@ public interface JSObject {
     long getPointer();
     QuickJSContext getContext();
     Object getProperty(String name);
+    @Deprecated
+    String getStringProperty(String name);
     String getString(String name);
+    @Deprecated
+    Integer getIntProperty(String name);
     Integer getInteger(String name);
+    @Deprecated
+    Boolean getBooleanProperty(String name);
     Boolean getBoolean(String name);
+    @Deprecated
+    Double getDoubleProperty(String name);
     Double getDouble(String name);
     Long getLong(String name);
+    @Deprecated
+    JSObject getJSObjectProperty(String name);
     JSObject getJSObject(String name);
+    @Deprecated
+    JSFunction getJSFunctionProperty(String name);
     JSFunction getJSFunction(String name);
+    @Deprecated
+    JSArray getJSArrayProperty(String name);
     JSArray getJSArray(String name);
+    @Deprecated
+    JSArray getOwnPropertyNames();
     JSArray getNames();
     String stringify();
     boolean isAlive();

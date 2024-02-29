@@ -36,6 +36,11 @@ public class QuickJSObject implements JSObject {
     }
 
     @Override
+    public String getStringProperty(String name) {
+        return getString(name);
+    }
+
+    @Override
     public void setProperty(String name, String value) {
         context.setProperty(this, name, value);
     }
@@ -113,15 +118,30 @@ public class QuickJSObject implements JSObject {
     }
 
     @Override
+    public Integer getIntProperty(String name) {
+        return getInteger(name);
+    }
+
+    @Override
     public Integer getInteger(String name) {
         Object value = getProperty(name);
         return value instanceof Integer ? (Integer) value : null;
     }
 
     @Override
+    public Boolean getBooleanProperty(String name) {
+        return getBoolean(name);
+    }
+
+    @Override
     public Boolean getBoolean(String name) {
         Object value = getProperty(name);
         return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    @Override
+    public Double getDoubleProperty(String name) {
+        return getDouble(name);
     }
 
     @Override
@@ -137,9 +157,19 @@ public class QuickJSObject implements JSObject {
     }
 
     @Override
+    public JSObject getJSObjectProperty(String name) {
+        return getJSObject(name);
+    }
+
+    @Override
     public JSObject getJSObject(String name) {
         Object value = getProperty(name);
         return value instanceof JSObject ? (JSObject) value : null;
+    }
+
+    @Override
+    public JSFunction getJSFunctionProperty(String name) {
+        return getJSFunction(name);
     }
 
     @Override
@@ -149,15 +179,24 @@ public class QuickJSObject implements JSObject {
     }
 
     @Override
+    public JSArray getJSArrayProperty(String name) {
+        return getJSArray(name);
+    }
+
+    @Override
     public JSArray getJSArray(String name) {
         Object value = getProperty(name);
         return value instanceof JSArray ? (JSArray) value : null;
     }
 
     @Override
+    public JSArray getOwnPropertyNames() {
+        return getNames();
+    }
+
+    @Override
     public JSArray getNames() {
-        JSFunction getOwnPropertyNames = (JSFunction) context.evaluate("Object.getOwnPropertyNames");
-        return (JSArray) getOwnPropertyNames.call(this);
+        return (JSArray) context.getOwnPropertyNames(this);
     }
 
     @Override
