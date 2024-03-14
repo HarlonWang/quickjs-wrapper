@@ -151,6 +151,14 @@ public class QuickJSContext implements Closeable {
     private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
         @Override
         public void onRemove(long pointer) {
+            if (destroyed) {
+                return;
+            }
+
+            if (!isLiveObject(runtime, pointer)) {
+                return;
+            }
+
             freeDupValue(context, pointer);
         }
     };
@@ -331,6 +339,11 @@ public class QuickJSContext implements Closeable {
     public int length(JSArray jsArray) {
         checkSameThread();
         checkDestroyed();
+
+        // todo 待优化
+        if (!isLiveObject(jsArray)) {
+            return 0;
+        }
 
         return length(context, jsArray.getPointer());
     }
