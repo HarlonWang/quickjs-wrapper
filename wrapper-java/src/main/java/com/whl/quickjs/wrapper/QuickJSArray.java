@@ -5,8 +5,8 @@ package com.whl.quickjs.wrapper;
  */
 public class QuickJSArray extends QuickJSObject implements JSArray {
 
-    public QuickJSArray(QuickJSContext context, long pointer) {
-        super(context, pointer);
+    public QuickJSArray(QuickJSContext context, long pointer, boolean needToRelease) {
+        super(context, pointer, needToRelease);
     }
 
     @Override

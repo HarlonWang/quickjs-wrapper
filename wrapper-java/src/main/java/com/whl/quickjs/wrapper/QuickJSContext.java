@@ -49,18 +49,18 @@ public class QuickJSContext implements Closeable {
     public static QuickJSContext create() {
         return new QuickJSContext(new JSObjectCreator() {
             @Override
-            public JSObject newObject(QuickJSContext context, long pointer) {
-                return new QuickJSObject(context, pointer);
+            public JSObject newObject(QuickJSContext context, long pointer, boolean needToRelease) {
+                return new QuickJSObject(context, pointer, needToRelease);
             }
 
             @Override
-            public JSArray newArray(QuickJSContext context, long pointer) {
-                return new QuickJSArray(context, pointer);
+            public JSArray newArray(QuickJSContext context, long pointer, boolean needToRelease) {
+                return new QuickJSArray(context, pointer, needToRelease);
             }
 
             @Override
-            public JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer) {
-                return new QuickJSFunction(context, pointer, thisPointer);
+            public JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer, boolean needToRelease) {
+                return new QuickJSFunction(context, pointer, thisPointer, needToRelease);
             }
         });
     }

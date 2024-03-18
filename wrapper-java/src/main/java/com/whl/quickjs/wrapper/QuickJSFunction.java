@@ -7,8 +7,8 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
 
     private final long thisPointer;
 
-    public QuickJSFunction(QuickJSContext context, long pointer, long thisPointer) {
-        super(context, pointer);
+    public QuickJSFunction(QuickJSContext context, long pointer, long thisPointer, boolean needToRelease) {
+        super(context, pointer, needToRelease);
         this.thisPointer = thisPointer;
     }
 
