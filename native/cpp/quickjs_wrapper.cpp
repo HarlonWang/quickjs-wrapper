@@ -472,7 +472,7 @@ jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
     JSValue value = JS_GetGlobalObject(context);
 
     auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
-    jobject result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newObjectM, thiz, value_ptr, false);
+    jobject result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newObjectM, thiz, value_ptr);
 
     JS_FreeValue(context, value);
     return result;
@@ -838,5 +838,5 @@ jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj
     }
 
     JSValue nullValue = JS_NULL;
-    return toJavaObject(env, thiz, nullValue, ret, true);
+    return toJavaObject(env, thiz, nullValue, ret);
 }
