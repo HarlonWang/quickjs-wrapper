@@ -342,11 +342,11 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     callFunctionHashCodeM = jniEnv->GetMethodID(objectClass, "hashCode", "()I");
     creatorM = jniEnv->GetMethodID(quickjsContextClass, "getCreator", "()Lcom/whl/quickjs/wrapper/JSObjectCreator;");
     newObjectM = jniEnv->GetMethodID(creatorClass, "newObject",
-                                     "(Lcom/whl/quickjs/wrapper/QuickJSContext;JZ)Lcom/whl/quickjs/wrapper/JSObject;");
+                                     "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSObject;");
     newArrayM = jniEnv->GetMethodID(creatorClass, "newArray",
-                                    "(Lcom/whl/quickjs/wrapper/QuickJSContext;JZ)Lcom/whl/quickjs/wrapper/JSArray;");
+                                    "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSArray;");
     newFunctionM = jniEnv->GetMethodID(creatorClass, "newFunction",
-                                       "(Lcom/whl/quickjs/wrapper/QuickJSContext;JJZ)Lcom/whl/quickjs/wrapper/JSFunction;");
+                                       "(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)Lcom/whl/quickjs/wrapper/JSFunction;");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
@@ -369,7 +369,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(creatorClass);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool needToRelease) const{
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const{
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -381,10 +381,8 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             const char* string = JS_ToCString(context, value);
             result = env->NewStringUTF(string);
             JS_FreeCString(context, string);
-            if (needToRelease) {
-                // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
-                JS_FreeValue(context, value);
-            }
+            // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
+            JS_FreeValue(context, value);
             break;
         }
 
@@ -429,11 +427,11 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
             if (JS_IsFunction(context, value)) {
                 auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
-                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newFunctionM, thiz, value_ptr, obj_ptr, needToRelease);
+                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newFunctionM, thiz, value_ptr, obj_ptr);
             } else if (JS_IsArray(context, value)) {
-                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newArrayM, thiz, value_ptr, needToRelease);
+                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newArrayM, thiz, value_ptr);
             } else {
-                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newObjectM, thiz, value_ptr, needToRelease);
+                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newObjectM, thiz, value_ptr);
             }
             break;
         }
@@ -624,7 +622,8 @@ JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int a
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
-        auto java_arg = toJavaObject(jniEnv, jniThiz, this_val, argv[i], false);
+        JSValue v = JS_DupValue(context, argv[i]);
+        auto java_arg = toJavaObject(jniEnv, jniThiz, this_val, v);
         jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, java_arg);
         jniEnv->DeleteLocalRef(java_arg);
     }

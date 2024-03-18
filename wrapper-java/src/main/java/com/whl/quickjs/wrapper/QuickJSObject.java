@@ -14,7 +14,7 @@ public class QuickJSObject implements JSObject {
 
     private boolean isReleased;
 
-    public QuickJSObject(QuickJSContext context, long pointer, boolean needToRelease) {
+    public QuickJSObject(QuickJSContext context, long pointer) {
         this.context = context;
         this.pointer = pointer;
     }
