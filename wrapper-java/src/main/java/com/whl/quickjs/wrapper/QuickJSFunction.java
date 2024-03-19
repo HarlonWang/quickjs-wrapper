@@ -14,6 +14,7 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
 
     @Override
     public Object call(Object... args) {
+        checkRefCountIsZero();
         return getContext().call(this, thisPointer, args);
     }
 

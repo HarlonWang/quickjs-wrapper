@@ -11,12 +11,12 @@ public class QuickJSObject implements JSObject {
 
     private final QuickJSContext context;
     private final long pointer;
-
-    private boolean isReleased;
+    private int refCount;
 
     public QuickJSObject(QuickJSContext context, long pointer) {
         this.context = context;
         this.pointer = pointer;
+        refCount++;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public Object getProperty(String name) {
-        checkReleased();
+        checkRefCountIsZero();
         return context.getProperty(this, name);
     }
 
@@ -42,37 +42,42 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public void setProperty(String name, String value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
     }
 
     @Override
     public void setProperty(String name, int value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
     }
 
     @Override
     public void setProperty(String name, long value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
     }
 
     @Override
     public void setProperty(String name, JSObject value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
     }
 
     @Override
     public void setProperty(String name, boolean value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
     }
 
     @Override
     public void setProperty(String name, double value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
     }
 
     @Override
     public void setProperty(String name, JSCallFunction value) {
-        context.setProperty(this, name, value);
+        setPropertyObject(name, value);
+    }
+
+    private void setPropertyObject(String name, Object o) {
+        checkRefCountIsZero();
+        context.setProperty(this, name, o);
     }
 
     @Override
@@ -109,6 +114,7 @@ public class QuickJSObject implements JSObject {
         }
 
         setProperty(name, jsObj);
+        jsObj.release();
     }
 
     @Override
@@ -196,44 +202,62 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public JSArray getNames() {
+        checkRefCountIsZero();
         return (JSArray) context.getOwnPropertyNames(this);
     }
 
     @Override
     public void release() {
-        checkReleased();
-
+        checkRefCountIsZero();
+        refCount--;
         context.freeValue(this);
-        isReleased = true;
     }
 
     @Override
     public void hold() {
+        checkRefCountIsZero();
+        refCount++;
         context.hold(this);
     }
 
     @Override
+    public void decrementRefCount() {
+        checkRefCountIsZero();
+        refCount--;
+    }
+
+    public int getRefCount() {
+        return refCount;
+    }
+
+    @Override
     public String stringify() {
+        checkRefCountIsZero();
         return context.stringify(this);
     }
 
     @Override
     public boolean isAlive() {
+        checkRefCountIsZero();
         return context.isLiveObject(this);
     }
 
-    final void checkReleased() {
-        if (isReleased) {
-            throw new NullPointerException("This JSObject was Released, Can not call this!");
+    final void checkRefCountIsZero() {
+        if (isRefCountZero()) {
+            throw new QuickJSException("The call threw an exception, the reference count of the current object has already reached zero.");
         }
+    }
+
+    public boolean isRefCountZero() {
+        return refCount == 0;
     }
 
     @Override
     public String toString() {
-        checkReleased();
-
         JSFunction toString = getJSFunction("toString");
-        return (String) toString.call();
+        String ret = (String) toString.call();
+        toString.release();
+        return ret;
     }
 
     @Override

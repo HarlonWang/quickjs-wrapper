@@ -11,19 +11,19 @@ public class QuickJSArray extends QuickJSObject implements JSArray {
 
     @Override
     public int length() {
-        checkReleased();
+        checkRefCountIsZero();
         return getContext().length(this);
     }
 
     @Override
     public Object get(int index) {
-        checkReleased();
+        checkRefCountIsZero();
         return getContext().get(this, index);
     }
 
     @Override
     public void set(Object value, int index) {
-        checkReleased();
+        checkRefCountIsZero();
         getContext().set(this, value, index);
     }
 }

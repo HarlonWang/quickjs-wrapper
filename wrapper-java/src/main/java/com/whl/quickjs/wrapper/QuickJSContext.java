@@ -3,7 +3,9 @@ package com.whl.quickjs.wrapper;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class QuickJSContext implements Closeable {
 
@@ -78,7 +80,8 @@ public class QuickJSContext implements Closeable {
             return;
         }
 
-        getGlobalObject().getJSObject("console").setProperty("stdout", args -> {
+        JSObject consoleObj = getGlobalObject().getJSObject("console");
+        consoleObj.setProperty("stdout", args -> {
             if (args.length == 2) {
                 String level = (String) args[0];
                 String info = (String) args[1];
@@ -102,6 +105,7 @@ public class QuickJSContext implements Closeable {
 
             return null;
         });
+        consoleObj.release();
     }
 
     public void setMaxStackSize(int maxStackSize) {
@@ -148,31 +152,40 @@ public class QuickJSContext implements Closeable {
 
     private final long runtime;
     private final long context;
-    private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
-        @Override
-        public void onRemove(long pointer) {
-            if (destroyed) {
-                return;
-            }
-
-            if (!isLiveObject(runtime, pointer)) {
-                return;
-            }
-
-            freeDupValue(context, pointer);
-        }
-    };
     private final long currentThreadId;
     private boolean destroyed = false;
     private final HashMap<Integer, JSCallFunction> callFunctionMap = new HashMap<>();
 
     private ModuleLoader moduleLoader;
     private JSObject globalObject;
-    private JSObjectCreator creator;
+    private final JSObjectCreator creator;
+    private final List<JSObject> objectRecords = new ArrayList<>();
 
     private QuickJSContext(JSObjectCreator creator) {
         try {
-            this.creator = creator;
+            // 这里代理一层 creator，用来记录 js 对象.
+            this.creator = new JSObjectCreator() {
+                @Override
+                public JSObject newObject(QuickJSContext c, long pointer) {
+                    JSObject o = creator.newObject(c, pointer);
+                    objectRecords.add(o);
+                    return o;
+                }
+
+                @Override
+                public JSArray newArray(QuickJSContext c, long pointer) {
+                    JSArray o = creator.newArray(c, pointer);
+                    objectRecords.add(o);
+                    return o;
+                }
+
+                @Override
+                public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer) {
+                    JSFunction o = creator.newFunction(c, pointer, thisPointer);
+                    objectRecords.add(o);
+                    return o;
+                }
+            };
             runtime = createRuntime();
             context = createContext(runtime);
         } catch (UnsatisfiedLinkError e) {
@@ -238,10 +251,24 @@ public class QuickJSContext implements Closeable {
         checkSameThread();
         checkDestroyed();
 
-        nativeCleaner.forceClean();
         callFunctionMap.clear();
+
+        for (int i = 0; i < objectRecords.size(); i++) {
+            QuickJSObject object = (QuickJSObject) objectRecords.get(i);
+            if (!object.isRefCountZero() && object != getGlobalObject()) {
+                JSFunction format = getGlobalObject().getJSFunction("format");
+                String ret = (String) format.call(object);
+                format.release();
+                System.out.println("leak object: " + ret + ": refCount: " + object.getRefCount());
+            }
+        }
+
         destroyContext(context);
         destroyed = true;
+    }
+
+    public List<JSObject> getObjectRecords() {
+        return objectRecords;
     }
 
     public String stringify(JSObject jsObj) {
@@ -294,6 +321,12 @@ public class QuickJSContext implements Closeable {
         Object ret = callFunction.call(args);
         if (ret instanceof JSCallFunction) {
             putCallFunction((JSCallFunction) ret);
+        }
+
+        if (ret instanceof JSObject) {
+            // 注意：JSObject 对象作为参数返回到️ JavaScript 中，不需要调用 release 方法，
+            // JS 引擎会进行 free，但是这里需要手动对 JSObject 对象的计数减一。
+            ((JSObject) ret).decrementRefCount();
         }
 
         return ret;
@@ -386,11 +419,10 @@ public class QuickJSContext implements Closeable {
         checkDestroyed();
 
         dupValue(jsObj);
-        nativeCleaner.register(jsObj, jsObj.getPointer());
     }
 
     public JSObject createNewJSObject() {
-        return (JSObject) parseJSON("{}");
+        return parseJSON("{}");
     }
 
     public JSArray createNewJSArray() {

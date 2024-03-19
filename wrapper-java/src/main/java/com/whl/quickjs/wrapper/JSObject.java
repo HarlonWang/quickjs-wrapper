@@ -41,4 +41,9 @@ public interface JSObject {
     boolean isAlive();
     void release();
     void hold();
+
+    /**
+     * 引用计数减一，目前仅将对象返回到 JavaScript 中的场景中使用。
+     */
+    void decrementRefCount();
 }
