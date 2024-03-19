@@ -297,7 +297,7 @@ public class QuickJSContext implements Closeable {
 
     private void putCallFunction(JSCallFunction callFunction) {
         int callFunctionId = callFunction.hashCode();
-        callFunctionMap.put(callFunctionId, (JSCallFunction) callFunction);
+        callFunctionMap.put(callFunctionId, callFunction);
     }
 
     /**
