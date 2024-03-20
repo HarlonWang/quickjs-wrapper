@@ -254,14 +254,14 @@ public class QuickJSContext implements Closeable {
         callFunctionMap.clear();
 
         for (int i = 0; i < objectRecords.size(); i++) {
-            QuickJSObject object = (QuickJSObject) objectRecords.get(i);
+            JSObject object = (JSObject) objectRecords.get(i);
             if (!object.isRefCountZero() && object != getGlobalObject()) {
                 int refCount = object.getRefCount();
 
-//                JSFunction format = getGlobalObject().getJSFunction("format");
-//                String ret = (String) format.call(object);
-//                format.release();
-//                System.out.println("leak object: " + "refCount:" + refCount + ", " + ret);
+                JSFunction format = getGlobalObject().getJSFunction("format");
+                String ret = (String) format.call(object);
+                format.release();
+                System.out.println("leak object: " + "refCount:" + refCount + ", " + ret);
 
                 for (int j = 0; j < refCount; j++) {
                     object.release();
