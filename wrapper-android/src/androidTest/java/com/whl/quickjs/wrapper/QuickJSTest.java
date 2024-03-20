@@ -66,6 +66,7 @@ public class QuickJSTest {
     public static QuickJSContext createContext() {
         QuickJSContext context = QuickJSContext.create();
         context.setConsole(new LogcatConsole("console-test"));
+        context.setLeakDetectionListener((leak, stringValue) -> Log.e("leak-object", stringValue));
         return context;
     }
 

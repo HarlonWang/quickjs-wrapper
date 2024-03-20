@@ -21,6 +21,10 @@ public class QuickJSContext implements Closeable {
         void error(String info);
     }
 
+    public interface LeakDetectionListener {
+        void notifyLeakDetected(JSObject leak, String stringValue);
+    }
+
     public static abstract class DefaultModuleLoader extends ModuleLoader {
 
         @Override
@@ -160,6 +164,7 @@ public class QuickJSContext implements Closeable {
     private JSObject globalObject;
     private final JSObjectCreator creator;
     private final List<JSObject> objectRecords = new ArrayList<>();
+    private LeakDetectionListener leakDetectionListener;
 
     private QuickJSContext(JSObjectCreator creator) {
         try {
@@ -247,6 +252,10 @@ public class QuickJSContext implements Closeable {
         return globalObject;
     }
 
+    public void setLeakDetectionListener(LeakDetectionListener leakDetectionListener) {
+        this.leakDetectionListener = leakDetectionListener;
+    }
+
     public void destroy() {
         checkSameThread();
         checkDestroyed();
@@ -264,10 +273,12 @@ public class QuickJSContext implements Closeable {
             // 全局对象交由引擎层会回收，这里先过滤掉
             if (!object.isRefCountZero() && object != getGlobalObject()) {
                 int refCount = object.getRefCount();
-//                JSFunction format = getGlobalObject().getJSFunction("format");
-//                String ret = (String) format.call(object);
-//                format.release();
-//                System.out.println("leak object: " + "refCount:" + refCount + ", " + ret);
+                if (leakDetectionListener != null) {
+                    JSFunction format = getGlobalObject().getJSFunction("format");
+                    String value = (String) format.call(object);
+                    leakDetectionListener.notifyLeakDetected(object, value);
+                    format.release();
+                }
                 for (int j = 0; j < refCount; j++) {
                     object.release();
                 }
