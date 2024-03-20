@@ -338,6 +338,9 @@ public class QuickJSContext implements Closeable {
         return ret;
     }
 
+    /**
+     * JS 引擎层的对象计数减一。
+     */
     public void freeValue(JSObject jsObj) {
         checkSameThread();
         checkDestroyed();
@@ -354,25 +357,13 @@ public class QuickJSContext implements Closeable {
     }
 
     /**
-     * Native 层注册的 JS 方法里的对象需要在其他地方使用，
-     * 调用该方法进行计数加一增加引用，不然 JS 方法执行完会被回收掉。
-     * 注意：不再使用的时候，调用对应的 {@link #freeDupValue(JSObject)} 方法进行计数减一。
+     * JS 引擎层的对象计数加一。
      */
     private void dupValue(JSObject jsObj) {
         checkSameThread();
         checkDestroyed();
 
         dupValue(context, jsObj.getPointer());
-    }
-
-    /**
-     * 引用计数减一，对应 {@link #dupValue(JSObject)}
-     */
-    private void freeDupValue(JSObject jsObj) {
-        checkSameThread();
-        checkDestroyed();
-
-        freeDupValue(context, jsObj.getPointer());
     }
 
     public int length(JSArray jsArray) {
