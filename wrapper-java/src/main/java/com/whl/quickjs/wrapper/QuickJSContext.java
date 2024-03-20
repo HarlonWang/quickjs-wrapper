@@ -252,25 +252,29 @@ public class QuickJSContext implements Closeable {
         checkDestroyed();
 
         callFunctionMap.clear();
+        clearObjectRecords();
+        destroyContext(context);
+        destroyed = true;
+    }
 
+    void clearObjectRecords() {
+        // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
         for (int i = 0; i < objectRecords.size(); i++) {
             JSObject object = (JSObject) objectRecords.get(i);
+            // 全局对象交由引擎层会回收，这里先过滤掉
             if (!object.isRefCountZero() && object != getGlobalObject()) {
                 int refCount = object.getRefCount();
-
-                JSFunction format = getGlobalObject().getJSFunction("format");
-                String ret = (String) format.call(object);
-                format.release();
-                System.out.println("leak object: " + "refCount:" + refCount + ", " + ret);
-
+//                JSFunction format = getGlobalObject().getJSFunction("format");
+//                String ret = (String) format.call(object);
+//                format.release();
+//                System.out.println("leak object: " + "refCount:" + refCount + ", " + ret);
                 for (int j = 0; j < refCount; j++) {
                     object.release();
                 }
             }
         }
 
-        destroyContext(context);
-        destroyed = true;
+        objectRecords.clear();
     }
 
     public List<JSObject> getObjectRecords() {
