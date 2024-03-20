@@ -274,10 +274,13 @@ public class QuickJSContext implements Closeable {
             if (!object.isRefCountZero() && object != getGlobalObject()) {
                 int refCount = object.getRefCount();
                 if (leakDetectionListener != null) {
+                    String value = null;
                     JSFunction format = getGlobalObject().getJSFunction("format");
-                    String value = (String) format.call(object);
+                    if (format != null) {
+                        value = (String) format.call(object);
+                        format.release();
+                    }
                     leakDetectionListener.notifyLeakDetected(object, value);
-                    format.release();
                 }
                 for (int j = 0; j < refCount; j++) {
                     object.release();
