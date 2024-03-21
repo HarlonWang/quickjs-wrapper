@@ -619,6 +619,10 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
 }
 
 JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv){
+    if (jniEnv->ExceptionCheck()) {
+        return JS_EXCEPTION;
+    }
+
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
@@ -639,6 +643,10 @@ JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int a
 }
 
 void QuickJSWrapper::removeCallFunction(int callback_id) const {
+    if (jniEnv->ExceptionCheck()) {
+        return;
+    }
+
     jniEnv->CallVoidMethod(jniThiz, removeCallFunctionM, callback_id);
 }
 
