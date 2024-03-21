@@ -261,12 +261,13 @@ public class QuickJSContext implements Closeable {
         checkDestroyed();
 
         callFunctionMap.clear();
-        clearObjectRecords();
+        releaseObjectRecords();
+        objectRecords.clear();
         destroyContext(context);
         destroyed = true;
     }
 
-    void clearObjectRecords() {
+    void releaseObjectRecords() {
         // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
         for (int i = 0; i < objectRecords.size(); i++) {
             JSObject object = (JSObject) objectRecords.get(i);
@@ -287,8 +288,6 @@ public class QuickJSContext implements Closeable {
                 }
             }
         }
-
-        objectRecords.clear();
     }
 
     public List<JSObject> getObjectRecords() {
