@@ -267,7 +267,7 @@ public class QuickJSContext implements Closeable {
         destroyed = true;
     }
 
-    void releaseObjectRecords() {
+    public void releaseObjectRecords() {
         // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
         for (int i = 0; i < objectRecords.size(); i++) {
             JSObject object = (JSObject) objectRecords.get(i);
