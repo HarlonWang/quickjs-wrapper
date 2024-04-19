@@ -237,7 +237,7 @@
         log: function (...args) {
             this.print("log", ...args)
         },
-        debug: function() {
+        debug: function(...args) {
             this.print("debug", ...args)
         },
         info: function (...args) {

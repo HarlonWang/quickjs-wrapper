@@ -313,6 +313,9 @@ const char *CONSOLE = R"lit(// Init format at first.
         log: function (...args) {
             this.print("log", ...args)
         },
+        debug: function(...args) {
+            this.print("debug", ...args)
+        },
         info: function (...args) {
             this.print("info", ...args)
         },
