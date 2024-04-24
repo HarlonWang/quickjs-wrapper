@@ -148,6 +148,10 @@ const char *CONSOLE = R"lit(// Init format at first.
             return `${value.toString()}`
         }
 
+        if (value instanceof Error) {
+            return `${value.toString()}`
+        }
+
         if (value instanceof Promise) {
             // quickjs 环境下通过 native 提供的方式获取 Promise 状态
             if (typeof getPromiseState !== "undefined") {

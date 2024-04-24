@@ -31,6 +31,10 @@ android {
         androidTest.java.srcDirs '../wrapper-android/src/androidTest/java'
         androidTest.assets.srcDirs '../wrapper-android/src/androidTest/assets'
     }
+
+//    packagingOptions {
+//        doNotStrip "*/*/*.so"
+//    }
 }
 
 dependencies {
