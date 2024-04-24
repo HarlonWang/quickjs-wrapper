@@ -222,4 +222,9 @@ assert.strictEqual(format({ 'a': { 'b': ['c'] } }, { depth: 1 }),
     assert.strictEqual(format({ foo: Symbol() }), '{ foo: Symbol() }');
 }
 
+// Test Error.
+{
+    assert.strictEqual(format(new Error('123')), 'Error: 123')
+}
+
 console.log("✅  测试通过")
