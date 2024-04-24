@@ -128,20 +128,23 @@ assert.strictEqual(format({ 'a': { 'b': ['c'] } }, { depth: 1 }),
 
 // Test Promise.
 {
-    const resolved = Promise.resolve(3);
-    assert.strictEqual(format(resolved), 'Promise { 3 }');
+    // quickjs 环境下通过 native 提供的方式获取 Promise 状态
+    if (typeof getPromiseState !== "undefined") {
+        const resolved = Promise.resolve(3);
+        assert.strictEqual(format(resolved), 'Promise { 3 }');
 
-    const rejected = Promise.reject(3);
-    assert.strictEqual(format(rejected), 'Promise { <rejected> 3 }');
-    // Squelch UnhandledPromiseRejection.
-    rejected.catch(() => {});
+        const rejected = Promise.reject(3);
+        assert.strictEqual(format(rejected), 'Promise { <rejected> 3 }');
+        // Squelch UnhandledPromiseRejection.
+        rejected.catch(() => {});
 
-    const pending = new Promise(() => {});
-    assert.strictEqual(format(pending), 'Promise { <pending> }');
+        const pending = new Promise(() => {});
+        assert.strictEqual(format(pending), 'Promise { <pending> }');
 
-    const promiseWithProperty = Promise.resolve('foo');
-    assert.strictEqual(format(promiseWithProperty),
-        "Promise { 'foo' }");
+        const promiseWithProperty = Promise.resolve('foo');
+        assert.strictEqual(format(promiseWithProperty),
+            "Promise { 'foo' }");
+    }
 }
 
 // Truncate output for Primitives with 1 character left
