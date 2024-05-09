@@ -435,14 +435,16 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
 
         case JS_TAG_OBJECT: {
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+            jobject creatorObj = env->CallObjectMethod(thiz, creatorM);
             if (JS_IsFunction(context, value)) {
                 auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
-                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newFunctionM, thiz, value_ptr, obj_ptr);
+                result = env->CallObjectMethod(creatorObj, newFunctionM, thiz, value_ptr, obj_ptr);
             } else if (JS_IsArray(context, value)) {
-                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newArrayM, thiz, value_ptr);
+                result = env->CallObjectMethod(creatorObj, newArrayM, thiz, value_ptr);
             } else {
-                result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newObjectM, thiz, value_ptr);
+                result = env->CallObjectMethod(creatorObj, newObjectM, thiz, value_ptr);
             }
+            env->DeleteLocalRef(creatorObj);
             break;
         }
 
