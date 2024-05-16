@@ -1,0 +1,14 @@
+{
+  "name": "quickjs-wrapper",
+  "scripts": {
+    "setup": "bun run scripts/index.ts"
+  },
+  "module": "scripts/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
