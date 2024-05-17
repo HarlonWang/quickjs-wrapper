@@ -268,6 +268,10 @@ public class QuickJSContext implements Closeable {
     }
 
     public void releaseObjectRecords() {
+        releaseObjectRecords(true);
+    }
+
+    public void releaseObjectRecords(boolean needRelease) {
         // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
         int count = objectRecords.size();
         if (count > 0) {
@@ -284,12 +288,17 @@ public class QuickJSContext implements Closeable {
                         }
                         leakDetectionListener.notifyLeakDetected(object, value);
                     }
-                    for (int j = 0; j < refCount; j++) {
-                        object.release();
+
+                    if (needRelease) {
+                        for (int j = 0; j < refCount; j++) {
+                            object.release();
+                        }
                     }
                 }
             }
-            format.release();
+            if (format != null) {
+                format.release();
+            }
         }
     }
 
