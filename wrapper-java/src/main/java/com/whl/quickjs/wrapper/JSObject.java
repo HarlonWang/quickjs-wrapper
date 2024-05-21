@@ -1,6 +1,10 @@
 package com.whl.quickjs.wrapper;
 
 public interface JSObject {
+
+    void setStackTrace(String stackTrace);
+    String getStackTrace();
+
     void setProperty(String name, String value);
     void setProperty(String name, int value);
     void setProperty(String name, long value);
