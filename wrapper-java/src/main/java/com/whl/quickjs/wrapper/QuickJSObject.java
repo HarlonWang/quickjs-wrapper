@@ -249,8 +249,7 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public boolean isAlive() {
-        checkRefCountIsZero();
-        return context.isLiveObject(this);
+        return getRefCount() != 0;
     }
 
     final void checkRefCountIsZero() {
@@ -265,6 +264,7 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public String toString() {
+        checkRefCountIsZero();
         JSFunction toString = getJSFunction("toString");
         String ret = (String) toString.call();
         toString.release();
