@@ -12,7 +12,7 @@ public class QuickJSObject implements JSObject {
     private final QuickJSContext context;
     private final long pointer;
     private int refCount;
-    private String stackTrace;
+    private Throwable stackTrace;
 
     public QuickJSObject(QuickJSContext context, long pointer) {
         this.context = context;
@@ -42,12 +42,12 @@ public class QuickJSObject implements JSObject {
     }
 
     @Override
-    public void setStackTrace(String stackTrace) {
+    public void setStackTrace(Throwable stackTrace) {
         this.stackTrace = stackTrace;
     }
 
     @Override
-    public String getStackTrace() {
+    public Throwable getStackTrace() {
         return stackTrace;
     }
 

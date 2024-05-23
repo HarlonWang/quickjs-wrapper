@@ -166,19 +166,6 @@ public class QuickJSContext implements Closeable {
     private final List<JSObject> objectRecords = new ArrayList<>();
     private LeakDetectionListener leakDetectionListener;
 
-    private String getStackTrace() {
-        StringBuilder sb = new StringBuilder();
-        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
-        for (int i = 0; i < elements.length; i++) {
-            String buffer = "index: " + i + " ClassName: " + elements[i].getClassName() +
-                    " Method Name : " + elements[i].getMethodName();
-            sb.append(buffer);
-            sb.append("\n");
-        }
-
-        return sb.toString();
-    }
-
     private QuickJSContext(JSObjectCreator creator) {
         try {
             // 这里代理一层 creator，用来记录 js 对象.
@@ -186,7 +173,7 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSObject newObject(QuickJSContext c, long pointer) {
                     JSObject o = creator.newObject(c, pointer);
-                    o.setStackTrace(getStackTrace());
+                    o.setStackTrace(new Throwable());
                     objectRecords.add(o);
                     return o;
                 }
@@ -194,7 +181,7 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSArray newArray(QuickJSContext c, long pointer) {
                     JSArray o = creator.newArray(c, pointer);
-                    o.setStackTrace(getStackTrace());
+                    o.setStackTrace(new Throwable());
                     objectRecords.add(o);
                     return o;
                 }
@@ -202,7 +189,7 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer) {
                     JSFunction o = creator.newFunction(c, pointer, thisPointer);
-                    o.setStackTrace(getStackTrace());
+                    o.setStackTrace(new Throwable());
                     objectRecords.add(o);
                     return o;
                 }
