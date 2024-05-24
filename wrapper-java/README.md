@@ -2,10 +2,12 @@
 ## environment requirements:
 + [Java 8](https://adoptium.net/temurin/releases/?arch=x64&package=jdk&version=8) installed with `JDK`, `JAVA_HOME` in your system environment variables.
 + install cmake & ninja
++ install 
 + On Windows add the following to your system PATH:
-  + `<JAVA_HOME>/include`
-  + `<JAVA_HOME>/include/win32`
+  + `<JAVA_HOME>\include`
+  + `<JAVA_HOME>\include\win32`
   + `C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64`
+  + `C:\path\to\mingw64\bin`
 
 ### cmake/ninja macos installation
 ```shell
@@ -16,9 +18,7 @@ brew install ninja
 ### cmake/ninja windows installation
 - Install Visual Studio build tools for C++ development
 - Install ninja via chocolatey or [UniGetUI](https://github.com/marticliment/WingetUI)
-```shell
-"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
-```
+- Install mingw-w64 via the online installer available at https://github.com/niXman/mingw-builds-binaries
 
 ### cmake/ninja ubuntu installation
 
@@ -33,7 +33,7 @@ tar -xvf cmake-3.24.0-rc5.tar.gz
 cd make-3.24.0-rc5
 ./configure && make && make install
 
-# Warning: doing this could be dangerous for your environment, using distrobox is a safer option here.
+# Warning: doing this could be dangerous for your environment, using distrobox or your system cmake installation is a safer option here.
 ```
 
 ## Building Dynamic Link Libraries
@@ -48,7 +48,7 @@ cmake --build ./build/cmake --target quickjs-java-wrapper -j 6
 ```
 
 ## Output
-Symlink to `wrapper-java/build/cmake/libquickjs-java-wrapper.dylib`
+Symlink to `wrapper-java/build/cmake/libquickjs-java-wrapper.<ext>` (`dylib` for darwin/macos, `dll` for win32/windows, `so` for linux)
 
 ## TODO
-- [ ] Cross-compilation available for all platforms
+- [ ] 🚧 Cross-compilation available for all platforms

@@ -2,6 +2,7 @@
 #define QUICKJS_EXTEND_LIBRARIES
 
 #include <string>
+#include <cstring>
 #include "../quickjs/quickjs.h"
 
 const char *DATE_POLYFILL = R"lit((() => {

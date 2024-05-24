@@ -16,4 +16,6 @@ add_library( # Sets the name of the library.
 
 
 include_directories($ENV{JAVA_HOME}/include/)
-include_directories($ENV{JAVA_HOME}/include/darwin)
+
+# keeping this or changing it to include/win32 has no perceivable effect on the build
+# include_directories($ENV{JAVA_HOME}/include/darwin)
