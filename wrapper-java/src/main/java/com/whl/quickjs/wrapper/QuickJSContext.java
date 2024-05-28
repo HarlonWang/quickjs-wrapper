@@ -378,6 +378,11 @@ public class QuickJSContext implements Closeable {
         checkDestroyed();
 
         freeValue(context, jsObj.getPointer());
+
+        // 如果计数为 0，从 objectRecords 里移除掉
+        if (jsObj.getRefCount() == 0) {
+            objectRecords.remove(jsObj);
+        }
     }
 
     /**
