@@ -165,6 +165,7 @@ public class QuickJSContext implements Closeable {
     private final JSObjectCreator creator;
     private final List<JSObject> objectRecords = new ArrayList<>();
     private LeakDetectionListener leakDetectionListener;
+    private boolean enableLeakDetection = false;
 
     private QuickJSContext(JSObjectCreator creator) {
         try {
@@ -173,7 +174,9 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSObject newObject(QuickJSContext c, long pointer) {
                     JSObject o = creator.newObject(c, pointer);
-                    o.setStackTrace(new Throwable());
+                    if (enableLeakDetection) {
+                        o.setStackTrace(new Throwable());
+                    }
                     objectRecords.add(o);
                     return o;
                 }
@@ -181,7 +184,9 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSArray newArray(QuickJSContext c, long pointer) {
                     JSArray o = creator.newArray(c, pointer);
-                    o.setStackTrace(new Throwable());
+                    if (enableLeakDetection) {
+                        o.setStackTrace(new Throwable());
+                    }
                     objectRecords.add(o);
                     return o;
                 }
@@ -189,7 +194,9 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer) {
                     JSFunction o = creator.newFunction(c, pointer, thisPointer);
-                    o.setStackTrace(new Throwable());
+                    if (enableLeakDetection) {
+                        o.setStackTrace(new Throwable());
+                    }
                     objectRecords.add(o);
                     return o;
                 }
@@ -200,6 +207,10 @@ public class QuickJSContext implements Closeable {
             throw new QuickJSException("The so library must be initialized before createContext! QuickJSLoader.init should be called on the Android platform. In the JVM, you need to manually call System.loadLibrary");
         }
         currentThreadId = Thread.currentThread().getId();
+    }
+
+    public void setEnableLeakDetection(boolean enableLeakDetection) {
+        this.enableLeakDetection = enableLeakDetection;
     }
 
     private void checkSameThread() {
