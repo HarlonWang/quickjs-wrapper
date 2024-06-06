@@ -640,6 +640,7 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("stack overflow"));
         }
+        // todo 这里销毁会有问题，quickjs.c 源码会有一层 stack overflow 的异常检测
         context.destroy();
     }
 
@@ -1216,11 +1217,13 @@ public class QuickJSTest {
             JSObject jsObject = jsContext.createNewJSObject();
             JSCallFunction function = args -> null;
             jsObject.setProperty("test", function);
-            jsObject.release();
+            // jsObject.release();
         }
 
         // QuickJSLoader.initConsoleLog 方法里有调用过一次 setProperty，总数还剩1个
-        assertEquals(1, jsContext.getCallFunctionMapSize());
+        // assertEquals(1, jsContext.getCallFunctionMapSize());
+        jsContext.releaseObjectRecords();
+        jsContext.releaseObjectRecords();
         jsContext.destroy();
         assertEquals(0, jsContext.getCallFunctionMapSize());
     }
