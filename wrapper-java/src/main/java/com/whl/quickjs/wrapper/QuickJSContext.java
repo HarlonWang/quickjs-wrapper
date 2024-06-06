@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class QuickJSContext implements Closeable {
@@ -287,31 +288,32 @@ public class QuickJSContext implements Closeable {
 
     public void releaseObjectRecords(boolean needRelease) {
         // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
-        int count = objectRecords.size();
-        if (count > 0) {
-            JSFunction format = getGlobalObject().getJSFunction("format");
-            for (int i = 0; i < count; i++) {
-                JSObject object = (JSObject) objectRecords.get(i);
-                // 全局对象交由引擎层会回收，这里先过滤掉
-                if (!object.isRefCountZero() && object != getGlobalObject()) {
-                    int refCount = object.getRefCount();
-                    if (leakDetectionListener != null) {
-                        String value = null;
-                        if (format != null) {
-                            value = (String) format.call(object);
-                        }
-                        leakDetectionListener.notifyLeakDetected(object, value);
+        JSFunction format = getGlobalObject().getJSFunction("format");
+        Iterator<JSObject> objectIterator = objectRecords.iterator();
+        while (objectIterator.hasNext()) {
+            JSObject object = objectIterator.next();
+            // 全局对象交由引擎层会回收，这里先过滤掉
+            if (!object.isRefCountZero() && object != getGlobalObject()) {
+                int refCount = object.getRefCount();
+                if (leakDetectionListener != null) {
+                    String value = null;
+                    if (format != null) {
+                        value = (String) format.call(object);
+                    }
+                    leakDetectionListener.notifyLeakDetected(object, value);
+                }
+
+                if (needRelease) {
+                    for (int j = 0; j < refCount; j++) {
+                        // 这里不能直接调用 object.release 方法，因为 release 里会调用 list.remove 导致并发修改异常
+                        object.decrementRefCount();
+                        freeValue(context, object.getPointer());
                     }
 
-                    if (needRelease) {
-                        for (int j = 0; j < refCount; j++) {
-                            object.release();
-                        }
+                    if (object.getRefCount() == 0) {
+                        objectIterator.remove();
                     }
                 }
-            }
-            if (format != null) {
-                format.release();
             }
         }
     }
@@ -391,9 +393,9 @@ public class QuickJSContext implements Closeable {
         freeValue(context, jsObj.getPointer());
 
         // todo 如果计数为 0，从 objectRecords 里移除掉
-//        if (jsObj.getRefCount() == 0) {
-//            objectRecords.remove(jsObj);
-//        }
+        if (jsObj.getRefCount() == 0) {
+            objectRecords.remove(jsObj);
+        }
     }
 
     /**
