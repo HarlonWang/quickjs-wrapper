@@ -290,9 +290,11 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     if (!is_handled) {
         unhandledRejections->push(JS_DupValue(ctx, reason));
     } else {
-        JSValueConst rej = unhandledRejections->front();
-        JS_FreeValue(ctx, rej);
-        unhandledRejections->pop();
+        if (!unhandledRejections->empty()) {
+            JSValueConst rej = unhandledRejections->front();
+            JS_FreeValue(ctx, rej);
+            unhandledRejections->pop();
+        }
     }
 }
 
