@@ -249,7 +249,7 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public boolean isAlive() {
-        return getRefCount() != 0;
+        return !isRefCountZero();
     }
 
     final void checkRefCountIsZero() {
