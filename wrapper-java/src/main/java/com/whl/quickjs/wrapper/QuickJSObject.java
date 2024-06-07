@@ -219,7 +219,9 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public void release() {
-        checkRefCountIsZero();
+        if (isRefCountZero()) {
+            return;
+        }
         refCount--;
         context.freeValue(this);
     }
