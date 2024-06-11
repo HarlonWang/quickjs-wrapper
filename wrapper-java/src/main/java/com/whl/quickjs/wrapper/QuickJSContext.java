@@ -166,7 +166,7 @@ public class QuickJSContext implements Closeable {
     private final JSObjectCreator creator;
     private final List<JSObject> objectRecords = new ArrayList<>();
     private LeakDetectionListener leakDetectionListener;
-    private boolean enableLeakDetection = false;
+    private boolean enableStackTrace = false;
 
     private QuickJSContext(JSObjectCreator creator) {
         try {
@@ -175,7 +175,7 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSObject newObject(QuickJSContext c, long pointer) {
                     JSObject o = creator.newObject(c, pointer);
-                    if (enableLeakDetection) {
+                    if (enableStackTrace) {
                         o.setStackTrace(new Throwable());
                     }
                     objectRecords.add(o);
@@ -185,7 +185,7 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSArray newArray(QuickJSContext c, long pointer) {
                     JSArray o = creator.newArray(c, pointer);
-                    if (enableLeakDetection) {
+                    if (enableStackTrace) {
                         o.setStackTrace(new Throwable());
                     }
                     objectRecords.add(o);
@@ -195,7 +195,7 @@ public class QuickJSContext implements Closeable {
                 @Override
                 public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer) {
                     JSFunction o = creator.newFunction(c, pointer, thisPointer);
-                    if (enableLeakDetection) {
+                    if (enableStackTrace) {
                         o.setStackTrace(new Throwable());
                     }
                     objectRecords.add(o);
@@ -210,8 +210,8 @@ public class QuickJSContext implements Closeable {
         currentThreadId = Thread.currentThread().getId();
     }
 
-    public void setEnableLeakDetection(boolean enableLeakDetection) {
-        this.enableLeakDetection = enableLeakDetection;
+    public void setEnableStackTrace(boolean enableStackTrace) {
+        this.enableStackTrace = enableStackTrace;
     }
 
     private void checkSameThread() {
