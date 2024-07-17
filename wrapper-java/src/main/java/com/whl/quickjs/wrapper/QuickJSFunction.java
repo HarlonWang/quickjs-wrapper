@@ -5,6 +5,17 @@ package com.whl.quickjs.wrapper;
  */
 public class QuickJSFunction extends QuickJSObject implements JSFunction {
 
+    /**
+     * 函数执行状态
+     */
+    enum Status {
+        NOT_STARTED,
+        IN_PROGRESS,
+        COMPLETED
+    }
+    private int stashTimes = 0;
+    private Status currentStatus = Status.NOT_STARTED;
+
     private final long thisPointer;
 
     public QuickJSFunction(QuickJSContext context, long pointer, long thisPointer) {
@@ -13,15 +24,37 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
     }
 
     @Override
+    public void release() {
+        // call 函数未执行完，触发了 release 操作，会导致 quickjs 野指针异常，
+        // 这里暂存一下，待函数执行完，才执行 release。
+        if (currentStatus == Status.IN_PROGRESS) {
+            stashTimes++;
+            return;
+        }
+        super.release();
+    }
+
+    @Override
     public Object call(Object... args) {
         checkRefCountIsZero();
-        return getContext().call(this, thisPointer, args);
+
+        currentStatus = Status.IN_PROGRESS;
+        Object ret = getContext().call(this, thisPointer, args);
+        currentStatus = Status.COMPLETED;
+
+        if (stashTimes > 0) {
+            // 如果有暂存，这里需要恢复下 release 操作
+            for (int i = 0; i < stashTimes; i++) {
+                release();
+            }
+            stashTimes = 0;
+        }
+        return ret;
     }
 
     @Override
     public void callVoid(Object... args) {
-        checkRefCountIsZero();
-        Object ret = getContext().call(this, thisPointer, args);
+        Object ret = call(args);
         if (ret instanceof JSObject) {
             ((JSObject) ret).release();
         }
