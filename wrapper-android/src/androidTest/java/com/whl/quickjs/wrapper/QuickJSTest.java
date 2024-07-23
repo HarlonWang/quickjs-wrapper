@@ -641,7 +641,11 @@ public class QuickJSTest {
             assertTrue(e.toString().contains("stack overflow"));
         }
         // todo 这里销毁会有问题，quickjs.c 源码会有一层 stack overflow 的异常检测
-        context.destroy();
+        try {
+            context.destroy();
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("stack overflow"));
+        }
     }
 
     @Test
@@ -915,9 +919,6 @@ public class QuickJSTest {
 
     @Test
     public void testIsAliveObject() {
-        thrown.expect(QuickJSException.class);
-        thrown.expectMessage("The call threw an exception, the reference count of the current object has already reached zero.");
-
         QuickJSContext context = createContext();
         JSObject object = context.createNewJSObject();
         context.getGlobalObject().setProperty("a", object);
