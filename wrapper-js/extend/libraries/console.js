@@ -71,6 +71,10 @@
             return `${value.toString()}`
         }
 
+        if (value instanceof Error) {
+            return `${value.toString()}`
+        }
+
         if (value instanceof Promise) {
             // quickjs 环境下通过 native 提供的方式获取 Promise 状态
             if (typeof getPromiseState !== "undefined") {
@@ -237,7 +241,7 @@
         log: function (...args) {
             this.print("log", ...args)
         },
-        debug: function() {
+        debug: function(...args) {
             this.print("debug", ...args)
         },
         info: function (...args) {

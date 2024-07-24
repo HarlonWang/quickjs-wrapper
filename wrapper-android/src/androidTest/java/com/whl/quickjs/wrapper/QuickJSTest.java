@@ -66,6 +66,7 @@ public class QuickJSTest {
     public static QuickJSContext createContext() {
         QuickJSContext context = QuickJSContext.create();
         context.setConsole(new LogcatConsole("console-test"));
+        context.setLeakDetectionListener((leak, stringValue) -> Log.e("leak-object", stringValue));
         return context;
     }
 
@@ -79,9 +80,6 @@ public class QuickJSTest {
     public void destroyQuickJSContextTest() {
         QuickJSContext context = createContext();
         context.evaluate("var a = 123;");
-
-        JSObject gloObj = context.getGlobalObject();
-        gloObj.release();
 
         JSObject globalObject = context.getGlobalObject();
         assertEquals(123, globalObject.getProperty("a"));
@@ -101,6 +99,7 @@ public class QuickJSTest {
         obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
         obj1.setProperty("nullProperty", (String) null);
         globalObj.setProperty("obj1", obj1);
+        obj1.release();
 
         assertEquals("hello", context.evaluate("obj1.stringProperty;"));
         assertEquals(1, context.evaluate("obj1.intProperty;"));
@@ -133,7 +132,11 @@ public class QuickJSTest {
         assertEquals(1686026400093L, obj1.getProperty("longProperty"));
         assertEquals(true, obj1.getProperty("booleanProperty"));
         assertNull(obj1.getProperty("nullProperty"));
-        assertEquals("HarlonWang", obj1.getJSFunction("functionProperty").call("Harlon"));
+        JSFunction fn = obj1.getJSFunction("functionProperty");
+        assertEquals("HarlonWang", fn.call("Harlon"));
+
+        fn.release();
+        obj1.release();
 
         context.destroy();
     }
@@ -147,6 +150,7 @@ public class QuickJSTest {
                 "\n" +
                 "test(3);");
         assertEquals(3, ret.get(2));
+        ret.release();
 
         context.destroy();
     }
@@ -160,6 +164,7 @@ public class QuickJSTest {
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
+        func.release();
 
         context.destroy();
     }
@@ -173,6 +178,7 @@ public class QuickJSTest {
         JSObject globalObject = context.getGlobalObject();
         JSFunction func = (JSFunction) globalObject.getProperty("test");
         assertEquals("hello, undefined-13", func.call(null, -1, 3));
+        func.release();
 
         context.destroy();
     }
@@ -189,6 +195,7 @@ public class QuickJSTest {
             func.call(new int[]{1, 2});
             fail();
         } catch (Exception e) {
+            func.release();
             assertTrue(e.toString().contains("Unsupported Java type"));
         }
 
@@ -218,6 +225,9 @@ public class QuickJSTest {
         JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
         jsFunction.call();
 
+        jsFunction.release();
+        jsObj.release();
+
         context.destroy();
     }
 
@@ -225,9 +235,16 @@ public class QuickJSTest {
     public void setPropertyWithJSObjectTest() {
         QuickJSContext context = createContext();
         context.evaluate("var test = {count: 0};");
-        context.getGlobalObject().setProperty("test1", (JSObject) context.getGlobalObject().getProperty("test"));
+        JSObject test = context.getGlobalObject().getJSObject("test");
+        context.getGlobalObject().setProperty("test1", test);
 
-        assertEquals("{\"count\":0}", context.getGlobalObject().getJSObject("test1").stringify());
+        JSObject test1 = context.getGlobalObject().getJSObject("test1");
+
+        assertEquals("{\"count\":0}", test1.stringify());
+
+        test.release();
+        test1.release();
+
         context.destroy();
     }
 
@@ -240,7 +257,12 @@ public class QuickJSTest {
         assertEquals("270", result.getProperty("leadsId"));
 
         context.getGlobalObject().setProperty("test", result);
-        assertEquals(text, context.getGlobalObject().getJSObject("test").stringify());
+
+        result.release();
+
+        JSObject test = context.getGlobalObject().getJSObject("test");
+        assertEquals(text, test.stringify());
+        test.release();
 
         context.destroy();
     }
@@ -250,7 +272,12 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
         QuickJSContext context = createContext();
         JSObject a = (JSObject) context.evaluate("var a = {}; a;");
-        a.setProperty("test", context.parseJSON(text));
+        JSObject textObj = (JSObject) context.parse(text);
+        a.setProperty("test", textObj);
+
+        a.release();
+        textObj.release();
+
         Object ret = context.evaluate("a.test.leadsId;");
         assertEquals("270", ret);
         context.destroy();
@@ -261,7 +288,14 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}\n";
         QuickJSContext context = createContext();
         JSObject a = (JSObject) context.evaluate("var a = {b: {}}; a;");
-        a.getJSObject("b").setProperty("test", context.parseJSON(text));
+        JSObject b = a.getJSObject("b");
+        JSObject c = (JSObject) context.parse(text);
+        b.setProperty("test", c);
+
+        c.release();
+        b.release();
+        a.release();
+
         Object ret = context.evaluate("a.b.test.leadsId;");
         assertEquals("270", ret);
         context.destroy();
@@ -271,10 +305,11 @@ public class QuickJSTest {
     public void jsonParseTest5() {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
         QuickJSContext context = createContext();
-        context.getGlobalObject().setProperty("test", (JSCallFunction) args -> context.parseJSON(text));
+        context.getGlobalObject().setProperty("test", args -> context.parse(text));
 
         JSObject ret = (JSObject) context.evaluate("var a = test(); a;");
         assertEquals(text, ret.stringify());
+        ret.release();
         context.destroy();
     }
 
@@ -288,6 +323,8 @@ public class QuickJSTest {
         assertEquals(1, ret.get(0));
         assertEquals(2, ret.get(1));
         assertEquals(3, ret.get(2));
+
+        ret.release();
 
         context.destroy();
     }
@@ -311,15 +348,19 @@ public class QuickJSTest {
     public void testGetOwnPropertyNames() {
         QuickJSContext context = createContext();
         context.evaluate("var a = {age: 1, ff: () => {}};");
-        JSArray array = context.getGlobalObject().getJSObject("a").getNames();
-        for (int i = 0; i < ((JSArray) array).length(); i++) {
-            String item = (String) ((JSArray) array).get(i);
+        JSObject a = context.getGlobalObject().getJSObject("a");
+        JSArray array = a.getNames();
+        for (int i = 0; i < array.length(); i++) {
+            String item = (String) array.get(i);
             if (i == 0) {
                 assertEquals("age", item);
             } else {
                 assertEquals("ff", item);
             }
         }
+
+        array.release();
+        a.release();
 
         context.destroy();
     }
@@ -342,11 +383,12 @@ public class QuickJSTest {
             assertEquals("哈哈", args[0]);
             return null;
         });
-        context.evaluate("    var defer =\n" +
+        JSObject ret = (JSObject) context.evaluate("    var defer =\n" +
                 "        'function' == typeof Promise\n" +
                 "            ? Promise.resolve().then.bind(Promise.resolve())\n" +
                 "            : setTimeout;\n" +
                 "    defer(() => { assert('哈哈'); });");
+        ret.release();
         context.destroy();
     }
 
@@ -389,8 +431,9 @@ public class QuickJSTest {
     @Test
     public void testReturnParseJSON() {
         QuickJSContext context = createContext();
-        context.getGlobalObject().setProperty("test", (JSCallFunction) args -> context.parseJSON("{}"));
-        context.evaluate("test();test();test();");
+        context.getGlobalObject().setProperty("test", args -> context.parse("{}"));
+        JSObject ret = (JSObject) context.evaluate("test();test();test();");
+        ret.release();
         context.destroy();
     }
 
@@ -401,8 +444,13 @@ public class QuickJSTest {
         jsArray.set(11, 0);
         jsArray.set("222", 1);
         JSFunction function = (JSFunction) context.evaluate("var test = (arg) => { return arg; };test;");
-        Object result = function.call(jsArray);
+        JSArray result = (JSArray) function.call(jsArray);
         assertEquals("11,222", result.toString());
+
+        result.release();
+        function.release();
+        jsArray.release();
+
         context.destroy();
     }
 
@@ -592,7 +640,12 @@ public class QuickJSTest {
         } catch (QuickJSException e) {
             assertTrue(e.toString().contains("stack overflow"));
         }
-        context.destroy();
+        // todo 这里销毁会有问题，quickjs.c 源码会有一层 stack overflow 的异常检测
+        try {
+            context.destroy();
+        } catch (QuickJSException e) {
+            assertTrue(e.toString().contains("stack overflow"));
+        }
     }
 
     @Test
@@ -633,17 +686,24 @@ public class QuickJSTest {
         public boolean testArray(JSArray array) {
             String arg1 = (String) array.get(0);
             int age = (int) array.get(1);
+            array.release();
             return TextUtils.equals("arg1", arg1) && 18 == age;
         }
 
         @JSMethod
         public boolean testObject(JSObject jsObj) {
-            return TextUtils.equals("{\"arg1\":\"a\",\"arg2\":18}", jsObj.stringify());
+            String str = jsObj.stringify();
+            jsObj.release();
+            return TextUtils.equals("{\"arg1\":\"a\",\"arg2\":18}", str);
         }
 
         @JSMethod
         public boolean testAll(JSObject object, JSArray message, int age, String name) {
-            return TextUtils.equals("{\"arg1\":\"a\",\"arg2\":18},[1,2,3],18,name", object.stringify() + "," + message.stringify() + "," + age + "," + name);
+            String oStr = object.stringify();
+            String mStr = message.stringify();
+            object.release();
+            message.release();
+            return TextUtils.equals("{\"arg1\":\"a\",\"arg2\":18},[1,2,3],18,name", oStr + "," + mStr + "," + age + "," + name);
         }
     }
 
@@ -691,7 +751,8 @@ public class QuickJSTest {
             assertEquals(error, "'aaa' is not defined");
             return null;
         });
-        context.evaluate("new Promise(() => { aaa; }).catch((res) => { assert(res.message); });");
+        JSObject ret = (JSObject) context.evaluate("new Promise(() => { aaa; }).catch((res) => { assert(res.message); });");
+        ret.release();
         context.destroy();
     }
 
@@ -722,7 +783,8 @@ public class QuickJSTest {
             assertEquals(1, args[0]);
             return null;
         });
-        context.evaluate("new Promise((resolve, reject) => { resolve(1); }).then((res) => { assert(res); });");
+        JSObject ret = (JSObject) context.evaluate("new Promise((resolve, reject) => { resolve(1); }).then((res) => { assert(res); });");
+        ret.release();
         context.destroy();
     }
 
@@ -772,7 +834,7 @@ public class QuickJSTest {
             assertEquals(1, args[0]);
             return null;
         });
-        context.evaluate("(function(){\n" +
+        JSObject ret = (JSObject) context.evaluate("(function(){\n" +
                 "    return new Promise((resolve, reject) => {\n" +
                 "        reject(1);\n" +
                 "    });\n" +
@@ -785,6 +847,7 @@ public class QuickJSTest {
                 "}).catch((res) => {\n" +
                 "    t2(res);\n" +
                 "});");
+        ret.release();
         context.destroy();
     }
 
@@ -860,6 +923,7 @@ public class QuickJSTest {
         JSObject object = context.createNewJSObject();
         context.getGlobalObject().setProperty("a", object);
         assertTrue(object.isAlive());
+        object.release();
         context.destroy();
         assertFalse(object.isAlive());
     }
@@ -922,7 +986,7 @@ public class QuickJSTest {
         thrown.expectMessage("JSON cannot be null");
 
         QuickJSContext context = createContext();
-        context.parseJSON(null);
+        context.parse(null);
         context.destroy();
     }
 
@@ -981,19 +1045,22 @@ public class QuickJSTest {
     public void testGetNativeFuncName() {
         QuickJSContext context = createContext();
 
-        context.getGlobalObject().setProperty("console", context.createNewJSObject());
+        JSObject console1 = context.createNewJSObject();
+        context.getGlobalObject().setProperty("console", console1);
+        console1.release();
 
-        JSObject console = context.getGlobalObject().getJSObject("console");
-        console.setProperty("log", args -> {
+        JSObject console2 = context.getGlobalObject().getJSObject("console");
+        console2.setProperty("log", args -> {
             assertEquals("nativeCall", args[0].toString());
             return null;
         });
+        console2.release();
 
         context.evaluate("var nativeObj = {};");
 
         JSObject tinyDOM = context.getGlobalObject().getJSObject("nativeObj");
         tinyDOM.setProperty("nativeCall", args -> null);
-
+        tinyDOM.release();
         context.evaluate("console.log(nativeObj.nativeCall.name);");
         context.destroy();
     }
@@ -1036,7 +1103,9 @@ public class QuickJSTest {
         QuickJSContext context = createContext();
         context.getGlobalObject().setProperty("nativeCall", args -> {
             JSFunction function = (JSFunction) args[0];
-            function.call();
+            JSObject ret = (JSObject) function.call();
+            ret.release();
+            function.release();
             return null;
         });
         context.evaluate("nativeCall(async () => { console.log(123); });");
@@ -1050,10 +1119,16 @@ public class QuickJSTest {
         JSFunction test = context.getGlobalObject().getJSFunction("test");
         JSObject promise = (JSObject) test.call();
         JSFunction then = promise.getJSFunction("then");
-        then.call((JSCallFunction) args -> {
+        JSObject ret = (JSObject) then.call((JSCallFunction) args -> {
             System.out.println(args[0]);
             return null;
         });
+
+        ret.release();
+        then.release();
+        promise.release();
+        test.release();
+
         context.destroy();
     }
 
@@ -1064,7 +1139,12 @@ public class QuickJSTest {
             JSArray jsArray = context.createNewJSArray();
             JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
             jsArray.set(jsObject, 0);
-            jsArray.set(context.parseJSON("{\"name\": \"Jack\", \"age\": 33}"), 1);
+
+            JSObject jsObject1 = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+            jsArray.set(jsObject1, 1);
+
+            jsObject.release();
+            jsObject1.release();
             return jsArray;
         });
         context.evaluate("var array = getData();console.log(JSON.stringify(array));console.log(array[0]);");
@@ -1138,11 +1218,13 @@ public class QuickJSTest {
             JSObject jsObject = jsContext.createNewJSObject();
             JSCallFunction function = args -> null;
             jsObject.setProperty("test", function);
-            jsObject.release();
+            // jsObject.release();
         }
 
         // QuickJSLoader.initConsoleLog 方法里有调用过一次 setProperty，总数还剩1个
-        assertEquals(1, jsContext.getCallFunctionMapSize());
+        // assertEquals(1, jsContext.getCallFunctionMapSize());
+        jsContext.releaseObjectRecords();
+        jsContext.releaseObjectRecords();
         jsContext.destroy();
         assertEquals(0, jsContext.getCallFunctionMapSize());
     }

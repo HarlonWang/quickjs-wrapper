@@ -17,7 +17,7 @@ using namespace std;
 
 class QuickJSWrapper {
 private:
-    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool non_js_callback = true);
+    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const;
     JSValue toJSValue(JNIEnv *env, jobject thiz, jobject value) const;
 
 public:
@@ -26,7 +26,6 @@ public:
     JSRuntime *runtime;
     JSContext *context;
 
-    map<jlong, JSValue> values;
     queue<JSValueConst> unhandledRejections;
 
     jclass objectClass;
@@ -41,6 +40,7 @@ public:
     jclass jsCallFunctionClass;
     jclass quickjsContextClass;
     jclass moduleLoaderClass;
+    jclass creatorClass;
 
     jmethodID booleanValueOf;
     jmethodID integerValueOf;
@@ -53,13 +53,13 @@ public:
     jmethodID doubleGetValue;
     jmethodID jsObjectGetValue;
 
-    jmethodID jsObjectInit;
-    jmethodID jsArrayInit;
-    jmethodID jsFunctionInit;
-
     jmethodID callFunctionBackM;
     jmethodID removeCallFunctionM;
     jmethodID callFunctionHashCodeM;
+    jmethodID creatorM;
+    jmethodID newObjectM;
+    jmethodID newArrayM;
+    jmethodID newFunctionM;
 
     QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt);
     ~QuickJSWrapper();
@@ -75,7 +75,7 @@ public:
     void set(JNIEnv *env, jobject thiz, jlong this_obj, jobject value, jint index);
     JSValue jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv);
     void removeCallFunction(int callback_id) const;
-    void freeValue(jlong);
+    void freeValue(jlong) const;
     void dupValue(jlong) const;
     void freeDupValue(jlong) const;
     jobject parseJSON(JNIEnv*, jobject, jstring);
@@ -86,6 +86,8 @@ public:
     jobject execute(JNIEnv*, jobject, jbyteArray);
 
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
+
+    jobject getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj);
 };
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

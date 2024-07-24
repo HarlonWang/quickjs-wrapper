@@ -1,15 +1,29 @@
 package com.whl.quickjs.wrapper;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
-public class QuickJSContext {
+public class QuickJSContext implements Closeable {
+
+    @Override
+    public void close() throws IOException {
+        destroy();
+    }
 
     public interface Console {
         void log(String info);
         void info(String info);
         void warn(String info);
         void error(String info);
+    }
+
+    public interface LeakDetectionListener {
+        void notifyLeakDetected(JSObject leak, String stringValue);
     }
 
     public static abstract class DefaultModuleLoader extends ModuleLoader {
@@ -40,7 +54,26 @@ public class QuickJSContext {
     private static final String UNKNOWN_FILE = "unknown.js";
 
     public static QuickJSContext create() {
-        return new QuickJSContext();
+        return new QuickJSContext(new JSObjectCreator() {
+            @Override
+            public JSObject newObject(QuickJSContext context, long pointer) {
+                return new QuickJSObject(context, pointer);
+            }
+
+            @Override
+            public JSArray newArray(QuickJSContext context, long pointer) {
+                return new QuickJSArray(context, pointer);
+            }
+
+            @Override
+            public JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer) {
+                return new QuickJSFunction(context, pointer, thisPointer);
+            }
+        });
+    }
+
+    public static QuickJSContext create(JSObjectCreator creator) {
+        return new QuickJSContext(creator);
     }
 
     public boolean isLiveObject(JSObject jsObj) {
@@ -52,7 +85,8 @@ public class QuickJSContext {
             return;
         }
 
-        getGlobalObject().getJSObject("console").setProperty("stdout", args -> {
+        JSObject consoleObj = getGlobalObject().getJSObject("console");
+        consoleObj.setProperty("stdout", args -> {
             if (args.length == 2) {
                 String level = (String) args[0];
                 String info = (String) args[1];
@@ -76,6 +110,7 @@ public class QuickJSContext {
 
             return null;
         });
+        consoleObj.release();
     }
 
     public void setMaxStackSize(int maxStackSize) {
@@ -111,6 +146,10 @@ public class QuickJSContext {
         dumpObjects(runtime, target.getAbsolutePath());
     }
 
+    public JSObjectCreator getCreator() {
+        return creator;
+    }
+
     // will use stdout to print.
     public void dumpObjects() {
         dumpObjects(runtime, null);
@@ -118,26 +157,61 @@ public class QuickJSContext {
 
     private final long runtime;
     private final long context;
-    private final NativeCleaner<JSObject> nativeCleaner = new NativeCleaner<JSObject>() {
-        @Override
-        public void onRemove(long pointer) {
-            freeDupValue(context, pointer);
-        }
-    };
     private final long currentThreadId;
     private boolean destroyed = false;
     private final HashMap<Integer, JSCallFunction> callFunctionMap = new HashMap<>();
 
     private ModuleLoader moduleLoader;
+    private JSObject globalObject;
+    private final JSObjectCreator creator;
+    private final List<JSObject> objectRecords = new ArrayList<>();
+    private LeakDetectionListener leakDetectionListener;
+    private boolean enableStackTrace = false;
 
-    private QuickJSContext() {
+    private QuickJSContext(JSObjectCreator creator) {
         try {
+            // 这里代理一层 creator，用来记录 js 对象.
+            this.creator = new JSObjectCreator() {
+                @Override
+                public JSObject newObject(QuickJSContext c, long pointer) {
+                    JSObject o = creator.newObject(c, pointer);
+                    if (enableStackTrace) {
+                        o.setStackTrace(new Throwable());
+                    }
+                    objectRecords.add(o);
+                    return o;
+                }
+
+                @Override
+                public JSArray newArray(QuickJSContext c, long pointer) {
+                    JSArray o = creator.newArray(c, pointer);
+                    if (enableStackTrace) {
+                        o.setStackTrace(new Throwable());
+                    }
+                    objectRecords.add(o);
+                    return o;
+                }
+
+                @Override
+                public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer) {
+                    JSFunction o = creator.newFunction(c, pointer, thisPointer);
+                    if (enableStackTrace) {
+                        o.setStackTrace(new Throwable());
+                    }
+                    objectRecords.add(o);
+                    return o;
+                }
+            };
             runtime = createRuntime();
             context = createContext(runtime);
         } catch (UnsatisfiedLinkError e) {
             throw new QuickJSException("The so library must be initialized before createContext! QuickJSLoader.init should be called on the Android platform. In the JVM, you need to manually call System.loadLibrary");
         }
         currentThreadId = Thread.currentThread().getId();
+    }
+
+    public void setEnableStackTrace(boolean enableStackTrace) {
+        this.enableStackTrace = enableStackTrace;
     }
 
     private void checkSameThread() {
@@ -185,17 +259,67 @@ public class QuickJSContext {
     public JSObject getGlobalObject() {
         checkSameThread();
         checkDestroyed();
-        return getGlobalObject(context);
+
+        if (globalObject == null) {
+            globalObject = getGlobalObject(context);
+        }
+
+        return globalObject;
+    }
+
+    public void setLeakDetectionListener(LeakDetectionListener leakDetectionListener) {
+        this.leakDetectionListener = leakDetectionListener;
     }
 
     public void destroy() {
         checkSameThread();
         checkDestroyed();
 
-        nativeCleaner.forceClean();
         callFunctionMap.clear();
+        releaseObjectRecords();
+        objectRecords.clear();
         destroyContext(context);
         destroyed = true;
+    }
+
+    public void releaseObjectRecords() {
+        releaseObjectRecords(true);
+    }
+
+    public void releaseObjectRecords(boolean needRelease) {
+        // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
+        JSFunction format = getGlobalObject().getJSFunction("format");
+        Iterator<JSObject> objectIterator = objectRecords.iterator();
+        while (objectIterator.hasNext()) {
+            JSObject object = objectIterator.next();
+            // 全局对象交由引擎层会回收，这里先过滤掉
+            if (!object.isRefCountZero() && object != getGlobalObject()) {
+                int refCount = object.getRefCount();
+                if (leakDetectionListener != null) {
+                    String value = null;
+                    if (format != null) {
+                        value = (String) format.call(object);
+                    }
+                    leakDetectionListener.notifyLeakDetected(object, value);
+                }
+
+                if (needRelease) {
+                    for (int j = 0; j < refCount; j++) {
+                        // 这里不能直接调用 object.release 方法，因为 release 里会调用 list.remove 导致并发修改异常
+                        object.decrementRefCount();
+                        freeValue(context, object.getPointer());
+                    }
+
+                    if (object.getRefCount() == 0) {
+                        objectIterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    public List<JSObject> getObjectRecords() {
+        return objectRecords;
     }
 
     public String stringify(JSObject jsObj) {
@@ -224,7 +348,7 @@ public class QuickJSContext {
 
     private void putCallFunction(JSCallFunction callFunction) {
         int callFunctionId = callFunction.hashCode();
-        callFunctionMap.put(callFunctionId, (JSCallFunction) callFunction);
+        callFunctionMap.put(callFunctionId, callFunction);
     }
 
     /**
@@ -250,14 +374,28 @@ public class QuickJSContext {
             putCallFunction((JSCallFunction) ret);
         }
 
+        if (ret instanceof JSObject) {
+            // 注意：JSObject 对象作为参数返回到️ JavaScript 中，不需要调用 release 方法，
+            // JS 引擎会进行 free，但是这里需要手动对 JSObject 对象的计数减一。
+            ((JSObject) ret).decrementRefCount();
+        }
+
         return ret;
     }
 
+    /**
+     * JS 引擎层的对象计数减一。
+     */
     public void freeValue(JSObject jsObj) {
         checkSameThread();
         checkDestroyed();
 
         freeValue(context, jsObj.getPointer());
+
+        // todo 如果计数为 0，从 objectRecords 里移除掉
+        if (jsObj.getRefCount() == 0) {
+            objectRecords.remove(jsObj);
+        }
     }
 
     /**
@@ -269,9 +407,7 @@ public class QuickJSContext {
     }
 
     /**
-     * Native 层注册的 JS 方法里的对象需要在其他地方使用，
-     * 调用该方法进行计数加一增加引用，不然 JS 方法执行完会被回收掉。
-     * 注意：不再使用的时候，调用对应的 {@link #freeDupValue(JSObject)} 方法进行计数减一。
+     * JS 引擎层的对象计数加一。
      */
     private void dupValue(JSObject jsObj) {
         checkSameThread();
@@ -280,19 +416,14 @@ public class QuickJSContext {
         dupValue(context, jsObj.getPointer());
     }
 
-    /**
-     * 引用计数减一，对应 {@link #dupValue(JSObject)}
-     */
-    private void freeDupValue(JSObject jsObj) {
-        checkSameThread();
-        checkDestroyed();
-
-        freeDupValue(context, jsObj.getPointer());
-    }
-
     public int length(JSArray jsArray) {
         checkSameThread();
         checkDestroyed();
+
+        // todo 待优化
+        if (!isLiveObject(jsArray)) {
+            return 0;
+        }
 
         return length(context, jsArray.getPointer());
     }
@@ -335,11 +466,10 @@ public class QuickJSContext {
         checkDestroyed();
 
         dupValue(jsObj);
-        nativeCleaner.register(jsObj, jsObj.getPointer());
     }
 
     public JSObject createNewJSObject() {
-        return (JSObject) parseJSON("{}");
+        return parseJSON("{}");
     }
 
     public JSArray createNewJSArray() {
@@ -414,6 +544,10 @@ public class QuickJSContext {
         evaluate(errorScript);
     }
 
+    public Object getOwnPropertyNames(JSObject object) {
+        return getOwnPropertyNames(context, object.getPointer());
+    }
+
     // runtime
     private native long createRuntime();
     private native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
@@ -441,6 +575,7 @@ public class QuickJSContext {
     private native Object parseJSON(long context, String json);
     private native byte[] compile(long context, String sourceCode, String fileName, boolean isModule); // Bytecode compile
     private native Object execute(long context, byte[] bytecode); // Bytecode execute
+    private native Object getOwnPropertyNames(long context, long objValue);
 
     // destroy context and runtime
     private native void destroyContext(long context);

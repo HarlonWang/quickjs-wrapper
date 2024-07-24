@@ -34,14 +34,18 @@ public class QuickJSModuleTest {
             return null;
         });
         context.getGlobalObject().setProperty("assertNameUpdated", args -> {
-            assertEquals("TypeError: 'name' is read-only", args[0].toString());
+            JSObject ret = (JSObject) args[0];
+            assertEquals("TypeError: 'name' is read-only", ret.toString());
+            ret.release();
             return null;
         });
-        context.evaluateModule("import {name, age} from './a.js';\n" +
+        Object ret = context.evaluateModule("import {name, age} from './a.js';\n" +
                 "\n" +
                 "assertName(name);\n" +
                 "assertAge(age);\n" +
                 "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { assertNameUpdated(res); });");
+
+        assertNull(ret);
 
         context.destroy();
     }
