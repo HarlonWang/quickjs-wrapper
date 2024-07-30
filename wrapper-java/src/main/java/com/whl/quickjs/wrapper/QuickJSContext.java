@@ -251,6 +251,10 @@ public class QuickJSContext implements Closeable {
     }
 
     public Object evaluate(String script, String fileName) {
+        if (script == null) {
+            throw new NullPointerException("Script cannot be null with " + fileName);
+        }
+
         checkSameThread();
         checkDestroyed();
         return evaluate(context, script, fileName);
@@ -503,6 +507,10 @@ public class QuickJSContext implements Closeable {
     }
 
     public byte[] compile(String source, String fileName) {
+        if (source == null) {
+            throw new NullPointerException("Script cannot be null with " + fileName);
+        }
+
         checkSameThread();
         checkDestroyed();
 
@@ -514,6 +522,10 @@ public class QuickJSContext implements Closeable {
     }
 
     public byte[] compileModule(String source, String fileName) {
+        if (source == null) {
+            throw new NullPointerException("Script cannot be null with " + fileName);
+        }
+
         checkSameThread();
         checkDestroyed();
 
@@ -521,6 +533,10 @@ public class QuickJSContext implements Closeable {
     }
 
     public Object execute(byte[] code) {
+        if (code == null) {
+            throw new NullPointerException("Bytecode cannot be null");
+        }
+
         checkSameThread();
         checkDestroyed();
 
@@ -528,9 +544,12 @@ public class QuickJSContext implements Closeable {
     }
 
     public Object evaluateModule(String script, String moduleName) {
+        if (script == null) {
+            throw new NullPointerException("Script cannot be null with " + moduleName);
+        }
+
         checkSameThread();
         checkDestroyed();
-
         return evaluateModule(context, script, moduleName);
     }
 
