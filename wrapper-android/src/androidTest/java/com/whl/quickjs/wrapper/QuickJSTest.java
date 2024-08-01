@@ -963,7 +963,7 @@ public class QuickJSTest {
     @Test
     public void testNullExceptionWithCompile() {
         thrown.expect(NullPointerException.class);
-        thrown.expectMessage("Source code cannot be null");
+        thrown.expectMessage("Script cannot be null with unknown.js");
 
         QuickJSContext context = createContext();
         context.compile(null);
