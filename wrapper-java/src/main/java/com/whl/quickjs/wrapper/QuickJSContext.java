@@ -502,34 +502,34 @@ public class QuickJSContext implements Closeable {
         return parseJSON(context, json);
     }
 
-    public byte[] compile(String source) {
-        return compile(source, UNKNOWN_FILE);
+    public byte[] compile(String script) {
+        return compile(script, UNKNOWN_FILE);
     }
 
-    public byte[] compile(String source, String fileName) {
-        if (source == null) {
+    public byte[] compile(String script, String fileName) {
+        if (script == null) {
             throw new NullPointerException("Script cannot be null with " + fileName);
         }
 
         checkSameThread();
         checkDestroyed();
 
-        return compile(context, source, fileName, false);
+        return compile(context, script, fileName, false);
     }
 
-    public byte[] compileModule(String source) {
-        return compileModule(source, UNKNOWN_FILE);
+    public byte[] compileModule(String script) {
+        return compileModule(script, UNKNOWN_FILE);
     }
 
-    public byte[] compileModule(String source, String fileName) {
-        if (source == null) {
+    public byte[] compileModule(String script, String fileName) {
+        if (script == null) {
             throw new NullPointerException("Script cannot be null with " + fileName);
         }
 
         checkSameThread();
         checkDestroyed();
 
-        return compile(context, source, fileName, true);
+        return compile(context, script, fileName, true);
     }
 
     public Object execute(byte[] code) {
