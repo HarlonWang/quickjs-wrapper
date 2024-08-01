@@ -290,9 +290,11 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     if (!is_handled) {
         unhandledRejections->push(JS_DupValue(ctx, reason));
     } else {
-        JSValueConst rej = unhandledRejections->front();
-        JS_FreeValue(ctx, rej);
-        unhandledRejections->pop();
+        if (!unhandledRejections->empty()) {
+            JSValueConst rej = unhandledRejections->front();
+            JS_FreeValue(ctx, rej);
+            unhandledRejections->pop();
+        }
     }
 }
 
@@ -324,6 +326,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jsCallFunctionClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSCallFunction")));
     quickjsContextClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/QuickJSContext")));
     moduleLoaderClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/ModuleLoader")));
+    creatorClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObjectCreator")));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -336,23 +339,19 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     doubleGetValue = jniEnv->GetMethodID(doubleClass, "doubleValue", "()D");
     jsObjectGetValue = jniEnv->GetMethodID(jsObjectClass, "getPointer", "()J");
 
-    jsObjectInit = jniEnv->GetMethodID(jsObjectClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsArrayInit = jniEnv->GetMethodID(jsArrayClass, "<init>", "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)V");
-    jsFunctionInit = jniEnv->GetMethodID(jsFunctionClass, "<init>","(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)V");
-
     callFunctionBackM = jniEnv->GetMethodID(quickjsContextClass, "callFunctionBack", "(I[Ljava/lang/Object;)Ljava/lang/Object;");
     removeCallFunctionM = jniEnv->GetMethodID(quickjsContextClass, "removeCallFunction", "(I)V");
     callFunctionHashCodeM = jniEnv->GetMethodID(objectClass, "hashCode", "()I");
+    creatorM = jniEnv->GetMethodID(quickjsContextClass, "getCreator", "()Lcom/whl/quickjs/wrapper/JSObjectCreator;");
+    newObjectM = jniEnv->GetMethodID(creatorClass, "newObject",
+                                     "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSObject;");
+    newArrayM = jniEnv->GetMethodID(creatorClass, "newArray",
+                                    "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSArray;");
+    newFunctionM = jniEnv->GetMethodID(creatorClass, "newFunction",
+                                       "(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)Lcom/whl/quickjs/wrapper/JSFunction;");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
-    map<jlong, JSValue>::iterator i;
-    for (i = values.begin(); i != values.end(); ++i) {
-        JSValue item = i->second;
-        JS_FreeValue(context, item);
-    }
-    values.clear();
-
     JS_FreeContext(context);
     JS_FreeRuntime(runtime);
 
@@ -369,9 +368,10 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(jsCallFunctionClass);
     jniEnv->DeleteGlobalRef(moduleLoaderClass);
     jniEnv->DeleteGlobalRef(quickjsContextClass);
+    jniEnv->DeleteGlobalRef(creatorClass);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value, bool non_js_callback){
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const{
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -380,13 +380,21 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
         }
 
         case JS_TAG_STRING: {
-            const char* string = JS_ToCString(context, value);
-            result = env->NewStringUTF(string);
-            JS_FreeCString(context, string);
-            if (non_js_callback) {
-                // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
-                JS_FreeValue(context, value);
-            }
+            const char *str;
+            size_t len;
+            str = JS_ToCStringLen(context, &len, value);
+
+            jbyteArray jba = env->NewByteArray(len);
+            env->SetByteArrayRegion(jba, 0, len, reinterpret_cast<const jbyte *>(str));
+
+            result = env->NewObject(stringClass,
+                                    env->GetMethodID(stringClass, "<init>",
+                                                     "([B)V"), jba);
+
+            JS_FreeCString(context, str);
+            env->DeleteLocalRef(jba);
+            // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
+            JS_FreeValue(context, value);
             break;
         }
 
@@ -429,28 +437,16 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
 
         case JS_TAG_OBJECT: {
             auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
+            jobject creatorObj = env->CallObjectMethod(thiz, creatorM);
             if (JS_IsFunction(context, value)) {
                 auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
-                result = env->NewObject(jsFunctionClass, jsFunctionInit, thiz, obj_ptr, value_ptr);
+                result = env->CallObjectMethod(creatorObj, newFunctionM, thiz, value_ptr, obj_ptr);
             } else if (JS_IsArray(context, value)) {
-                result = env->NewObject(jsArrayClass, jsArrayInit, thiz, value_ptr);
+                result = env->CallObjectMethod(creatorObj, newArrayM, thiz, value_ptr);
             } else {
-                result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
+                result = env->CallObjectMethod(creatorObj, newObjectM, thiz, value_ptr);
             }
-
-            if (non_js_callback) {
-                // 这里对 JSObject 的引用计数做了处理：
-                // 1. 判断是否有该对象，如果没有就保存到 values 里
-                // 2. 如果已经有该对象，则对其进行计数减一
-                // 3. 这样，可以保证该对象引用计数一直只会加一次
-                // 4. 如果没有主动释放，会在 destroy 的时候进行减一
-                if (values.count(value_ptr) == 0) {
-                    values.insert(pair<jlong, JSValue>(value_ptr, value));
-                } else{
-                    JS_FreeValue(context, value);
-                }
-            }
-
+            env->DeleteLocalRef(creatorObj);
             break;
         }
 
@@ -490,7 +486,7 @@ jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
     JSValue value = JS_GetGlobalObject(context);
 
     auto value_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(value));
-    jobject result = env->NewObject(jsObjectClass, jsObjectInit, thiz, value_ptr);
+    jobject result = env->CallObjectMethod(env->CallObjectMethod(thiz, creatorM), newObjectM, thiz, value_ptr);
 
     JS_FreeValue(context, value);
     return result;
@@ -572,11 +568,19 @@ jstring QuickJSWrapper::jsonStringify(JNIEnv *env, jlong value) const {
         return nullptr;
     }
 
-    auto result = JS_ToCString(context, obj);
+    const char *str;
+    size_t len;
+
+    str = JS_ToCStringLen(context, &len, obj);
+    jbyteArray jba = env->NewByteArray(len);
+    env->SetByteArrayRegion(jba, 0, len, reinterpret_cast<const jbyte *>(str));
+    jstring ret = static_cast<jstring>(env->NewObject(stringClass,
+                                                      env->GetMethodID(stringClass, "<init>",
+                                                                       "([B)V"), jba));
     JS_FreeValue(context, obj);
-    jstring string =env->NewStringUTF(result);
-    JS_FreeCString(context, result);
-    return string;
+    JS_FreeCString(context, str);
+    env->DeleteLocalRef(jba);
+    return ret;
 }
 
 jint QuickJSWrapper::length(JNIEnv *env, jlong value) const {
@@ -637,10 +641,15 @@ QuickJSWrapper::setProperty(JNIEnv *env, jobject thiz, jlong this_obj, jstring n
 }
 
 JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int argc, JSValueConst *argv){
+    if (jniEnv->ExceptionCheck()) {
+        return JS_EXCEPTION;
+    }
+
     jobjectArray javaArgs = jniEnv->NewObjectArray((jsize)argc, objectClass, nullptr);
 
     for (int i = 0; i < argc; i++) {
-        auto java_arg = toJavaObject(jniEnv, jniThiz, this_val, argv[i], false);
+        JSValue v = JS_DupValue(context, argv[i]);
+        auto java_arg = toJavaObject(jniEnv, jniThiz, this_val, v);
         jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, java_arg);
         jniEnv->DeleteLocalRef(java_arg);
     }
@@ -651,26 +660,15 @@ JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int a
 
     JSValue jsValue = toJSValue(jniEnv, jniThiz, result);
 
-    // JS 对象作为方法返回值，需要引用计数加1，不然会被释放掉
-    if (JS_IsObject(jsValue) && !jniEnv->IsInstanceOf(result, jsCallFunctionClass)) {
-        JS_DupValue(context, jsValue);
-
-        // todo 这里有一个引用计数优化点
-        // 1. 通过 Java 层创建的 JSObject 会被计数加1，上面的 JS_DupValue 会加1，
-        // 2. 也就是会有两次引用，在函数执行完会减1，因为还有一次引用不会被释放。
-        // 3. 优化方式一：注释掉上面的 JS_DupValue 代码，放开下面的注释代码。
-//        map<jlong, JSValue>::iterator exist;
-//        exist = values.find(reinterpret_cast<jlong>(JS_VALUE_GET_PTR(jsValue)));
-//        if (exist != values.end()) {
-//            values.erase(exist);
-//        }
-    }
-
     jniEnv->DeleteLocalRef(result);
     return jsValue;
 }
 
 void QuickJSWrapper::removeCallFunction(int callback_id) const {
+    if (jniEnv->ExceptionCheck()) {
+        return;
+    }
+
     jniEnv->CallVoidMethod(jniThiz, removeCallFunctionM, callback_id);
 }
 
@@ -721,17 +719,9 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
     return result;
 }
 
-void QuickJSWrapper::freeValue(jlong value) {
-    // current only free exist value in map.
-    // todo refactor
-    map<jlong, JSValue>::iterator exist;
-    exist = values.find(value);
-    if (exist != values.end()) {
-        values.erase(exist);
-
-        JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
-        JS_FreeValue(context, jsObj);
-    }
+void QuickJSWrapper::freeValue(jlong value) const {
+    JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    JS_FreeValue(context, jsObj);
 }
 
 void QuickJSWrapper::dupValue(jlong value) const {
@@ -739,6 +729,11 @@ void QuickJSWrapper::dupValue(jlong value) const {
     JS_DupValue(context, jsObj);
 }
 
+/**
+ * @deprecated
+ * See {@link freeValue(String)}
+ * @param value
+ */
 void QuickJSWrapper::freeDupValue(jlong value) const {
     JSValue jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
     JS_FreeValue(context, jsObj);
@@ -852,4 +847,26 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
     jobject jsObj = toJavaObject(env, thiz, global, result);
     JS_FreeValue(context, global);
     return jsObj;
+}
+
+jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj) {
+    const char *getOwnPropertyNames = "Object.getOwnPropertyNames";
+    JSValue func = JS_Eval(context, getOwnPropertyNames, strlen(getOwnPropertyNames), getOwnPropertyNames, JS_EVAL_TYPE_GLOBAL);
+    if (JS_IsException(func)) {
+        throwJSException(env, context);
+        JS_FreeValue(context, func);
+        return nullptr;
+    }
+
+    JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(obj));
+    JSValue ret = JS_Call(context, func, JS_NULL, 1, &jsObject);
+    JS_FreeValue(context, func);
+    if (JS_IsException(ret)) {
+        throwJSException(env, context);
+        JS_FreeValue(context, ret);
+        return nullptr;
+    }
+
+    JSValue nullValue = JS_NULL;
+    return toJavaObject(env, thiz, nullValue, ret);
 }

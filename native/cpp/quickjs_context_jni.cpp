@@ -264,3 +264,10 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thi
     }
 
 }
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_getOwnPropertyNames(JNIEnv *env, jobject thiz,
+                                                                jlong context, jlong obj_value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->getOwnPropertyNames(env, thiz, obj_value);
+}

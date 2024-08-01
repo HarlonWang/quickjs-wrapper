@@ -56,10 +56,13 @@ public class QuickJSFreeValueTest {
 
         assertEquals("{\"name\":\"hello\",\"age\":12,\"sex\":\"男\"}", result);
 
+        evaluate.release();
+
         context.evaluate("var user = {};");
 
         JSObject user = (JSObject) context.getGlobalObject().getProperty("user");
         user.setProperty("name", "Jack");
+        user.release();
 
         JSFunction function = (JSFunction) context.getGlobalObject().getProperty("test");
         JSObject result1 = (JSObject) function.call();
@@ -71,13 +74,17 @@ public class QuickJSFreeValueTest {
         String name1 = (String) result1.getProperty("name");
         assertEquals("hello", name1);
 
-        // evaluate.free();
+        result2.release();
+        result1.release();
+        function.release();
     }
 
     @Test
     public void testState() {
         context.getGlobalObject().setProperty("setState", args -> {
-            Log.d("test", args[0].toString());
+            JSObject ret = (JSObject) args[0];
+            Log.d("test", ret.toString());
+            ret.release();
             return "test";
         });
 
@@ -99,6 +106,8 @@ public class QuickJSFreeValueTest {
         age1.release();
         age2.release();
         age3.release();
+
+        obj1.release();
     }
 
     @Test
@@ -141,6 +150,7 @@ public class QuickJSFreeValueTest {
         context.evaluate("stateTest();");
         context.evaluate("setState({count: 1});");
         context.evaluate("console.log(getState().count);");
+        console.release();
     }
 
 }

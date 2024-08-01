@@ -2,6 +2,7 @@
 #define QUICKJS_EXTEND_LIBRARIES
 
 #include <string>
+#include <cstring>
 #include "../quickjs/quickjs.h"
 
 const char *DATE_POLYFILL = R"lit((() => {
@@ -144,6 +145,10 @@ const char *CONSOLE = R"lit(// Init format at first.
 
     function formatObject(value, opt, recurseTimes) {
         if (value instanceof RegExp) {
+            return `${value.toString()}`
+        }
+
+        if (value instanceof Error) {
             return `${value.toString()}`
         }
 
@@ -342,7 +347,7 @@ const char *CONSOLE = R"lit(// Init format at first.
 
 
 static inline void loadExtendLibraries(JSContext *ctx) {
-    JS_Eval(ctx, DATE_POLYFILL, strlen(DATE_POLYFILL), "date-polyfill.js", JS_EVAL_TYPE_GLOBAL);
+    JS_FreeValue(ctx, JS_Eval(ctx, DATE_POLYFILL, strlen(DATE_POLYFILL), "date-polyfill.js", JS_EVAL_TYPE_GLOBAL));
     JS_FreeValue(ctx, JS_Eval(ctx, CONSOLE, strlen(CONSOLE), "console.js", JS_EVAL_TYPE_GLOBAL));
 }
 

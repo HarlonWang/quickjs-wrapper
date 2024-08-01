@@ -33,6 +33,11 @@ android {
             path file('src/main/CMakeLists.txt')
         }
     }
+
+//    packagingOptions {
+//        doNotStrip "*/*/*.so"
+//    }
+
 }
 
 dependencies {
