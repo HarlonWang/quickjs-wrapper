@@ -149,6 +149,7 @@ obj1.setProperty("getUrl", (JSCallFunction) args -> {
     return "https://github.com/HarlonWang/quickjs-wrapper";
 });
 globalObj.setProperty("repository", repository);
+repository.release();
 ```
 
 JavaScript
@@ -183,19 +184,25 @@ repository.getString("name"); // QuickJS Wrapper
 repository.getInteger("created"); // 2022
 repository.getDouble("version"); // 1.1
 repository.getBoolean("signing_enabled"); // true
-repository.getJSFunction("getUrl").call(); // https://github.com/HarlonWang/quickjs-wrapper
+JSFunction fn = repository.getJSFunction("getUrl");
+String url = fn.call(); // https://github.com/HarlonWang/quickjs-wrapper
+fn.release();
+repository.release();
 ```
 
 ### Create JSObject in Java
 ```Java
 QuickJSContext context = QuickJSContext.create();
 JSObject obj = context.createNewJSObject();
+// Need to release, otherwise it will cause a memory leak.
+obj.release();
 ```
 
 ### Create JSArray in Java
 ```Java
 QuickJSContext context = QuickJSContext.create();
 JSArray array = context.createNewJSArray();
+array.release();
 ```
 
 ### How to return Function to JavaScript in Java
