@@ -253,6 +253,34 @@ console.log('name：' + name); // Jack
 console.log('age：' + age); // 18
 ```
 
+### Object release
+We typically recommend releasing reference relationships actively after using Java objects to avoid memory leaks. Additionally, the engine will release unreleased objects when destroy, but this timing may be a bit later.
+```java
+JSFunction func = xxx.getJSFunction("test");
+func.call();
+func.release();
+
+JSObject obj = xxx.getJSObject("test");
+int a = obj.getString("123");
+obj.release();
+
+// If the JSFunction does not need to handle the return value, it is recommended to call the following method.
+jsFunction.callVoid(xxx);
+```
+
+It's important to note that if the result is being returned for use in JavaScript, there is no need to release it.
+```java
+context.getGlobalObject().setProperty("test", new JSCallFunction() {
+  @Override
+  public Object call(Object... args) {
+    JSObject ret = context.createNewJSObject();
+    // There is no need to call the release method here.
+    // ret.release();
+    return ret;
+  }
+});
+```
+
 ## R8 / ProGuard
 If you are using R8 the shrinking and obfuscation rules are included automatically.
 
