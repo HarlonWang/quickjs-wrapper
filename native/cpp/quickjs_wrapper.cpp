@@ -314,6 +314,10 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     initJSFuncCallback(context);
     loadExtendLibraries(context);
 
+    const char *getOwnPropertyNames = "Object.getOwnPropertyNames";
+    ownPropertyNames = JS_Eval(context, getOwnPropertyNames, strlen(getOwnPropertyNames), getOwnPropertyNames, JS_EVAL_TYPE_GLOBAL);
+
+
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
     integerClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
@@ -352,6 +356,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
+    JS_FreeValue(context, ownPropertyNames);
     JS_FreeContext(context);
     JS_FreeRuntime(runtime);
 
@@ -380,21 +385,12 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
         }
 
         case JS_TAG_STRING: {
-            const char *str;
-            size_t len;
-            str = JS_ToCStringLen(context, &len, value);
-
-            jbyteArray jba = env->NewByteArray(len);
-            env->SetByteArrayRegion(jba, 0, len, reinterpret_cast<const jbyte *>(str));
-
-            result = env->NewObject(stringClass,
-                                    env->GetMethodID(stringClass, "<init>",
-                                                     "([B)V"), jba);
-
-            JS_FreeCString(context, str);
-            env->DeleteLocalRef(jba);
+            const char* string = JS_ToCString(context, value);
+            result = env->NewStringUTF(string);
+            JS_FreeCString(context, string);
             // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
             JS_FreeValue(context, value);
+            break;
             break;
         }
 
@@ -850,17 +846,13 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
 }
 
 jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj) {
-    const char *getOwnPropertyNames = "Object.getOwnPropertyNames";
-    JSValue func = JS_Eval(context, getOwnPropertyNames, strlen(getOwnPropertyNames), getOwnPropertyNames, JS_EVAL_TYPE_GLOBAL);
-    if (JS_IsException(func)) {
+    if (JS_IsException(ownPropertyNames)) {
         throwJSException(env, context);
-        JS_FreeValue(context, func);
         return nullptr;
     }
 
     JSValue jsObject = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(obj));
-    JSValue ret = JS_Call(context, func, JS_NULL, 1, &jsObject);
-    JS_FreeValue(context, func);
+    JSValue ret = JS_Call(context, ownPropertyNames, JS_NULL, 1, &jsObject);
     if (JS_IsException(ret)) {
         throwJSException(env, context);
         JS_FreeValue(context, ret);
