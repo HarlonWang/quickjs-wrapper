@@ -298,16 +298,6 @@ static void promiseRejectionTracker(JSContext *ctx, JSValueConst promise,
     }
 }
 
-// todo 这里需要注意，JVM 平台下 NewStringUTF 方法对部分 unicode 的转换有问题，会出现乱码。
-static jstring toJavaString(JNIEnv *env, JSContext *context, JSValue value) {
-    const char* string = JS_ToCString(context, value);
-    jstring result = env->NewStringUTF(string);
-    JS_FreeCString(context, string);
-    // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
-    JS_FreeValue(context, value);
-    return result;
-}
-
 QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     jniEnv = env;
     runtime = rt;
@@ -395,7 +385,7 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
         }
 
         case JS_TAG_STRING: {
-            result = toJavaString(env, context, value);
+            result = toJavaString(env, value);
             break;
         }
 
@@ -569,7 +559,7 @@ jstring QuickJSWrapper::jsonStringify(JNIEnv *env, jlong value) const {
         return nullptr;
     }
 
-    return toJavaString(env, context, obj);
+    return toJavaString(env, obj);
 }
 
 jint QuickJSWrapper::length(JNIEnv *env, jlong value) const {
@@ -854,4 +844,34 @@ jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj
 
     JSValue nullValue = JS_NULL;
     return toJavaObject(env, thiz, nullValue, ret);
+}
+
+jstring QuickJSWrapper::toJavaString(JNIEnv *env, JSValue value) const {
+    jstring result;
+#ifdef IS_ANDROID
+    const char* string = JS_ToCString(context, value);
+    result = env->NewStringUTF(string);
+    JS_FreeCString(context, string);
+    // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
+    JS_FreeValue(context, value);
+#else
+    // 这里需要注意，JVM 平台下 NewStringUTF 方法对部分 unicode 的转换有问题，会出现乱码，换了另一种方式解决。
+    const char *str;
+    size_t len;
+    str = JS_ToCStringLen(context, &len, value);
+
+    jbyteArray jba = env->NewByteArray(len);
+    env->SetByteArrayRegion(jba, 0, len, reinterpret_cast<const jbyte *>(str));
+
+    result = static_cast<jstring>(env->NewObject(stringClass,
+                                                 env->GetMethodID(stringClass, "<init>", "([B)V"),
+                                                 jba));
+
+    JS_FreeCString(context, str);
+    env->DeleteLocalRef(jba);
+    // JSString 类型的 JSValue 需要手动释放掉，不然会泄漏
+    JS_FreeValue(context, value);
+#endif
+
+    return result;
 }

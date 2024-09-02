@@ -16,7 +16,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags ''
+                cppFlags '-DIS_ANDROID=TRUE'
             }
         }
     }
