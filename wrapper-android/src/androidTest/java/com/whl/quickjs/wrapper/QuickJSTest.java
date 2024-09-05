@@ -1292,7 +1292,7 @@ public class QuickJSTest {
 
     @Test
     public void testParseObjectReleased() {
-        int maxSize = 100000;
+        int maxSize = 1000000;
 
         QuickJSContext context = createContext();
         StringBuilder builder = new StringBuilder();
