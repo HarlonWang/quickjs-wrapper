@@ -96,13 +96,11 @@ context.destroy();
 ### Evaluating JavaScript
 
 ```Java
-QuickJSContext context = QuickJSContext.create();
 context.evaluate("var a = 1 + 2;");
 ```
 
 ### Console Support
 ```Java
-QuickJSContext context = QuickJSContext.create();
 context.setConsole(your console implementation.);
 ```
 
