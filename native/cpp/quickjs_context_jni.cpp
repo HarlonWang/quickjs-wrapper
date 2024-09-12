@@ -242,7 +242,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thi
     auto *rt = reinterpret_cast<JSRuntime*>(runtime);
 
     if (file_name == nullptr) {
-        JS_DumpObjects(rt);
+        // JS_DumpObjects(rt);
     } else {
         const char *path = env->GetStringUTFChars(file_name, JNI_FALSE);
         // 这里重定向打印日志到指定文件，方便查看。
@@ -258,7 +258,7 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_dumpObjects(JNIEnv *env, jobject thi
         JS_ComputeMemoryUsage(rt, &stats);
         JS_DumpMemoryUsage(stdout, &stats, rt);
 
-        JS_DumpObjects(rt);
+        // JS_DumpObjects(rt);
 
         fclose(file);
     }
