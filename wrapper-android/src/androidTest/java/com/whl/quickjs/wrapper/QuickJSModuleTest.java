@@ -45,7 +45,7 @@ public class QuickJSModuleTest {
                 "assertAge(age);\n" +
                 "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { assertNameUpdated(res); });");
 
-        assertNull(ret);
+        assertEquals(ret.toString(), "[object Promise]");
 
         context.destroy();
     }
