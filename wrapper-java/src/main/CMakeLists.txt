@@ -17,3 +17,4 @@ add_library( # Sets the name of the library.
 
 include_directories($ENV{JAVA_HOME}/include/)
 include_directories($ENV{JAVA_HOME}/include/darwin)
+include_directories($ENV{JAVA_HOME}/include/linux)
