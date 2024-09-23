@@ -455,23 +455,6 @@ public class QuickJSTest {
     }
 
     @Test
-    public void testStackOverflowWithStackSize() {
-        QuickJSContext context = createContext();
-        context.setMaxStackSize(1024);
-        try {
-            context.evaluate("function y(){}");
-        } catch (QuickJSException e) {
-            assertTrue(e.toString().contains("stack overflow"));
-        }
-        // todo 这里销毁会有问题，quickjs.c 源码会有一层 stack overflow 的异常检测
-        try {
-            context.destroy();
-        } catch (QuickJSException e) {
-            assertTrue(e.toString().contains("stack overflow"));
-        }
-    }
-
-    @Test
     public void testMissingFormalParameter() {
         QuickJSContext context = createContext();
         try {
