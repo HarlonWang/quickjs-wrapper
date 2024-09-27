@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1206,6 +1207,20 @@ public class QuickJSTest {
         array.release();
 
         assertEquals("{a={a=123, b=[1, 2]}, b=[{a={c=xxx}}, 2, qqq, 1.22], Infinity=-9223372036854775808, NaN=NaN, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, undefined=null}", context.getGlobalObject().toMap().toString());
+        context.destroy();
+    }
+
+    @Test
+    public void testObjectToMapFilter() {
+        QuickJSContext context = createContext();
+        HashMap<String, Object> map = context.getGlobalObject().toMap(new MapFilter() {
+            @Override
+            public boolean isReadable(String key) {
+                return !key.equals("Infinity");
+            }
+        });
+        System.out.println(map.toString());
+        assertEquals("{NaN=NaN, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, undefined=null}", map.toString());
         context.destroy();
     }
 

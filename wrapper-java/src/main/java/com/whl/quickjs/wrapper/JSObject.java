@@ -58,4 +58,7 @@ public interface JSObject {
     HashMap<String, Object> toMap();
 
     ArrayList<Object> toArray();
+
+    HashMap<String, Object> toMap(MapFilter filter);
+    ArrayList<Object> toArray(MapFilter filter);
 }

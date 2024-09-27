@@ -33,14 +33,24 @@ public class QuickJSArray extends QuickJSObject implements JSArray {
 
     @Override
     public HashMap<String, Object> toMap() {
+        return toMap(null);
+    }
+
+    @Override
+    public HashMap<String, Object> toMap(MapFilter filter) {
         throw new UnsupportedOperationException("Array types are not yet supported for conversion to map. You should use toArray.");
     }
 
     @Override
     public ArrayList<Object> toArray() {
+        return toArray(null);
+    }
+
+    @Override
+    public ArrayList<Object> toArray(MapFilter filter) {
         ArrayList<Object> arrayList = new ArrayList<>(length());
         HashSet<Long> circulars = new HashSet<>();
-        convertToMap(this, arrayList, circulars);
+        convertToMap(this, arrayList, circulars, filter);
         circulars.clear();
         return arrayList;
     }
