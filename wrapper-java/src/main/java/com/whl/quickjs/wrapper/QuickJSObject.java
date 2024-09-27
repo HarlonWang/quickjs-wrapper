@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Harlon Wang on 2024/2/12.
@@ -15,7 +16,6 @@ public class QuickJSObject implements JSObject {
     private final long pointer;
     private int refCount;
     private Throwable stackTrace;
-    protected ArrayList<Long> circulars;
 
     public QuickJSObject(QuickJSContext context, long pointer) {
         this.context = context;
@@ -245,7 +245,8 @@ public class QuickJSObject implements JSObject {
     @Override
     public HashMap<String, Object> toMap() {
         HashMap<String, Object> objectMap = new HashMap<>();
-        convertToMap(this, objectMap);
+        HashSet<Long> circulars = new HashSet<>();
+        convertToMap(this, objectMap, circulars);
         circulars.clear();
         return objectMap;
     }
@@ -255,10 +256,7 @@ public class QuickJSObject implements JSObject {
         throw new UnsupportedOperationException("Object types are not yet supported for conversion to array. You should use toMap.");
     }
 
-    protected void convertToMap(Object target, Object map) {
-        if (circulars == null) {
-            circulars = new ArrayList<>();
-        }
+    protected void convertToMap(Object target, Object map, HashSet<Long> circulars) {
         if (circulars.contains(((JSObject) target).getPointer())) {
             // Circular reference objects, no processing needed.
             return;
@@ -287,7 +285,7 @@ public class QuickJSObject implements JSObject {
 
             if (value instanceof JSArray) {
                 ArrayList<Object> list = new ArrayList<>(((JSArray) value).length());
-                convertToMap(value, list);
+                convertToMap(value, list, circulars);
                 if (!list.isEmpty()) {
                     if (map instanceof HashMap) {
                         ((HashMap<String, Object>) map).put(key, list);
@@ -301,7 +299,7 @@ public class QuickJSObject implements JSObject {
 
             if (value instanceof JSObject) {
                 HashMap<String, Object> valueMap = new HashMap<>();
-                convertToMap(value, valueMap);
+                convertToMap(value, valueMap, circulars);
                 if (!valueMap.isEmpty()) {
                     if (map instanceof HashMap) {
                         ((HashMap<String, Object>) map).put(key, valueMap);

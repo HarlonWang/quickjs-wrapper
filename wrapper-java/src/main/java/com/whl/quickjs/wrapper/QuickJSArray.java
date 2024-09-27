@@ -2,6 +2,7 @@ package com.whl.quickjs.wrapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Harlon Wang on 2024/2/13.
@@ -38,7 +39,8 @@ public class QuickJSArray extends QuickJSObject implements JSArray {
     @Override
     public ArrayList<Object> toArray() {
         ArrayList<Object> arrayList = new ArrayList<>(length());
-        convertToMap(this, arrayList);
+        HashSet<Long> circulars = new HashSet<>();
+        convertToMap(this, arrayList, circulars);
         circulars.clear();
         return arrayList;
     }
