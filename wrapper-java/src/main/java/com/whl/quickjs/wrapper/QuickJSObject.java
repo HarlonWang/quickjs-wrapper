@@ -2,7 +2,9 @@ package com.whl.quickjs.wrapper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by Harlon Wang on 2024/2/12.
@@ -13,6 +15,7 @@ public class QuickJSObject implements JSObject {
     private final long pointer;
     private int refCount;
     private Throwable stackTrace;
+    protected ArrayList<Long> circulars;
 
     public QuickJSObject(QuickJSContext context, long pointer) {
         this.context = context;
@@ -237,6 +240,89 @@ public class QuickJSObject implements JSObject {
     public void decrementRefCount() {
         checkRefCountIsZero();
         refCount--;
+    }
+
+    @Override
+    public HashMap<String, Object> toMap() {
+        HashMap<String, Object> objectMap = new HashMap<>();
+        convertToMap(this, objectMap);
+        circulars.clear();
+        return objectMap;
+    }
+
+    @Override
+    public ArrayList<Object> toArray() {
+        throw new UnsupportedOperationException("Object types are not yet supported for conversion to array. You should use toMap.");
+    }
+
+    protected void convertToMap(Object target, Object map) {
+        if (circulars == null) {
+            circulars = new ArrayList<>();
+        }
+        if (circulars.contains(((JSObject) target).getPointer())) {
+            // Circular reference objects, no processing needed.
+            return;
+        }
+
+        circulars.add(((JSObject) target).getPointer());
+
+        boolean isArray = target instanceof JSArray;
+        JSArray array = isArray ? (JSArray) target : ((JSObject) target).getNames();
+        int length = array.length();
+        for (int i = 0; i < length; i++) {
+            String key = null;
+            Object value;
+            if (isArray) {
+                value = array.get(i);
+            } else {
+                key = (String) array.get(i);
+                value = ((JSObject) target).getProperty(key);
+            }
+
+            if (value instanceof JSFunction) {
+                // Unsupported type.
+                ((JSFunction) value).release();
+                continue;
+            }
+
+            if (value instanceof JSArray) {
+                ArrayList<Object> list = new ArrayList<>(((JSArray) value).length());
+                convertToMap(value, list);
+                if (!list.isEmpty()) {
+                    if (map instanceof HashMap) {
+                        ((HashMap<String, Object>) map).put(key, list);
+                    } else if (map instanceof ArrayList){
+                        ((ArrayList<Object>) map).add(list);
+                    }
+                }
+                ((JSArray) value).release();
+                continue;
+            }
+
+            if (value instanceof JSObject) {
+                HashMap<String, Object> valueMap = new HashMap<>();
+                convertToMap(value, valueMap);
+                if (!valueMap.isEmpty()) {
+                    if (map instanceof HashMap) {
+                        ((HashMap<String, Object>) map).put(key, valueMap);
+                    } else if (map instanceof ArrayList){
+                        ((ArrayList<Object>) map).add(valueMap);
+                    }
+                }
+                ((JSObject) value).release();
+                continue;
+            }
+
+            // Primitive types.
+            if (map instanceof HashMap) {
+                ((HashMap<String, Object>) map).put(key, value);
+            } else if (map instanceof ArrayList){
+                ((ArrayList<Object>) map).add(value);
+            }
+        }
+        if (!isArray) {
+            array.release();
+        }
     }
 
     public int getRefCount() {
