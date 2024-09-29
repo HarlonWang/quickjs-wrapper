@@ -1,5 +1,8 @@
 # Change Log
 
+## 2.2.0 *(2024-09-20)*
+- JSObject 增加 toMap 方法，支持转 HashMap 类型
+
 ## 2.1.0 *(2024-09-20)*
 - 升级 QuickJS 至 2024-0214 版本
 - 优化不同平台的 string 转换
