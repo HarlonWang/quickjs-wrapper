@@ -6,6 +6,7 @@ QuickJS wrapper for Android/JVM.
 - Support promise execute
 - JavaScript exception handler
 - Compile bytecode
+- Supports converting JS object types to Java HashMap.
 
 Experimental Features Stability not guaranteed.
 - ESModule (import, export)
