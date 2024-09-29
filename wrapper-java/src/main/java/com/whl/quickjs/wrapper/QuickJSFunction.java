@@ -1,5 +1,8 @@
 package com.whl.quickjs.wrapper;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 /**
  * Created by Harlon Wang on 2024/2/12.
  */
@@ -60,4 +63,13 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
         }
     }
 
+    @Override
+    public HashMap<String, Object> toMap() {
+        throw new UnsupportedOperationException("JSFunction types do not support conversion to map or array.");
+    }
+
+    @Override
+    public ArrayList<Object> toArray() {
+        throw new UnsupportedOperationException("JSFunction types do not support conversion to map or array.");
+    }
 }

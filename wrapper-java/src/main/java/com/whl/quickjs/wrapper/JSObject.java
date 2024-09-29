@@ -1,5 +1,8 @@
 package com.whl.quickjs.wrapper;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public interface JSObject {
 
     void setStackTrace(Throwable trace);
@@ -51,4 +54,13 @@ public interface JSObject {
      * 引用计数减一，目前仅将对象返回到 JavaScript 中的场景中使用。
      */
     void decrementRefCount();
+
+    HashMap<String, Object> toMap();
+
+    ArrayList<Object> toArray();
+
+    HashMap<String, Object> toMap(MapFilter filter);
+    ArrayList<Object> toArray(MapFilter filter);
+    HashMap<String, Object> toMap(MapFilter filter, Object extra);
+    ArrayList<Object> toArray(MapFilter filter, Object extra);
 }
