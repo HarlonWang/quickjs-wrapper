@@ -5,6 +5,6 @@ package com.whl.quickjs.wrapper;
  */
 public interface MapFilter {
 
-    boolean isReadable(String key);
+    boolean shouldSkipKey(String key, long pointer, Object extra);
 
 }
