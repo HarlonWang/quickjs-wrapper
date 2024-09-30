@@ -292,7 +292,6 @@ public class QuickJSContext implements Closeable {
 
     public void releaseObjectRecords(boolean needRelease) {
         // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
-        JSFunction format = getGlobalObject().getJSFunction("format");
         Iterator<JSObject> objectIterator = objectRecords.iterator();
         while (objectIterator.hasNext()) {
             JSObject object = objectIterator.next();
@@ -300,10 +299,9 @@ public class QuickJSContext implements Closeable {
             if (!object.isRefCountZero() && object != getGlobalObject()) {
                 int refCount = object.getRefCount();
                 if (leakDetectionListener != null) {
-                    String value = null;
-                    if (format != null) {
-                        value = (String) format.call(object);
-                    }
+                    JSFunction format = getGlobalObject().getJSFunction("format");
+                    String value = (String) format.call(object);
+                    format.release();
                     leakDetectionListener.notifyLeakDetected(object, value);
                 }
 
