@@ -67,7 +67,6 @@ public class QuickJSTest {
     public static QuickJSContext createContext() {
         QuickJSContext context = QuickJSContext.create();
         context.setConsole(new LogcatConsole("console-test"));
-        context.setLeakDetectionListener((leak, stringValue) -> Log.e("leak-object", stringValue));
         return context;
     }
 
@@ -1219,6 +1218,21 @@ public class QuickJSTest {
         }, "test");
         System.out.println(map.toString());
         assertEquals("{NaN=NaN, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, undefined=null}", map.toString());
+        context.destroy();
+    }
+
+    @Test
+    public void testObjectLeakDetection() {
+        QuickJSContext context = createContext();
+        context.setLeakDetectionListener((leak, stringValue) -> {
+            assertEquals(stringValue, "{ name: 'leak1' }");
+        });
+
+        // 泄漏场景
+        JSObject o = context.createNewJSObject();
+        o.setProperty("name", "leak1");
+        // o.release();
+
         context.destroy();
     }
 

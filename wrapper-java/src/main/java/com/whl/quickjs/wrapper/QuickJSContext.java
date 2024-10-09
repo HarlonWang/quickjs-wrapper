@@ -291,19 +291,20 @@ public class QuickJSContext implements Closeable {
     }
 
     public void releaseObjectRecords(boolean needRelease) {
-        // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
         JSFunction format = getGlobalObject().getJSFunction("format");
+
+        // 检测是否有未被释放引用的对象，如果有的话，根据计数释放一下
         Iterator<JSObject> objectIterator = objectRecords.iterator();
         while (objectIterator.hasNext()) {
             JSObject object = objectIterator.next();
-            // 全局对象交由引擎层会回收，这里先过滤掉
-            if (!object.isRefCountZero() && object != getGlobalObject()) {
+
+            // 这里需要过滤掉 getGlobalObject 和 format
+            // 1. getGlobalObject 全局对象不会主动释放，引擎销毁会回收
+            // 2. format 用来格式化内容，会在迭代完释放掉，这里过滤掉
+            if (!object.isRefCountZero() && object != getGlobalObject() && object != format) {
                 int refCount = object.getRefCount();
                 if (leakDetectionListener != null) {
-                    String value = null;
-                    if (format != null) {
-                        value = (String) format.call(object);
-                    }
+                    String value = (String) format.call(object);
                     leakDetectionListener.notifyLeakDetected(object, value);
                 }
 
@@ -320,6 +321,8 @@ public class QuickJSContext implements Closeable {
                 }
             }
         }
+
+        format.release();
     }
 
     public List<JSObject> getObjectRecords() {

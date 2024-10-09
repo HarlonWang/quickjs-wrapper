@@ -169,7 +169,9 @@ static char *jsModuleNormalizeFunc(JSContext *ctx, const char *module_base_name,
     env->DeleteLocalRef(moduleLoader);
 
     // todo 这里作为返回值，没有调用 ReleaseStringUTFChars，quickjs.c 里面会对 char* 进行释放，需要 check 下是否有释放？
-    return (char *) env->GetStringUTFChars((jstring) result, nullptr);
+    auto ret = (char *) env->GetStringUTFChars((jstring) result, nullptr);
+    env->DeleteLocalRef(result);
+    return ret;
 }
 
 static JSModuleDef *
