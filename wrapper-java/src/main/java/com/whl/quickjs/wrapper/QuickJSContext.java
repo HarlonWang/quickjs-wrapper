@@ -570,6 +570,18 @@ public class QuickJSContext implements Closeable {
         return getOwnPropertyNames(context, object.getPointer());
     }
 
+    public byte[] toByteArray(JSObject object) {
+        checkSameThread();
+        checkDestroyed();
+        return arrayBufferToByteArray(context, object.getPointer());
+    }
+
+    public JSObject newArrayBuffer(byte[] data) {
+        checkSameThread();
+        checkDestroyed();
+        return newArrayBuffer(context, data);
+    }
+
     // runtime
     private native long createRuntime();
     private native void setMaxStackSize(long runtime, int size); // The default is 1024 * 256, and 0 means unlimited.
@@ -601,4 +613,6 @@ public class QuickJSContext implements Closeable {
 
     // destroy context and runtime
     private native void destroyContext(long context);
+    private native JSObject newArrayBuffer(long context, byte[] value);
+    private native byte[] arrayBufferToByteArray(long context, long objValue);
 }

@@ -319,7 +319,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     const char *getOwnPropertyNames = "Object.getOwnPropertyNames";
     ownPropertyNames = JS_Eval(context, getOwnPropertyNames, strlen(getOwnPropertyNames), getOwnPropertyNames, JS_EVAL_TYPE_GLOBAL);
 
-
+    byteArrayClass = (jclass) env->NewGlobalRef(env->FindClass("[B"));
     objectClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Object")));
     booleanClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Boolean")));
     integerClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("java/lang/Integer")));
@@ -687,6 +687,12 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
 
         int *callbackId = new int(jniEnv->CallIntMethod(value, callFunctionHashCodeM));
         JS_SetOpaque(obj, callbackId);
+    } else if(env->IsInstanceOf(value, byteArrayClass)){
+        jbyteArray jbytes = (jbyteArray)(value);
+        jbyte* byteData = env->GetByteArrayElements(jbytes, NULL);
+        jsize length = env->GetArrayLength(jbytes);
+        result = JS_NewArrayBufferCopy(context, (uint8_t *)byteData, length);
+        env->ReleaseByteArrayElements(jbytes, byteData, 0);
     } else {
         auto classType = env->GetObjectClass(value);
         const auto typeName = getJavaName(env, classType);
@@ -876,4 +882,26 @@ jstring QuickJSWrapper::toJavaString(JNIEnv *env, JSValue value) const {
 #endif
 
     return result;
+}
+
+jobject QuickJSWrapper::newArrayBuffer(JNIEnv *env, jobject thiz, jbyteArray value) {
+    jbyte* byteData = env->GetByteArrayElements(value, NULL);
+    jsize length = env->GetArrayLength(value);
+    JSValue result = JS_NewArrayBufferCopy(context, (uint8_t *)byteData, length);
+    env->ReleaseByteArrayElements(value, byteData, 0);
+    JSValue nullValue = JS_NULL;
+    return toJavaObject(env, thiz, nullValue, result);
+}
+
+jbyteArray QuickJSWrapper::arrayBufferToByteArray(JNIEnv *env, jobject thiz, jlong value) {
+    JSValue jsValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
+    uint8_t *buffer;
+    size_t byteLength;
+    buffer = JS_GetArrayBuffer(context, &byteLength, jsValue);
+    if (buffer == nullptr) {
+        return nullptr;
+    }
+    jbyteArray byteArray = env->NewByteArray(byteLength);
+    env->SetByteArrayRegion(byteArray, 0, byteLength, reinterpret_cast<const jbyte *>(buffer));
+    return byteArray;
 }

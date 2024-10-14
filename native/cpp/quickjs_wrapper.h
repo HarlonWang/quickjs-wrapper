@@ -42,6 +42,7 @@ public:
     jclass quickjsContextClass;
     jclass moduleLoaderClass;
     jclass creatorClass;
+    jclass byteArrayClass;
     JSValue ownPropertyNames;
 
     jmethodID booleanValueOf;
@@ -90,6 +91,9 @@ public:
     jobject evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstring file_name);
 
     jobject getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj);
+
+    jobject newArrayBuffer(JNIEnv *env, jobject thiz, jbyteArray value);
+    jbyteArray arrayBufferToByteArray(JNIEnv *env, jobject thiz, jlong obj);
 };
 
 #endif //QUICKJS_TEST_CONTEXT_WRAPPER_H

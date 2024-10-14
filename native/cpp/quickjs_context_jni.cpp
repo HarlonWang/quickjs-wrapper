@@ -271,3 +271,17 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getOwnPropertyNames(JNIEnv *env, job
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->getOwnPropertyNames(env, thiz, obj_value);
 }
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_newArrayBuffer(JNIEnv *env, jobject thiz, jlong context, jbyteArray value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->newArrayBuffer(env, thiz, value);
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_arrayBufferToByteArray(JNIEnv *env, jobject thiz, jlong context, jlong value) {
+    auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
+    return wrapper->arrayBufferToByteArray(env, thiz, value);
+}
