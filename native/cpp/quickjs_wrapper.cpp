@@ -689,10 +689,10 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
         JS_SetOpaque(obj, callbackId);
     } else if(env->IsInstanceOf(value, byteArrayClass)){
         jbyteArray jbytes = (jbyteArray)(value);
-        jbyte* byteData = env->GetByteArrayElements(jbytes, NULL);
         jsize length = env->GetArrayLength(jbytes);
-        result = JS_NewArrayBufferCopy(context, (uint8_t *)byteData, length);
-        env->ReleaseByteArrayElements(jbytes, byteData, 0);
+        std::unique_ptr<jbyte[]> buffer(new jbyte[length]);
+        env->GetByteArrayRegion(jbytes, 0, length, buffer.get());
+        result = JS_NewArrayBufferCopy(context, reinterpret_cast<uint8_t*>(buffer.get()), length);
     } else {
         auto classType = env->GetObjectClass(value);
         const auto typeName = getJavaName(env, classType);
@@ -885,23 +885,29 @@ jstring QuickJSWrapper::toJavaString(JNIEnv *env, JSValue value) const {
 }
 
 jobject QuickJSWrapper::newArrayBuffer(JNIEnv *env, jobject thiz, jbyteArray value) {
-    jbyte* byteData = env->GetByteArrayElements(value, NULL);
     jsize length = env->GetArrayLength(value);
-    JSValue result = JS_NewArrayBufferCopy(context, (uint8_t *)byteData, length);
-    env->ReleaseByteArrayElements(value, byteData, 0);
+    std::unique_ptr<jbyte[]> buffer(new jbyte[length]);
+    env->GetByteArrayRegion(value, 0, length, buffer.get());
+    JSValue result = JS_NewArrayBufferCopy(context, reinterpret_cast<uint8_t*>(buffer.get()), length);
     JSValue nullValue = JS_NULL;
     return toJavaObject(env, thiz, nullValue, result);
 }
 
 jbyteArray QuickJSWrapper::arrayBufferToByteArray(JNIEnv *env, jobject thiz, jlong value) {
     JSValue jsValue = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(value));
-    uint8_t *buffer;
-    size_t byteLength;
-    buffer = JS_GetArrayBuffer(context, &byteLength, jsValue);
+    size_t byteLength = 0;
+    uint8_t *buffer = JS_GetArrayBuffer(context, &byteLength, jsValue);
     if (buffer == nullptr) {
         return nullptr;
     }
     jbyteArray byteArray = env->NewByteArray(byteLength);
-    env->SetByteArrayRegion(byteArray, 0, byteLength, reinterpret_cast<const jbyte *>(buffer));
+    void *elementsPtr = env->GetPrimitiveArrayCritical(byteArray, nullptr);
+    if (elementsPtr == nullptr) {
+        env->DeleteLocalRef(byteArray);
+        return nullptr;
+    }
+    jbyte *elements = reinterpret_cast<jbyte *>(elementsPtr);
+    memcpy(elements, buffer, byteLength);
+    env->ReleasePrimitiveArrayCritical(byteArray, elements, 0);
     return byteArray;
 }
