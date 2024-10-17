@@ -125,6 +125,11 @@ public class QuickJSContext implements Closeable {
         setMemoryLimit(runtime, memoryLimitSize);
     }
 
+    // Return the byte size.
+    public long getMemoryUsedSize() {
+        return getMemoryUsedSize(runtime);
+    }
+
     public void dumpMemoryUsage(File target) {
         if (target == null || !target.exists()) {
             return;
@@ -578,6 +583,7 @@ public class QuickJSContext implements Closeable {
     private native void setMemoryLimit(long runtime, int size);
     private native void dumpMemoryUsage(long runtime, String fileName);
     private native void dumpObjects(long runtime, String fileName);
+    private native long getMemoryUsedSize(long runtime);
 
     // context
     private native long createContext(long runtime);

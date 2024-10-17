@@ -85,6 +85,11 @@ public class QuickJSObject implements JSObject {
     }
 
     @Override
+    public void setProperty(String name, byte[] value) {
+        setPropertyObject(name, value);
+    }
+
+    @Override
     public void setProperty(String name, JSCallFunction value) {
         setPropertyObject(name, value);
     }
@@ -174,6 +179,12 @@ public class QuickJSObject implements JSObject {
     public Long getLong(String name) {
         Object value = getProperty(name);
         return value instanceof Long ? (Long) value : null;
+    }
+
+    @Override
+    public byte[] getBytes(String name) {
+        Object value = getProperty(name);
+        return value instanceof byte[] ? (byte[]) value : null;
     }
 
     @Override

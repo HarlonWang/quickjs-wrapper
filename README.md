@@ -111,6 +111,7 @@ context.setConsole(your console implementation.);
 - `int`
 - `long`
 - `double`
+- `byte[]` <=> ArrayBuffer
 - `String`
 - `null`
 

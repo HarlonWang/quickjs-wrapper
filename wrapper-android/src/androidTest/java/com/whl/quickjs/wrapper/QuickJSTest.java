@@ -1236,4 +1236,26 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testArrayBytes() {
+        QuickJSContext context = createContext();
+        byte[] bytes = "test测试".getBytes();
+        byte[] buffer = (byte[]) context.evaluate("new Uint8Array([116, 101, 115, 116, 230, 181, 139, 232, 175, 149]).buffer");
+        assertArrayEquals(bytes, buffer);
+
+        context.getGlobalObject().setProperty("testBuffer", bytes);
+        byte[] testBuffers = context.getGlobalObject().getBytes("testBuffer");
+        assertArrayEquals(testBuffers, buffer);
+
+        context.destroy();
+    }
+
+    @Test
+    public void testArrayBytes1() {
+        QuickJSContext context = createContext();
+        JSFunction bufferTest = (JSFunction) context.evaluate("const bufferTest = (buffer) => { if(new Uint8Array(buffer)[0] !== 116) { throw Error('failed, not equal'); }; }; bufferTest;");
+        bufferTest.callVoid("test测试".getBytes());
+        context.destroy();
+    }
+
 }

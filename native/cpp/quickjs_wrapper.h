@@ -42,6 +42,7 @@ public:
     jclass quickjsContextClass;
     jclass moduleLoaderClass;
     jclass creatorClass;
+    jclass byteArrayClass;
     JSValue ownPropertyNames;
 
     jmethodID booleanValueOf;

@@ -271,3 +271,12 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getOwnPropertyNames(JNIEnv *env, job
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
     return wrapper->getOwnPropertyNames(env, thiz, obj_value);
 }
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_getMemoryUsedSize(JNIEnv *env, jobject thiz,
+                                                              jlong runtime) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    JSMemoryUsage usage;
+    JS_ComputeMemoryUsage(rt, &usage);
+    return (jlong)usage.memory_used_size;
+}
