@@ -7,8 +7,6 @@ QuickJS wrapper for Android/JVM.
 - JavaScript exception handler
 - Compile bytecode
 - Supports converting JS object types to Java HashMap.
-
-Experimental Features Stability not guaranteed.
 - ESModule (import, export)
 
 ## Download
@@ -85,18 +83,12 @@ QuickJSLoader.init();
 
 ```Java
 QuickJSContext context = QuickJSContext.create();
-```
 
-### Destroy QuickJSContext
-
-```Java
-context.destroy();
-```
-
-### Evaluating JavaScript
-
-```Java
+// evaluating JavaScript
 context.evaluate("var a = 1 + 2;");
+
+// destroy QuickJSContext
+context.destroy();
 ```
 
 ### Console Support
@@ -107,29 +99,27 @@ context.setConsole(your console implementation.);
 ### Supported Types
 
 #### Java and JavaScript can directly convert to each other for the following basic types
-- `boolean`
-- `int`
-- `long`
-- `double`
-- `byte[]` <=> ArrayBuffer
-- `String`
-- `null`
+| JavaScript | Java            |
+|------------|-----------------|
+| null       | null            |
+| undefined  | null            |
+| boolean    | Boolean         |
+| Number     | Long/Int/Double |
+| string     | String          |
+| Array      | JSArray         |
+| object     | JSObject        |
+| Function   | JSFunction      |
 
-#### Mutual conversion of JS object types
-- `JSObject` represents a JavaScript object
-- `JSFunction` represents a JavaScript function
-- `JSArray` represents a JavaScript Array
+Since JavaScript doesn't have a `long` type, additional information about `long`:
 
-#### About Long type
-There is no Long type in JavaScript, the conversion of Long type is special.
+Java --> JavaScript
+  - The Long value <= Number.MAX_SAFE_INTEGER, will be convert to Number type.
+  - The Long value > Number.MAX_SAFE_INTEGER, will be convert to BigInt type.
+  - Number.MIN_SAFE_INTEGER is the same to above.
 
-- Java --> JavaScript
-    - The Long value <= Number.MAX_SAFE_INTEGER, will be convert to Number type.
-    - The Long value > Number.MAX_SAFE_INTEGER, will be convert to BigInt type.
-    - Number.MIN_SAFE_INTEGER is the same to above.
+JavaScript --> Java
+  - Number(Int64) or BigInt --> Long type
 
-- JavaScript --> Java
-    - Number(Int64) or BigInt --> Long type
 
 ### Set Property
 Java
