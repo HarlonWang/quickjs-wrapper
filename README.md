@@ -9,6 +9,9 @@ QuickJS wrapper for Android/JVM.
 - Supports converting JS object types to Java HashMap.
 - ESModule (import, export)
 
+Experimental Features Stability not guaranteed.
+- Supports ArrayBuffer to a byte array type.
+
 ## Download
 
 [![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper-android.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper-android%22)
@@ -99,16 +102,17 @@ context.setConsole(your console implementation.);
 ### Supported Types
 
 #### Java and JavaScript can directly convert to each other for the following basic types
-| JavaScript | Java            |
-|------------|-----------------|
-| null       | null            |
-| undefined  | null            |
-| boolean    | Boolean         |
-| Number     | Long/Int/Double |
-| string     | String          |
-| Array      | JSArray         |
-| object     | JSObject        |
-| Function   | JSFunction      |
+| JavaScript  | Java              |
+|-------------|-------------------|
+| null        | null              |
+| undefined   | null              |
+| boolean     | Boolean           |
+| Number      | Long/Int/Double   |
+| string      | String            |
+| Array       | JSArray           |
+| object      | JSObject          |
+| Function    | JSFunction        |
+| ArrayBuffer | byte[](Deep copy) |
 
 Since JavaScript doesn't have a `long` type, additional information about `long`:
 
