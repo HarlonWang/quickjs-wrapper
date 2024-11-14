@@ -12,12 +12,12 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
      * 函数执行状态
      */
     enum Status {
-        NOT_STARTED,
-        IN_PROGRESS,
-        COMPLETED
+        NOT_CALLED,
+        CALLING,
+        CALLED
     }
     private int stashTimes = 0;
-    private Status currentStatus = Status.NOT_STARTED;
+    private Status currentStatus = Status.NOT_CALLED;
 
     private final long thisPointer;
 
@@ -30,7 +30,7 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
     public void release() {
         // call 函数未执行完，触发了 release 操作，会导致 quickjs 野指针异常，
         // 这里暂存一下，待函数执行完，才执行 release。
-        if (currentStatus == Status.IN_PROGRESS) {
+        if (currentStatus == Status.CALLING) {
             stashTimes++;
             return;
         }
@@ -41,9 +41,9 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
     public Object call(Object... args) {
         checkRefCountIsZero();
 
-        currentStatus = Status.IN_PROGRESS;
+        currentStatus = Status.CALLING;
         Object ret = getContext().call(this, thisPointer, args);
-        currentStatus = Status.COMPLETED;
+        currentStatus = Status.CALLED;
 
         if (stashTimes > 0) {
             // 如果有暂存，这里需要恢复下 release 操作

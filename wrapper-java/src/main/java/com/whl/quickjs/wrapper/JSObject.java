@@ -14,6 +14,7 @@ public interface JSObject {
     void setProperty(String name, JSObject value);
     void setProperty(String name, boolean value);
     void setProperty(String name, double value);
+    void setProperty(String name, byte[] value);
     void setProperty(String name, JSCallFunction value);
     void setProperty(String name, Class<?> clazz);
     long getPointer();
@@ -32,6 +33,7 @@ public interface JSObject {
     Double getDoubleProperty(String name);
     Double getDouble(String name);
     Long getLong(String name);
+    byte[] getBytes(String name);
     @Deprecated
     JSObject getJSObjectProperty(String name);
     JSObject getJSObject(String name);

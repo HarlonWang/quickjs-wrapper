@@ -23,6 +23,13 @@ static string getJavaName(JNIEnv* env, jobject javaClass) {
     return str;
 }
 
+// quickjs 没有提供 JS_IsArrayBuffer 方法，这里通过取巧的方式来实现，后续可以替换掉
+static bool JS_IsArrayBuffer(JSValue  value) {
+    // quickjs 里的 ArrayBuffer 对应的类型枚举值
+    int8_t JS_CLASS_ARRAY_BUFFER = 19;
+    return JS_GetClassID(value) == JS_CLASS_ARRAY_BUFFER;
+}
+
 static void tryToTriggerOnError(JSContext *ctx, JSValueConst *error) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue onerror = JS_GetPropertyStr(ctx, global, "onError");
@@ -231,6 +238,12 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
         int scriptLen = env->GetStringUTFLength((jstring) result);
         JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
                                    JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+        if (JS_IsException(func_val)) {
+            JS_FreeValue(ctx, func_val);
+            throwJSException(env, ctx);
+            return (JSModuleDef *) JS_VALUE_GET_PTR(JS_EXCEPTION);
+        }
+
         m = JS_VALUE_GET_PTR(func_val);
         JS_FreeValue(ctx, func_val);
     }
@@ -333,6 +346,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     quickjsContextClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/QuickJSContext")));
     moduleLoaderClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/ModuleLoader")));
     creatorClass = (jclass)(jniEnv->NewGlobalRef(jniEnv->FindClass("com/whl/quickjs/wrapper/JSObjectCreator")));
+    byteArrayClass = (jclass) jniEnv->NewGlobalRef(env->FindClass("[B"));
 
     booleanValueOf = jniEnv->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;");
     integerValueOf = jniEnv->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
@@ -376,6 +390,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(moduleLoaderClass);
     jniEnv->DeleteGlobalRef(quickjsContextClass);
     jniEnv->DeleteGlobalRef(creatorClass);
+    jniEnv->DeleteGlobalRef(byteArrayClass);
 }
 
 jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const{
@@ -436,6 +451,16 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
                 result = env->CallObjectMethod(creatorObj, newFunctionM, thiz, value_ptr, obj_ptr);
             } else if (JS_IsArray(context, value)) {
                 result = env->CallObjectMethod(creatorObj, newArrayM, thiz, value_ptr);
+            } else if (JS_IsArrayBuffer(value)) {
+                size_t byteLength = 0;
+                uint8_t *buffer = JS_GetArrayBuffer(context, &byteLength, value);
+                jbyteArray byteArray = env->NewByteArray(byteLength);
+                void *elementsPtr = env->GetPrimitiveArrayCritical(byteArray, nullptr);
+                jbyte *elements = reinterpret_cast<jbyte *>(elementsPtr);
+                memcpy(elements, buffer, byteLength);
+                result = byteArray;
+                JS_FreeValue(context, value);
+                env->ReleasePrimitiveArrayCritical(byteArray, elements, 0);
             } else {
                 result = env->CallObjectMethod(creatorObj, newObjectM, thiz, value_ptr);
             }
@@ -514,7 +539,8 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         // 基础类型(例如 string )和 Java callback 类型需要使用完 free.
         if (env->IsInstanceOf(arg, stringClass) || env->IsInstanceOf(arg, doubleClass) ||
             env->IsInstanceOf(arg, integerClass) || env->IsInstanceOf(arg, longClass) ||
-            env->IsInstanceOf(arg, booleanClass) || env->IsInstanceOf(arg, jsCallFunctionClass)) {
+            env->IsInstanceOf(arg, booleanClass) || env->IsInstanceOf(arg, jsCallFunctionClass)
+            || env->IsInstanceOf(arg, byteArrayClass)) {
             freeArguments.push_back(jsArg);
         }
 
@@ -676,6 +702,12 @@ JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) cons
         }
     } else if (env->IsInstanceOf(value, booleanClass)) {
         result = JS_NewBool(context, env->CallBooleanMethod(value, booleanGetValue));
+    } else if (env->IsInstanceOf(value, byteArrayClass)) {
+        jbyteArray bytes = static_cast<jbyteArray>(value);
+        jbyte* byteData = env->GetByteArrayElements(bytes, nullptr);
+        jsize length = env->GetArrayLength(bytes);
+        result = JS_NewArrayBufferCopy(context, reinterpret_cast<uint8_t*>(byteData), length);
+        env->ReleaseByteArrayElements(bytes, byteData, JNI_ABORT);
     } else if (env->IsInstanceOf(value, jsObjectClass)) {
         result = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(env->CallLongMethod(value, jsObjectGetValue)));
     } else if (env->IsInstanceOf(value, jsCallFunctionClass)) {

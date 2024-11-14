@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.4.0 *(2024-11-14)*
+- 新增方法: 获取使用内存的大小信息（getMemoryUsedSize）
+- 支持 ArrayBuffer 转为 Byte 数组（深拷贝，对性能有一些影响）
+
 ## 2.2.1 *(2024-09-29)*
 - JSObject 增加 toMap 方法，支持转 HashMap 类型
 
