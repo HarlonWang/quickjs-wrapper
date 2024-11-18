@@ -1197,15 +1197,20 @@ public class QuickJSTest {
     @Test
     public void testObjectToMap() {
         QuickJSContext context = createContext();
-        JSObject ret = (JSObject) context.evaluate("var a = {'a': '123', 'b': [1, 2]};a.c = a;;a;");
-        assertEquals("{a=123, b=[1, 2]}", ret.toMap().toString());
+        JSObject ret = (JSObject) context.evaluate("var a = {'a': '123', 'b': [1, 2]};a.c = a;a;");
+        assertEquals("{a=123, b=[1, 2], c={}}", ret.toMap().toString());
         ret.release();
 
         JSArray array = (JSArray) context.evaluate("var b = [{a: { c : 'xxx'}}, 2, 'qqq', 1.22]; b.push(b); b;");
-        assertEquals("[{a={c=xxx}}, 2, qqq, 1.22]", array.toArray().toString());
+        assertEquals("[{a={c=xxx}}, 2, qqq, 1.22, []]", array.toArray().toString());
         array.release();
 
-        assertEquals("{a={a=123, b=[1, 2]}, b=[{a={c=xxx}}, 2, qqq, 1.22], Infinity=-9223372036854775808, NaN=NaN, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, undefined=null}", context.getGlobalObject().toMap().toString());
+        assertEquals("{globalThis={}, console={}, a={a=123, b=[1, 2], c={}}, b=[{a={c=xxx}}, 2, qqq, 1.22, []], Infinity=-9223372036854775808, Reflect={}, NaN=NaN, JSON={}, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, Atomics={}, undefined=null}", context.getGlobalObject().toMap().toString());
+
+        JSObject emptyObj = (JSObject) context.evaluate("var a = { emptyArray: [] };a;");
+        assertEquals("{emptyArray=[]}", emptyObj.toMap().toString());
+        emptyObj.release();
+
         context.destroy();
     }
 
@@ -1217,7 +1222,7 @@ public class QuickJSTest {
             return key.equals("Infinity");
         }, "test");
         System.out.println(map.toString());
-        assertEquals("{NaN=NaN, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, undefined=null}", map.toString());
+        assertEquals("{globalThis={}, console={}, Reflect={}, NaN=NaN, JSON={}, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, Atomics={}, undefined=null}", map.toString());
         context.destroy();
     }
 
