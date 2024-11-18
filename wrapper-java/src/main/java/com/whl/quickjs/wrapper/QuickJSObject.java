@@ -322,12 +322,10 @@ public class QuickJSObject implements JSObject {
             if (value instanceof JSArray) {
                 ArrayList<Object> list = new ArrayList<>(((JSArray) value).length());
                 convertToMap(value, list, circulars, filter, extra);
-                if (!list.isEmpty()) {
-                    if (map instanceof HashMap) {
-                        ((HashMap<String, Object>) map).put(key, list);
-                    } else if (map instanceof ArrayList){
-                        ((ArrayList<Object>) map).add(list);
-                    }
+                if (map instanceof HashMap) {
+                    ((HashMap<String, Object>) map).put(key, list);
+                } else if (map instanceof ArrayList){
+                    ((ArrayList<Object>) map).add(list);
                 }
                 ((JSArray) value).release();
                 continue;
@@ -336,12 +334,10 @@ public class QuickJSObject implements JSObject {
             if (value instanceof JSObject) {
                 HashMap<String, Object> valueMap = new HashMap<>();
                 convertToMap(value, valueMap, circulars, filter, extra);
-                if (!valueMap.isEmpty()) {
-                    if (map instanceof HashMap) {
-                        ((HashMap<String, Object>) map).put(key, valueMap);
-                    } else if (map instanceof ArrayList){
-                        ((ArrayList<Object>) map).add(valueMap);
-                    }
+                if (map instanceof HashMap) {
+                    ((HashMap<String, Object>) map).put(key, valueMap);
+                } else if (map instanceof ArrayList){
+                    ((ArrayList<Object>) map).add(valueMap);
                 }
                 ((JSObject) value).release();
                 continue;
