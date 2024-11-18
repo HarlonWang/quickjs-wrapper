@@ -289,16 +289,10 @@ public class QuickJSObject implements JSObject {
     }
 
     /**
-     * 注意点：针对循环引用的处理方式，会把循环引用的对象变成空 map 或者空 list。
+     * 注意点：循环引用的对象会被过滤掉
      */
     protected void convertToMap(Object target, Object map, HashSet<Long> circulars, MapFilter filter, Object extra) {
-        long pointer = ((JSObject) target).getPointer();
-        if (circulars.contains(pointer)) {
-            // Circular reference objects, no processing needed.
-            return;
-        }
-
-        circulars.add(pointer);
+        circulars.add(((JSObject) target).getPointer());
 
         boolean isArray = target instanceof JSArray;
         JSArray array = isArray ? (JSArray) target : ((JSObject) target).getNames();
@@ -314,6 +308,14 @@ public class QuickJSObject implements JSObject {
                     continue;
                 }
                 value = ((JSObject) target).getProperty(key);
+            }
+
+            if (value instanceof JSObject) {
+                long pointer = ((JSObject) value).getPointer();
+                if (circulars.contains(pointer)) {
+                    // Circular reference objects, no processing needed.
+                    continue;
+                }
             }
 
             if (value instanceof JSFunction) {
