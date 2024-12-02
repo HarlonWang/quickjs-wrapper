@@ -890,14 +890,14 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
         return nullptr;
     }
 
+    result = JS_EvalFunction(context, result);
+
+    result = js_std_await(context, result);
+
     if (!executePendingJobLoop(env, runtime, context)) {
         JS_FreeValue(context, result);
         return nullptr;
     }
-
-    result = JS_EvalFunction(context, result);
-
-    result = js_std_await(context, result);
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);
