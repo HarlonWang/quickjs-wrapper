@@ -23,6 +23,39 @@ static string getJavaName(JNIEnv* env, jobject javaClass) {
     return str;
 }
 
+static JSValue js_std_await(JSContext *ctx, JSValue obj)
+{
+    JSValue ret;
+    int state;
+
+    for(;;) {
+        state = JS_PromiseState(ctx, obj);
+        if (state == JS_PROMISE_FULFILLED) {
+            ret = JS_PromiseResult(ctx, obj);
+            JS_FreeValue(ctx, obj);
+            break;
+        } else if (state == JS_PROMISE_REJECTED) {
+            ret = JS_Throw(ctx, JS_PromiseResult(ctx, obj));
+            JS_FreeValue(ctx, obj);
+            break;
+        } else if (state == JS_PROMISE_PENDING) {
+            JSContext *ctx1;
+            int err;
+            err = JS_ExecutePendingJob(JS_GetRuntime(ctx), &ctx1);
+//            if (err < 0) {
+//                js_std_dump_error(ctx1);
+//            }
+//            if (os_poll_func)
+//                os_poll_func(ctx);
+        } else {
+            /* not a promise */
+            ret = obj;
+            break;
+        }
+    }
+    return ret;
+}
+
 // quickjs 没有提供 JS_IsArrayBuffer 方法，这里通过取巧的方式来实现，后续可以替换掉
 static bool JS_IsArrayBuffer(JSValue  value) {
     // quickjs 里的 ArrayBuffer 对应的类型枚举值
@@ -656,7 +689,11 @@ JSValue QuickJSWrapper::jsFuncCall(int callback_id, JSValueConst this_val, int a
 
     for (int i = 0; i < argc; i++) {
         JSValue v = JS_DupValue(context, argv[i]);
-        auto java_arg = toJavaObject(jniEnv, jniThiz, this_val, v);
+        JSValue tv = this_val;
+        if (!JS_IsObject(this_val)) {
+            tv = JS_NULL;
+        }
+        auto java_arg = toJavaObject(jniEnv, jniThiz, tv, v);
         jniEnv->SetObjectArrayElement(javaArgs, (jsize)i, java_arg);
         jniEnv->DeleteLocalRef(java_arg);
     }
@@ -829,7 +866,9 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray bytecode) 
 
     jobject result;
     if (!JS_IsException(val)) {
-        result = toJavaObject(env, thiz, obj, val);
+        JSValue global = JS_GetGlobalObject(context);
+        result = toJavaObject(env, thiz, global, val);
+        JS_FreeValue(context, global);
     } else {
         result = nullptr;
         throwJSException(env, context);
@@ -855,6 +894,10 @@ QuickJSWrapper::evaluateModule(JNIEnv *env, jobject thiz, jstring script, jstrin
         JS_FreeValue(context, result);
         return nullptr;
     }
+
+    result = JS_EvalFunction(context, result);
+
+    result = js_std_await(context, result);
 
     JSValue global = JS_GetGlobalObject(context);
     jobject jsObj = toJavaObject(env, thiz, global, result);

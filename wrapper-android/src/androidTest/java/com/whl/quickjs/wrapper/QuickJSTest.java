@@ -1263,4 +1263,51 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testAsyncSourceFunc() {
+        QuickJSContext context = createContext();
+        byte[] compile = context.compile("async function testUpdate() {\n" +
+                "\tconsole.log(123);\n" +
+                "}\n" +
+                "testUpdate;");
+        Object evaluate = context.execute(compile);
+        if (evaluate instanceof JSFunction) {
+            System.out.println("string: " + evaluate);
+            ((JSFunction) evaluate).callVoid();
+        }
+
+        context.destroy();
+    }
+
+    @Test
+    public void testAsyncSourceFunc2() {
+        QuickJSContext context = createContext();
+        context.getGlobalObject().setProperty("setTimeout", new JSCallFunction() {
+            @Override
+            public Object call(Object... args) {
+                Object ret = args[0];
+                if (ret instanceof JSFunction) {
+                    ((JSFunction) ret).callVoid();
+                }
+                return null;
+            }
+        });
+//        byte[] compile = context.compile("async function testUpdate() {\n" +
+//                "\tconsole.log(123);\n" +
+//                "}\n" +
+//                "setTimeout(testUpdate);");
+//        context.execute(compile);
+
+        context.evaluate("async function testUpdate() {\n" +
+                "\tconsole.log(123);\n" +
+                "}\n" +
+                "setTimeout(testUpdate);");
+//        context.evaluate("async function testUpdate() {\n" +
+//                "\tconsole.log(123);\n" +
+//                "}\n" +
+//                "testUpdate();");
+
+        context.destroy();
+    }
+
 }

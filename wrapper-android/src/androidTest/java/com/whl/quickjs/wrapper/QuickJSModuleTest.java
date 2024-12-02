@@ -15,6 +15,7 @@ public class QuickJSModuleTest {
     public void testModule() {
         QuickJSLoader.init();
         QuickJSContext context = QuickJSContext.create();
+        context.setConsole(new QuickJSTest.LogcatConsole("console-test"));
         context.setModuleLoader(new QuickJSContext.DefaultModuleLoader() {
             @Override
             public String getModuleStringCode(String moduleName) {
@@ -39,13 +40,12 @@ public class QuickJSModuleTest {
             ret.release();
             return null;
         });
-        Object ret = context.evaluateModule("import {name, age} from './a.js';\n" +
+        context.evaluateModule("import {name, age} from './a.js';\n" +
                 "\n" +
                 "assertName(name);\n" +
                 "assertAge(age);\n" +
                 "new Promise((resolve, reject) => { name = 'Updated'; }).catch((res) => { assertNameUpdated(res); });");
 
-        assertEquals(ret.toString(), "[object Promise]");
 
         context.destroy();
     }
