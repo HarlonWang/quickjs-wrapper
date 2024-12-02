@@ -390,6 +390,10 @@ public class QuickJSContext implements Closeable {
             // 注意：JSObject 对象作为参数返回到️ JavaScript 中，不需要调用 release 方法，
             // JS 引擎会进行 free，但是这里需要手动对 JSObject 对象的计数减一。
             ((JSObject) ret).decrementRefCount();
+
+            if (((JSObject) ret).getRefCount() == 0) {
+                objectRecords.remove(((JSObject) ret));
+            }
         }
 
         return ret;
