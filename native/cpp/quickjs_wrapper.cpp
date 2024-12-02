@@ -393,7 +393,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(byteArrayClass);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const{
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst this_obj, JSValueConst value) const{
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -493,11 +493,7 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
-    JSValue global = JS_GetGlobalObject(context);
-    jobject jsObj = toJavaObject(env, thiz, global, result);
-    JS_FreeValue(context, global);
-
-    return jsObj;
+    return toJavaObject(env, thiz, JS_UNDEFINED, result);
 }
 
 jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
@@ -829,7 +825,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray bytecode) 
 
     jobject result;
     if (!JS_IsException(val)) {
-        result = toJavaObject(env, thiz, obj, val);
+        result = toJavaObject(env, thiz, JS_UNDEFINED, val);
     } else {
         result = nullptr;
         throwJSException(env, context);
@@ -876,8 +872,7 @@ jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj
         return nullptr;
     }
 
-    JSValue nullValue = JS_NULL;
-    return toJavaObject(env, thiz, nullValue, ret);
+    return toJavaObject(env, thiz, JS_UNDEFINED, ret);
 }
 
 jstring QuickJSWrapper::toJavaString(JNIEnv *env, JSValue value) const {

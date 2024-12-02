@@ -1263,4 +1263,20 @@ public class QuickJSTest {
         context.destroy();
     }
 
+    @Test
+    public void testAsyncSourceFunc() {
+        QuickJSContext context = createContext();
+        byte[] compile = context.compile("async function testUpdate() {\n" +
+                "\tconsole.log(123);\n" +
+                "}\n" +
+                "testUpdate;");
+        Object evaluate = context.execute(compile);
+        if (evaluate instanceof JSFunction) {
+            System.out.println("string: " + evaluate);
+            ((JSFunction) evaluate).callVoid();
+        }
+
+        context.destroy();
+    }
+
 }
