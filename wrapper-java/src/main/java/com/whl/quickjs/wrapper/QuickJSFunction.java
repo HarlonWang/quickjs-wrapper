@@ -20,10 +20,12 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
     private Status currentStatus = Status.NOT_CALLED;
 
     private final long thisPointer;
+    private final int thisPointerTag;
 
-    public QuickJSFunction(QuickJSContext context, long pointer, long thisPointer) {
+    public QuickJSFunction(QuickJSContext context, long pointer, long thisPointer, int thisPointerTag) {
         super(context, pointer);
         this.thisPointer = thisPointer;
+        this.thisPointerTag = thisPointerTag;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
         checkRefCountIsZero();
 
         currentStatus = Status.CALLING;
-        Object ret = getContext().call(this, thisPointer, args);
+        Object ret = getContext().call(this, thisPointer, thisPointerTag, args);
         currentStatus = Status.CALLED;
 
         if (stashTimes > 0) {

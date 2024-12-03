@@ -6,5 +6,5 @@ package com.whl.quickjs.wrapper;
 public interface JSObjectCreator {
     JSObject newObject(QuickJSContext context, long pointer);
     JSArray newArray(QuickJSContext context, long pointer);
-    JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer);
+    JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer, int thisPointerTag);
 }
