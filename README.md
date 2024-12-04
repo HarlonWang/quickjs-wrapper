@@ -255,7 +255,11 @@ JSObject obj = xxx.getJSObject("test");
 int a = obj.getString("123");
 obj.release();
 
-// If the JSFunction does not need to handle the return value, it is recommended to call the following method.
+// If the return value is an object, it also needs to be released, 
+JSObject ret = jsFunction.call();
+ret.release();
+
+// If you don't need to handle the return value, it is recommended to call the following method.
 jsFunction.callVoid(xxx);
 ```
 
