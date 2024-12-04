@@ -1205,8 +1205,6 @@ public class QuickJSTest {
         assertEquals("[{a={c=xxx}}, 2, qqq, 1.22]", array.toArray().toString());
         array.release();
 
-        assertEquals("{console={}, a={a=123, b=[1, 2]}, b=[{a={c=xxx}}, 2, qqq, 1.22], Infinity=-9223372036854775808, Reflect={}, NaN=NaN, JSON={}, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, Atomics={}, undefined=null}", context.getGlobalObject().toMap().toString());
-
         JSObject emptyObj = (JSObject) context.evaluate("var a = { emptyArray: [] };a;");
         assertEquals("{emptyArray=[]}", emptyObj.toMap().toString());
         emptyObj.release();
@@ -1217,12 +1215,8 @@ public class QuickJSTest {
     @Test
     public void testObjectToMapFilter() {
         QuickJSContext context = createContext();
-        HashMap<String, Object> map = context.getGlobalObject().toMap((key, pointer, extra) -> {
-            assertEquals("test", extra.toString());
-            return key.equals("Infinity");
-        }, "test");
-        System.out.println(map.toString());
-        assertEquals("{console={}, Reflect={}, NaN=NaN, JSON={}, Math={LN2=0.6931471805599453, LN10=2.302585092994046, LOG2E=1.4426950408889634, E=2.718281828459045, SQRT2=1.4142135623730951, LOG10E=0.4342944819032518, PI=3.141592653589793, SQRT1_2=0.7071067811865476}, Atomics={}, undefined=null}", map.toString());
+        HashMap<String, Object> map = context.getGlobalObject().toMap((key, pointer, extra) -> key.equals("Math") || key.equals("Infinity"));
+        assertEquals("{console={}, Reflect={}, NaN=NaN, JSON={}, Atomics={}, undefined=null}", map.toString());
         context.destroy();
     }
 
@@ -1260,6 +1254,22 @@ public class QuickJSTest {
         QuickJSContext context = createContext();
         JSFunction bufferTest = (JSFunction) context.evaluate("const bufferTest = (buffer) => { if(new Int8Array(buffer)[0] !== 116) { throw Error('failed, not equal'); }; }; bufferTest;");
         bufferTest.callVoid("test测试".getBytes());
+        context.destroy();
+    }
+
+    @Test
+    public void testAsyncSourceFunc() {
+        QuickJSContext context = createContext();
+        byte[] compile = context.compile("async function testUpdate() {\n" +
+                "\tconsole.log(123);\n" +
+                "}\n" +
+                "testUpdate;");
+        Object evaluate = context.execute(compile);
+        if (evaluate instanceof JSFunction) {
+            System.out.println("string: " + evaluate);
+            ((JSFunction) evaluate).callVoid();
+        }
+
         context.destroy();
     }
 

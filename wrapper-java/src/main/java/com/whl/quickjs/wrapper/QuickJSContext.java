@@ -66,8 +66,8 @@ public class QuickJSContext implements Closeable {
             }
 
             @Override
-            public JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer) {
-                return new QuickJSFunction(context, pointer, thisPointer);
+            public JSFunction newFunction(QuickJSContext context, long pointer, long thisPointer, int thisPointerTag) {
+                return new QuickJSFunction(context, pointer, thisPointer, thisPointerTag);
             }
         });
     }
@@ -198,8 +198,8 @@ public class QuickJSContext implements Closeable {
                 }
 
                 @Override
-                public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer) {
-                    JSFunction o = creator.newFunction(c, pointer, thisPointer);
+                public JSFunction newFunction(QuickJSContext c, long pointer, long thisPointer, int thisPointerTag) {
+                    JSFunction o = creator.newFunction(c, pointer, thisPointer, thisPointerTag);
                     if (enableStackTrace) {
                         o.setStackTrace(new Throwable());
                     }
@@ -390,6 +390,10 @@ public class QuickJSContext implements Closeable {
             // 注意：JSObject 对象作为参数返回到️ JavaScript 中，不需要调用 release 方法，
             // JS 引擎会进行 free，但是这里需要手动对 JSObject 对象的计数减一。
             ((JSObject) ret).decrementRefCount();
+
+            if (((JSObject) ret).getRefCount() == 0) {
+                objectRecords.remove(((JSObject) ret));
+            }
         }
 
         return ret;
@@ -454,7 +458,7 @@ public class QuickJSContext implements Closeable {
         set(context, jsArray.getPointer(), value, index);
     }
 
-    Object call(JSObject func, long objPointer, Object... args) {
+    Object call(JSObject func, long objPointer, int thisPointerTag, Object... args) {
         checkSameThread();
         checkDestroyed();
 
@@ -465,7 +469,7 @@ public class QuickJSContext implements Closeable {
             }
         }
 
-        return call(context, func.getPointer(), objPointer, args);
+        return call(context, func.getPointer(), objPointer, thisPointerTag, args);
     }
 
     /**
@@ -590,7 +594,7 @@ public class QuickJSContext implements Closeable {
     private native Object evaluate(long context, String script, String fileName);
     private native Object evaluateModule(long context, String script, String fileName);
     private native JSObject getGlobalObject(long context);
-    private native Object call(long context, long func, long thisObj, Object[] args);
+    private native Object call(long context, long func, long thisObj, int thisObjTag, Object[] args);
     private native Object getProperty(long context, long objValue, String name);
     private native void setProperty(long context, long objValue, String name, Object value);
     private native String stringify(long context, long objValue);

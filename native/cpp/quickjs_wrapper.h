@@ -18,7 +18,7 @@ using namespace std;
 class QuickJSWrapper {
 private:
     jstring toJavaString(JNIEnv *env, JSValue value) const;
-    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const;
+    jobject toJavaObject(JNIEnv *env, jobject thiz, JSValueConst this_obj, JSValueConst value) const;
     JSValue toJSValue(JNIEnv *env, jobject thiz, jobject value) const;
 
 public:
@@ -71,7 +71,7 @@ public:
     jobject getGlobalObject(JNIEnv*, jobject thiz) const;
     jobject getProperty(JNIEnv*, jobject thiz, jlong value, jstring name);
     void setProperty(JNIEnv*, jobject thiz, jlong this_obj, jstring name, jobject value) const;
-    jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jobjectArray args);
+    jobject call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj, jint this_obj_tag, jobjectArray args);
     jstring jsonStringify(JNIEnv *env, jlong value) const;
     jint length(JNIEnv *env, jlong value) const;
     jobject get(JNIEnv *env, jobject thiz, jlong value, jint index);

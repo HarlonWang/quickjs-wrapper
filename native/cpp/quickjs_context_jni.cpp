@@ -52,9 +52,9 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getProperty(JNIEnv *env, jobject thi
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_whl_quickjs_wrapper_QuickJSContext_call(JNIEnv *env, jobject thiz, jlong context,
-                                                 jlong func, jlong this_obj, jobjectArray args) {
+                                                 jlong func, jlong this_obj, jint this_obj_tag, jobjectArray args) {
     auto wrapper = reinterpret_cast<QuickJSWrapper*>(context);
-    return wrapper->call(env, thiz, func, this_obj, args);
+    return wrapper->call(env, thiz, func, this_obj, this_obj_tag, args);
 }
 
 extern "C"

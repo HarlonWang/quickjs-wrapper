@@ -368,7 +368,7 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, jobject thiz, JSRuntime *rt) {
     newArrayM = jniEnv->GetMethodID(creatorClass, "newArray",
                                     "(Lcom/whl/quickjs/wrapper/QuickJSContext;J)Lcom/whl/quickjs/wrapper/JSArray;");
     newFunctionM = jniEnv->GetMethodID(creatorClass, "newFunction",
-                                       "(Lcom/whl/quickjs/wrapper/QuickJSContext;JJ)Lcom/whl/quickjs/wrapper/JSFunction;");
+                                       "(Lcom/whl/quickjs/wrapper/QuickJSContext;JJI)Lcom/whl/quickjs/wrapper/JSFunction;");
 }
 
 QuickJSWrapper::~QuickJSWrapper() {
@@ -393,7 +393,7 @@ QuickJSWrapper::~QuickJSWrapper() {
     jniEnv->DeleteGlobalRef(byteArrayClass);
 }
 
-jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& this_obj, JSValueConst& value) const{
+jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst this_obj, JSValueConst value) const{
     jobject result;
     switch (JS_VALUE_GET_NORM_TAG(value)) {
         case JS_TAG_EXCEPTION: {
@@ -448,7 +448,7 @@ jobject QuickJSWrapper::toJavaObject(JNIEnv *env, jobject thiz, JSValueConst& th
             jobject creatorObj = env->CallObjectMethod(thiz, creatorM);
             if (JS_IsFunction(context, value)) {
                 auto obj_ptr = reinterpret_cast<jlong>(JS_VALUE_GET_PTR(this_obj));
-                result = env->CallObjectMethod(creatorObj, newFunctionM, thiz, value_ptr, obj_ptr);
+                result = env->CallObjectMethod(creatorObj, newFunctionM, thiz, value_ptr, obj_ptr, JS_VALUE_GET_TAG(this_obj));
             } else if (JS_IsArray(context, value)) {
                 result = env->CallObjectMethod(creatorObj, newArrayM, thiz, value_ptr);
             } else if (JS_IsArrayBuffer(value)) {
@@ -493,11 +493,7 @@ jobject QuickJSWrapper::evaluate(JNIEnv *env, jobject thiz, jstring script, jstr
         return nullptr;
     }
 
-    JSValue global = JS_GetGlobalObject(context);
-    jobject jsObj = toJavaObject(env, thiz, global, result);
-    JS_FreeValue(context, global);
-
-    return jsObj;
+    return toJavaObject(env, thiz, JS_UNDEFINED, result);
 }
 
 jobject QuickJSWrapper::getGlobalObject(JNIEnv *env, jobject thiz) const {
@@ -525,7 +521,7 @@ jobject QuickJSWrapper::getProperty(JNIEnv *env, jobject thiz, jlong value, jstr
 }
 
 jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_obj,
-                             jobjectArray args) {
+                             jint this_obj_tag, jobjectArray args) {
     int argc = env->GetArrayLength(args);
     vector<JSValue> arguments;
     vector<JSValue> freeArguments;
@@ -549,13 +545,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
         arguments.push_back(jsArg);
     }
 
-    JSValue jsObj;
-    if (this_obj == 0) {
-        jsObj = JS_UNDEFINED;
-    } else {
-        jsObj = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(this_obj));
-    }
-
+    JSValue jsObj = JS_MKPTR(this_obj_tag, reinterpret_cast<void *>(this_obj));
     JSValue jsFunc = JS_MKPTR(JS_TAG_OBJECT, reinterpret_cast<void *>(func));
 
     JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data());
@@ -829,7 +819,7 @@ jobject QuickJSWrapper::execute(JNIEnv *env, jobject thiz, jbyteArray bytecode) 
 
     jobject result;
     if (!JS_IsException(val)) {
-        result = toJavaObject(env, thiz, obj, val);
+        result = toJavaObject(env, thiz, JS_UNDEFINED, val);
     } else {
         result = nullptr;
         throwJSException(env, context);
@@ -876,8 +866,7 @@ jobject QuickJSWrapper::getOwnPropertyNames(JNIEnv *env, jobject thiz, jlong obj
         return nullptr;
     }
 
-    JSValue nullValue = JS_NULL;
-    return toJavaObject(env, thiz, nullValue, ret);
+    return toJavaObject(env, thiz, JS_UNDEFINED, ret);
 }
 
 jstring QuickJSWrapper::toJavaString(JNIEnv *env, JSValue value) const {
