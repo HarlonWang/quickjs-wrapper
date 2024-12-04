@@ -185,7 +185,7 @@ repository.release();
 ```Java
 QuickJSContext context = QuickJSContext.create();
 JSObject obj = context.createNewJSObject();
-// Need to release, otherwise it will cause a memory leak.
+// When not in use, it needs to be released, otherwise it will cause a memory leak.
 obj.release();
 ```
 
