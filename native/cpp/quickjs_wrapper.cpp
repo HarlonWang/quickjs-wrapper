@@ -175,13 +175,6 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
     return (JSModuleDef *) m;
 }
 
-// Support Array.prototype.at with javascript, like: [1, 2].at(0);
-static void initArrayPrototypeAt(JSContext *ctx) {
-    const char* at = "Array.prototype.at === undefined && (Array.prototype.at = function(no) { return this[no >= 0 ? no : (this.length+no)] })";
-    JSValue res = JS_Eval(ctx, at, strlen(at), "ArrayPrototypeAt.js", JS_EVAL_TYPE_GLOBAL);
-    JS_FreeValue(ctx, res);
-}
-
 // It is usually show object on the console.
 static void initFormatObject(JSContext *ctx) {
     const char* format_string_script = R"lit(function __format_string(a) {
@@ -412,7 +405,6 @@ QuickJSWrapper::QuickJSWrapper(JNIEnv *env, JSRuntime *rt) {
 
     JS_SetRuntimeOpaque(runtime, this);
     initJSFuncCallback(context);
-    initArrayPrototypeAt(context);
     initFormatObject(context);
     initPolyfillDate(context);
 
