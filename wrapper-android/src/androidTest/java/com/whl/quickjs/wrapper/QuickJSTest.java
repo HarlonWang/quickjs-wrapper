@@ -1303,4 +1303,11 @@ public class QuickJSTest {
         }
     }
 
+    @Test
+    public void testDynamicImport(){
+        try (QuickJSContext context = createContext()){
+            context.evaluateModule(readFile("test_module_import_dynamic.js"));
+        }
+    }
+
 }
