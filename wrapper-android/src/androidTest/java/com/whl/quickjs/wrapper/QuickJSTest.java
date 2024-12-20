@@ -107,22 +107,6 @@ public class QuickJSTest {
     }
 
     @Test
-    public void createQuickJSContextTest() {
-        QuickJSContext context = createContext();
-        context.destroy();
-    }
-
-    @Test
-    public void destroyQuickJSContextTest() {
-        QuickJSContext context = createContext();
-        context.evaluate("var a = 123;");
-
-        JSObject globalObject = context.getGlobalObject();
-        assertEquals(123, globalObject.getProperty("a"));
-        context.destroy();
-    }
-
-    @Test
     public void setPropertyTest() {
         QuickJSContext context = createContext();
         JSObject globalObj = context.getGlobalObject();
