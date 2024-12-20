@@ -11,6 +11,8 @@ import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.whl.quickjs.android.QuickJSLoader;
 
 import java.io.BufferedReader;
@@ -18,6 +20,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +57,32 @@ public class QuickJSTest {
         public void error(String info) {
             Log.e(tag, info);
         }
+    }
+
+    public static String readFile(String fileName){
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        // 打开 assets 目录下的文件
+        InputStream inputStream;
+        try {
+            inputStream = context.getAssets().open(fileName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+
+        while (true) {
+            try {
+                if ((line = reader.readLine()) == null) break;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            stringBuilder.append(line).append("\n");
+        }
+
+        return stringBuilder.toString();
     }
 
     @Rule
@@ -881,26 +911,7 @@ public class QuickJSTest {
     @Test
     public void testPolyfillDate() {
         QuickJSContext context = createContext();
-        context.evaluate("function assert(expected, actual) {\n" +
-                "    if ((Date.parse(expected) === new Date(expected).getTime()) && (Date.parse(expected) === actual)) {\n" +
-                "        console.log('✅assert passed with ' + expected, 'Date.parse = ' + Date.parse(expected), 'Date.construct = ' + new Date(expected).getTime(), 'actual = ' + actual);\n" +
-                "    } else {\n" +
-                "        console.log('❌assert failed with ' + expected, 'Date.parse = ' + Date.parse(expected), 'Date.construct = ' + new Date(expected).getTime(), 'actual = ' + actual);\n" +
-                "        throw Error('parse failed.');\n" +
-                "    }\n" +
-                "}\n" +
-                "\n" +
-                "assert('20130108', 1357603200000);\n" +
-                "assert('2018-04-24', 1524528000000);\n" +
-                "assert('2018-04-24 11:12', 1524539520000);\n" +
-                "assert('2018-05-02 11:12:13', 1525230733000);\n" +
-                "assert('2018-05-02 11:12:13.998', 1525230733998);\n" +
-                "assert('2018-4-1', 1522540800000);\n" +
-                "assert('2018-4-1 11:12', 1522552320000);\n" +
-                "assert('2018-4-1 1:1:1:223', 1522515661223);\n" +
-                "assert('2018-01', 1514764800000);\n" +
-                "assert('2018', 1514764800000);\n" +
-                "assert('2018-05-02T11:12:13Z', 1525259533000);");
+        context.evaluate(readFile("test_polyfill_date.js"));
         context.destroy();
     }
 
