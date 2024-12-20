@@ -94,9 +94,15 @@ public class QuickJSTest {
         QuickJSLoader.startRedirectingStdoutStderr("QuickJSTest");
     }
 
-    public static QuickJSContext createContext() {
+    public static QuickJSContext createContext() throws QuickJSException {
         QuickJSContext context = QuickJSContext.create();
         context.setConsole(new LogcatConsole("console-test"));
+        context.setModuleLoader(new QuickJSContext.DefaultModuleLoader() {
+            @Override
+            public String getModuleStringCode(String moduleName) {
+                return readFile(moduleName.replace("./", ""));
+            }
+        });
         return context;
     }
 
@@ -1262,26 +1268,39 @@ public class QuickJSTest {
 
     @Test
     public void testArrayBytes1() {
-        QuickJSContext context = createContext();
-        JSFunction bufferTest = (JSFunction) context.evaluate("const bufferTest = (buffer) => { if(new Int8Array(buffer)[0] !== 116) { throw Error('failed, not equal'); }; }; bufferTest;");
-        bufferTest.callVoid("test测试".getBytes());
-        context.destroy();
+        try (QuickJSContext context = createContext()){
+            JSFunction bufferTest = (JSFunction) context.evaluate("const bufferTest = (buffer) => { if(new Int8Array(buffer)[0] !== 116) { throw Error('failed, not equal'); }; }; bufferTest;");
+            bufferTest.callVoid("test测试".getBytes());
+        }
     }
 
     @Test
     public void testAsyncSourceFunc() {
-        QuickJSContext context = createContext();
-        byte[] compile = context.compile("async function testUpdate() {\n" +
-                "\tconsole.log(123);\n" +
-                "}\n" +
-                "testUpdate;");
-        Object evaluate = context.execute(compile);
-        if (evaluate instanceof JSFunction) {
-            System.out.println("string: " + evaluate);
-            ((JSFunction) evaluate).callVoid();
+        try (QuickJSContext context = createContext()){
+            byte[] compile = context.compile("async function testUpdate() {\n" +
+                    "\tconsole.log(123);\n" +
+                    "}\n" +
+                    "testUpdate;");
+            Object evaluate = context.execute(compile);
+            if (evaluate instanceof JSFunction) {
+                System.out.println("string: " + evaluate);
+                ((JSFunction) evaluate).callVoid();
+            }
         }
+    }
 
-        context.destroy();
+    @Test
+    public void testBaseModule() {
+        try (QuickJSContext context = createContext()){
+            context.evaluateModule(readFile("test_base_module1.mjs"));
+        }
+    }
+
+    @Test
+    public void testEvalModuleReturn() {
+        try (QuickJSContext context = createContext()){
+            assertEquals(context.evaluateModule("1;").toString(), "[object Promise]");
+        }
     }
 
 }
