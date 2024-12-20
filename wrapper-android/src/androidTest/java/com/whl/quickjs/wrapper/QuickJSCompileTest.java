@@ -14,8 +14,6 @@ public class QuickJSCompileTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private QuickJSContext context;
-
     @Before
     public void setup() {
         QuickJSLoader.init();
@@ -23,36 +21,41 @@ public class QuickJSCompileTest {
 
     @Test
     public void helloWorld() {
-        context = QuickJSContext.create();
-        byte[] code = context.compile("'hello, world!'.toUpperCase();");
-        context.destroy();
+        try (QuickJSContext context = QuickJSContext.create()){
+            byte[] code = context.compile("'hello, world!'.toUpperCase();");
+            Object hello = context.execute(code);
+            assertEquals(hello, "HELLO, WORLD!");
+        }
+    }
 
-        context = QuickJSContext.create();
-        Object hello = context.execute(code);
-        assertEquals(hello, "HELLO, WORLD!");
-        context.destroy();
+    @Test
+    public void testDifferentContexts() {
+        byte[] code;
+        try (QuickJSContext context = QuickJSContext.create()){
+            code = context.compile("'hello, world!'.toUpperCase();");
+        }
+
+        try (QuickJSContext context = QuickJSContext.create()){
+            Object hello = context.execute(code);
+            assertEquals(hello, "HELLO, WORLD!");
+        }
     }
 
     @Test
     public void testPromise() {
-        context = QuickJSContext.create();
-        byte[] bytes = context.compile("var ret; new Promise((resolve, reject) => { ret = 'resolved'; }); ret;");
-        context.destroy();
-
-        context = QuickJSContext.create();
-        Object ret = context.execute(bytes);
-        assertEquals(ret, "resolved");
-        context.destroy();
+        try (QuickJSContext context = QuickJSContext.create()){
+            byte[] bytes = context.compile("var ret; new Promise((resolve, reject) => { ret = 'resolved'; }); ret;");
+            Object ret = context.execute(bytes);
+            assertEquals(ret, "resolved");
+        }
     }
 
     @Test(expected = QuickJSException.class)
     public void testThrowErrorWithFileName() {
-        context = QuickJSContext.create();
-        byte[] bytes = context.compile("test;", "test.js");
-        context.destroy();
-        context = QuickJSContext.create();
-        context.execute(bytes);
-        context.destroy();
+        try (QuickJSContext context = QuickJSContext.create()){
+            byte[] bytes = context.compile("test;", "test.js");
+            context.execute(bytes);
+        }
     }
 
     @Test
