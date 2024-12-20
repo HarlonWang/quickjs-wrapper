@@ -108,183 +108,174 @@ public class QuickJSTest {
 
     @Test
     public void setPropertyTest() {
-        QuickJSContext context = createContext();
-        JSObject globalObj = context.getGlobalObject();
-        JSObject obj1 = context.createNewJSObject();
-        obj1.setProperty("stringProperty", "hello");
-        obj1.setProperty("intProperty", 1);
-        obj1.setProperty("doubleProperty", 0.1);
-        obj1.setProperty("longProperty", 1686026400093L);
-        obj1.setProperty("booleanProperty", true);
-        obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
-        obj1.setProperty("nullProperty", (String) null);
-        globalObj.setProperty("obj1", obj1);
-        obj1.release();
+        try (QuickJSContext context = createContext()){
+            JSObject globalObj = context.getGlobalObject();
+            JSObject obj1 = context.createNewJSObject();
+            obj1.setProperty("stringProperty", "hello");
+            obj1.setProperty("intProperty", 1);
+            obj1.setProperty("doubleProperty", 0.1);
+            obj1.setProperty("longProperty", 1686026400093L);
+            obj1.setProperty("booleanProperty", true);
+            obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
+            obj1.setProperty("nullProperty", (String) null);
+            globalObj.setProperty("obj1", obj1);
+            obj1.release();
 
-        assertEquals("hello", context.evaluate("obj1.stringProperty;"));
-        assertEquals(1, context.evaluate("obj1.intProperty;"));
-        assertEquals(0.1, context.evaluate("obj1.doubleProperty;"));
-        assertEquals(1686026400093L, context.evaluate("obj1.longProperty;"));
-        assertEquals(true, context.evaluate("obj1.booleanProperty;"));
-        assertEquals("HarlonWang", context.evaluate("obj1.functionProperty(\"Harlon\");"));
-        assertNull(context.evaluate("obj1.nullProperty;"));
-
-        context.destroy();
+            assertEquals("hello", context.evaluate("obj1.stringProperty;"));
+            assertEquals(1, context.evaluate("obj1.intProperty;"));
+            assertEquals(0.1, context.evaluate("obj1.doubleProperty;"));
+            assertEquals(1686026400093L, context.evaluate("obj1.longProperty;"));
+            assertEquals(true, context.evaluate("obj1.booleanProperty;"));
+            assertEquals("HarlonWang", context.evaluate("obj1.functionProperty(\"Harlon\");"));
+            assertNull(context.evaluate("obj1.nullProperty;"));
+        }
     }
 
     @Test
     public void getPropertyTest() {
-        QuickJSContext context = createContext();
-        context.evaluate("var obj1 = {\n" +
-                "\tstringProperty: 'hello',\n" +
-                "\tintProperty: 1,\n" +
-                "\tdoubleProperty: 0.1,\n" +
-                "\tlongProperty: 1686026400093n,\n" +
-                "\tbooleanProperty: true,\n" +
-                "\tnullProperty: null,\n" +
-                "\tfunctionProperty: (name) => { return name + 'Wang'; }\n" +
-                "}");
-        JSObject globalObject = context.getGlobalObject();
-        JSObject obj1 = globalObject.getJSObject("obj1");
-        assertEquals("hello", obj1.getString("stringProperty"));
-        assertEquals(1, obj1.getProperty("intProperty"));
-        assertEquals(0.1, obj1.getProperty("doubleProperty"));
-        assertEquals(1686026400093L, obj1.getProperty("longProperty"));
-        assertEquals(true, obj1.getProperty("booleanProperty"));
-        assertNull(obj1.getProperty("nullProperty"));
-        JSFunction fn = obj1.getJSFunction("functionProperty");
-        assertEquals("HarlonWang", fn.call("Harlon"));
+        try(QuickJSContext context = createContext()){
+            context.evaluate("var obj1 = {\n" +
+                    "\tstringProperty: 'hello',\n" +
+                    "\tintProperty: 1,\n" +
+                    "\tdoubleProperty: 0.1,\n" +
+                    "\tlongProperty: 1686026400093n,\n" +
+                    "\tbooleanProperty: true,\n" +
+                    "\tnullProperty: null,\n" +
+                    "\tfunctionProperty: (name) => { return name + 'Wang'; }\n" +
+                    "}");
+            JSObject globalObject = context.getGlobalObject();
+            JSObject obj1 = globalObject.getJSObject("obj1");
+            assertEquals("hello", obj1.getString("stringProperty"));
+            assertEquals(1, obj1.getProperty("intProperty"));
+            assertEquals(0.1, obj1.getProperty("doubleProperty"));
+            assertEquals(1686026400093L, obj1.getProperty("longProperty"));
+            assertEquals(true, obj1.getProperty("booleanProperty"));
+            assertNull(obj1.getProperty("nullProperty"));
+            JSFunction fn = obj1.getJSFunction("functionProperty");
+            assertEquals("HarlonWang", fn.call("Harlon"));
 
-        fn.release();
-        obj1.release();
-
-        context.destroy();
+            fn.release();
+            obj1.release();
+        }
     }
 
     @Test
     public void getJSArrayTest() {
-        QuickJSContext context = createContext();
-        JSArray ret = (JSArray) context.evaluate("function test(value) {\n" +
-                "\treturn [1, 2, value];\n" +
-                "}\n" +
-                "\n" +
-                "test(3);");
-        assertEquals(3, ret.get(2));
-        ret.release();
-
-        context.destroy();
+        try (QuickJSContext context = createContext()){
+            JSArray ret = (JSArray) context.evaluate("function test(value) {\n" +
+                    "\treturn [1, 2, value];\n" +
+                    "}\n" +
+                    "\n" +
+                    "test(3);");
+            assertEquals(3, ret.get(2));
+            ret.release();
+        }
     }
 
     @Test
     public void JSFunctionArgsTest() {
-        QuickJSContext context = createContext();
-        context.evaluate("function test(intValue, stringValue, doubleValue, booleanValue) {\n" +
-                "\treturn \"hello, \" + intValue + stringValue + doubleValue + booleanValue;\n" +
-                "}");
-        JSObject globalObject = context.getGlobalObject();
-        JSFunction func = (JSFunction) globalObject.getProperty("test");
-        assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
-        func.release();
-
-        context.destroy();
+        try (QuickJSContext context = createContext()){
+            context.evaluate("function test(intValue, stringValue, doubleValue, booleanValue) {\n" +
+                    "\treturn \"hello, \" + intValue + stringValue + doubleValue + booleanValue;\n" +
+                    "}");
+            JSObject globalObject = context.getGlobalObject();
+            JSFunction func = (JSFunction) globalObject.getProperty("test");
+            assertEquals("hello, 1string123.11true", func.call(1, "string", 123.11, true));
+            func.release();
+        }
     }
 
     @Test
     public void JSFunctionNullArgsTest() {
-        QuickJSContext context = createContext();
-        context.evaluate("function test(arg1, arg2, arg3) {\n" +
-                "\treturn \"hello, \" + arg1 + arg2 + arg3;\n" +
-                "}");
-        JSObject globalObject = context.getGlobalObject();
-        JSFunction func = (JSFunction) globalObject.getProperty("test");
-        assertEquals("hello, undefined-13", func.call(null, -1, 3));
-        func.release();
-
-        context.destroy();
+        try (QuickJSContext context = createContext()){
+            context.evaluate("function test(arg1, arg2, arg3) {\n" +
+                    "\treturn \"hello, \" + arg1 + arg2 + arg3;\n" +
+                    "}");
+            JSObject globalObject = context.getGlobalObject();
+            JSFunction func = (JSFunction) globalObject.getProperty("test");
+            assertEquals("hello, undefined-13", func.call(null, -1, 3));
+            func.release();
+        }
     }
 
     @Test
     public void JSFunctionArgsTestWithUnSupportType() {
-        QuickJSContext context = createContext();
-        context.evaluate("function test(name) {\n" +
-                "\treturn \"hello, \" + name;\n" +
-                "}");
-        JSObject globalObject = context.getGlobalObject();
-        JSFunction func = (JSFunction) globalObject.getProperty("test");
-        try {
-            func.call(new int[]{1, 2});
-            fail();
-        } catch (Exception e) {
-            func.release();
-            assertTrue(e.toString().contains("Unsupported Java type"));
+        try (QuickJSContext context = createContext()){
+            context.evaluate("function test(name) {\n" +
+                    "\treturn \"hello, \" + name;\n" +
+                    "}");
+            JSObject globalObject = context.getGlobalObject();
+            JSFunction func = (JSFunction) globalObject.getProperty("test");
+            try {
+                func.call(new int[]{1, 2});
+                fail();
+            } catch (Exception e) {
+                func.release();
+                assertTrue(e.toString().contains("Unsupported Java type"));
+            }
         }
-
-        context.destroy();
     }
 
     @Test
     public void arrowFuncTest() {
-        QuickJSContext context = createContext();
-        context.evaluate("function test(index) {\n" +
-                "\tconsole.log(index);\n" +
-                "}\n" +
-                "\n" +
-                "function render() {\n" +
-                "\n" +
-                "\tvar index = 123;\n" +
-                "\tvar invokeTest = () => {\n" +
-                "\t\ttest(index);\n" +
-                "\t}\n" +
-                "\n" +
-                "\treturn {\n" +
-                "\t\tfunc: invokeTest\n" +
-                "\t};\n" +
-                "}");
+        try (QuickJSContext context = createContext()){
+            context.evaluate("function test(index) {\n" +
+                    "\tconsole.log(index);\n" +
+                    "}\n" +
+                    "\n" +
+                    "function render() {\n" +
+                    "\n" +
+                    "\tvar index = 123;\n" +
+                    "\tvar invokeTest = () => {\n" +
+                    "\t\ttest(index);\n" +
+                    "\t}\n" +
+                    "\n" +
+                    "\treturn {\n" +
+                    "\t\tfunc: invokeTest\n" +
+                    "\t};\n" +
+                    "}");
 
-        JSObject jsObj = (JSObject) context.evaluate("render();");
-        JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
-        jsFunction.call();
+            JSObject jsObj = (JSObject) context.evaluate("render();");
+            JSFunction jsFunction = (JSFunction) jsObj.getProperty("func");
+            jsFunction.call();
 
-        jsFunction.release();
-        jsObj.release();
-
-        context.destroy();
+            jsFunction.release();
+            jsObj.release();
+        }
     }
 
     @Test
     public void setPropertyWithJSObjectTest() {
-        QuickJSContext context = createContext();
-        context.evaluate("var test = {count: 0};");
-        JSObject test = context.getGlobalObject().getJSObject("test");
-        context.getGlobalObject().setProperty("test1", test);
+        try (QuickJSContext context = createContext()){
+            context.evaluate("var test = {count: 0};");
+            JSObject test = context.getGlobalObject().getJSObject("test");
+            context.getGlobalObject().setProperty("test1", test);
 
-        JSObject test1 = context.getGlobalObject().getJSObject("test1");
+            JSObject test1 = context.getGlobalObject().getJSObject("test1");
 
-        assertEquals("{\"count\":0}", test1.stringify());
+            assertEquals("{\"count\":0}", test1.stringify());
 
-        test.release();
-        test1.release();
-
-        context.destroy();
+            test.release();
+            test1.release();
+        }
     }
 
     @Test
     public void jsonParseTest() {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
 
-        QuickJSContext context = createContext();
-        JSObject result = context.parseJSON(text);
-        assertEquals("270", result.getProperty("leadsId"));
+        try (QuickJSContext context = createContext()){
+            JSObject result = context.parseJSON(text);
+            assertEquals("270", result.getProperty("leadsId"));
 
-        context.getGlobalObject().setProperty("test", result);
+            context.getGlobalObject().setProperty("test", result);
 
-        result.release();
+            result.release();
 
-        JSObject test = context.getGlobalObject().getJSObject("test");
-        assertEquals(text, test.stringify());
-        test.release();
-
-        context.destroy();
+            JSObject test = context.getGlobalObject().getJSObject("test");
+            assertEquals(text, test.stringify());
+            test.release();
+        }
     }
 
     @Test
