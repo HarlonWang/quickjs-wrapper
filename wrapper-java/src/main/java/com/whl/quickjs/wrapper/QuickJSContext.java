@@ -11,7 +11,7 @@ import java.util.List;
 public class QuickJSContext implements Closeable {
 
     @Override
-    public void close() throws IOException {
+    public void close() throws QuickJSException {
         destroy();
     }
 
