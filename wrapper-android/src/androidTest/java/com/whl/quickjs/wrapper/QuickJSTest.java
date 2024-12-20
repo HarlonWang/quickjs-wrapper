@@ -717,20 +717,21 @@ public class QuickJSTest {
 
     @Test
     public void testQuickJSExceptionWithJavaError() {
-        QuickJSContext context = createContext();
-        Thread t1 = new Thread(() -> {
+        try (QuickJSContext context = createContext()){
+            Thread t1 = new Thread(() -> {
+                try {
+                    context.evaluate("var a = 1;");
+                } catch (QuickJSException e) {
+                    assertFalse(e.isJSError());
+                    assertEquals("Must be call same thread in QuickJSContext.create!", e.getMessage());
+                }
+            });
+            t1.start();
             try {
-                context.evaluate("var a = 1;");
-            } catch (QuickJSException e) {
-                assertFalse(e.isJSError());
-                assertEquals("Must be call same thread in QuickJSContext.create!", e.getMessage());
+                t1.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        });
-        t1.start();
-        try {
-            t1.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -989,9 +990,9 @@ public class QuickJSTest {
     public void testPromiseCrash() {
         thrown.expect(QuickJSException.class);
         thrown.expectMessage("我来自Exception的值");
-        QuickJSContext jsContext = createContext();
-        JSObject pofeng = jsContext.createNewJSObject();
-        JSObject gol = jsContext.getGlobalObject();
+        QuickJSContext context = createContext();
+        JSObject pofeng = context.createNewJSObject();
+        JSObject gol = context.getGlobalObject();
         gol.setProperty("pofeng", pofeng);
         pofeng.setProperty("getSystemInfo", args -> {
             ((JSFunction) ((JSObject) args[0]).getJSObject("success")).call("我来自Exception的值");
@@ -1005,8 +1006,8 @@ public class QuickJSTest {
                 "                }\n" +
                 "            })\n" +
                 "        })";
-        jsContext.evaluate(js);
-        jsContext.destroy();
+        context.evaluate(js);
+        context.destroy();
     }
 
     @Test
