@@ -238,6 +238,7 @@ jsModuleLoaderFunc(JSContext *ctx, const char *module_name, void *opaque) {
         int scriptLen = env->GetStringUTFLength((jstring) result);
         JSValue func_val = JS_Eval(ctx, script, scriptLen, module_name,
                                    JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+        env->ReleaseStringUTFChars((jstring)(result), script);
         if (JS_IsException(func_val)) {
             JS_FreeValue(ctx, func_val);
             throwJSException(env, ctx);
