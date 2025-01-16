@@ -1017,11 +1017,11 @@ public class QuickJSTest {
             JSObject jsObject = jsContext.createNewJSObject();
             JSCallFunction function = args -> null;
             jsObject.setProperty("test", function);
-            // jsObject.release();
+            jsObject.release();
         }
 
         // QuickJSLoader.initConsoleLog 方法里有调用过一次 setProperty，总数还剩1个
-        // assertEquals(1, jsContext.getCallFunctionMapSize());
+        assertEquals(1, jsContext.getCallFunctionMapSize());
         jsContext.releaseObjectRecords();
         jsContext.releaseObjectRecords();
         jsContext.destroy();
