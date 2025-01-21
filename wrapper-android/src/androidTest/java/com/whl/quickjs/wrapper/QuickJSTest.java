@@ -24,7 +24,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1017,11 +1019,11 @@ public class QuickJSTest {
             JSObject jsObject = jsContext.createNewJSObject();
             JSCallFunction function = args -> null;
             jsObject.setProperty("test", function);
-            // jsObject.release();
+            jsObject.release();
         }
 
         // QuickJSLoader.initConsoleLog 方法里有调用过一次 setProperty，总数还剩1个
-        // assertEquals(1, jsContext.getCallFunctionMapSize());
+        assertEquals(1, jsContext.getCallFunctionMapSize());
         jsContext.releaseObjectRecords();
         jsContext.releaseObjectRecords();
         jsContext.destroy();
@@ -1210,6 +1212,27 @@ public class QuickJSTest {
         try (QuickJSContext context = createContext()) {
             HashMap<String, Object> map = context.getGlobalObject().toMap((key, pointer, extra) -> key.equals("Math") || key.equals("Infinity"));
             assertEquals("{console={}, Reflect={}, NaN=NaN, JSON={}, Atomics={}, undefined=null}", map.toString());
+        }
+    }
+
+    @Test
+    public void testObjectToCustomMap() {
+        try (QuickJSContext context = createContext()) {
+            StringBuilder expected = new StringBuilder("{");
+            JSObject object = context.createNewJSObject();
+            for (int i = 0; i < 100; i++) {
+                object.setProperty(Integer.toString(i), i);
+                expected.append(i).append("=").append(i);
+                if (i != 99) {
+                    expected.append(", ");
+                }
+            }
+            expected.append("}");
+            Map<String, Object> linkedMap = object.toMap(null, null, LinkedHashMap::new);
+            HashMap<String, Object> hashMap = object.toMap();
+            assertEquals(expected.toString(), linkedMap.toString());
+            assertNotEquals(expected.toString(), hashMap.toString());
+            object.release();
         }
     }
 

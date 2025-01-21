@@ -280,3 +280,14 @@ Java_com_whl_quickjs_wrapper_QuickJSContext_getMemoryUsedSize(JNIEnv *env, jobje
     JS_ComputeMemoryUsage(rt, &usage);
     return (jlong)usage.memory_used_size;
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_whl_quickjs_wrapper_QuickJSContext_setGCThreshold(JNIEnv *env, jobject thiz, jlong runtime,
+                                                           jint size) {
+    auto *rt = reinterpret_cast<JSRuntime*>(runtime);
+    // use -1 to disable automatic GC
+    if (size < 0) {
+        size = -1;
+    }
+    JS_SetGCThreshold(rt, size);
+}

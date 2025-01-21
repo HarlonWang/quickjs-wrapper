@@ -2,6 +2,7 @@ package com.whl.quickjs.wrapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public interface JSObject {
 
@@ -63,6 +64,6 @@ public interface JSObject {
 
     HashMap<String, Object> toMap(MapFilter filter);
     ArrayList<Object> toArray(MapFilter filter);
-    HashMap<String, Object> toMap(MapFilter filter, Object extra);
-    ArrayList<Object> toArray(MapFilter filter, Object extra);
+    Map<String, Object> toMap(MapFilter filter, Object extra, MapCreator mapCreator);
+    ArrayList<Object> toArray(MapFilter filter, Object extra, MapCreator mapCreator);
 }

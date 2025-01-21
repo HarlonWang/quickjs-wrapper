@@ -117,6 +117,10 @@ public class QuickJSContext implements Closeable {
         setMaxStackSize(runtime, maxStackSize);
     }
 
+    public void setGCThreshold(int thresholdSize) {
+        setGCThreshold(runtime, thresholdSize);
+    }
+
     public void runGC() {
         runGC(runtime);
     }
@@ -588,6 +592,7 @@ public class QuickJSContext implements Closeable {
     private native void dumpMemoryUsage(long runtime, String fileName);
     private native void dumpObjects(long runtime, String fileName);
     private native long getMemoryUsedSize(long runtime);
+    private native void setGCThreshold(long runtime, int size);
 
     // context
     private native long createContext(long runtime);

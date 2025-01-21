@@ -3,6 +3,7 @@ package com.whl.quickjs.wrapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Created by Harlon Wang on 2024/2/13.
@@ -38,7 +39,7 @@ public class QuickJSArray extends QuickJSObject implements JSArray {
 
     @Override
     public HashMap<String, Object> toMap(MapFilter filter) {
-        return toMap(filter, null);
+        return (HashMap<String, Object>) toMap(filter, null, null);
     }
 
     @Override
@@ -48,20 +49,20 @@ public class QuickJSArray extends QuickJSObject implements JSArray {
 
     @Override
     public ArrayList<Object> toArray(MapFilter filter) {
-        return toArray(filter, null);
+        return toArray(filter, null, HashMap::new);
     }
 
     @Override
-    public ArrayList<Object> toArray(MapFilter filter, Object extra) {
+    public ArrayList<Object> toArray(MapFilter filter, Object extra, MapCreator creator) {
         ArrayList<Object> arrayList = new ArrayList<>(length());
         HashSet<Long> circulars = new HashSet<>();
-        convertToMap(this, arrayList, circulars, filter, extra);
+        convertToMap(this, arrayList, circulars, filter, extra, creator);
         circulars.clear();
         return arrayList;
     }
 
     @Override
-    public HashMap<String, Object> toMap(MapFilter filter, Object extra) {
+    public Map<String, Object> toMap(MapFilter filter, Object extra, MapCreator mapCreator) {
         throw new UnsupportedOperationException("Array types are not yet supported for conversion to map. You should use toArray.");
     }
 }
