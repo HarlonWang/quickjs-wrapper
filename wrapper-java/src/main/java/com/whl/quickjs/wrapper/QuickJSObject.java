@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Created by Harlon Wang on 2024/2/12.
@@ -265,33 +266,33 @@ public class QuickJSObject implements JSObject {
 
     @Override
     public HashMap<String, Object> toMap(MapFilter filter) {
-        return toMap(filter, null);
+        return (HashMap<String, Object>) toMap(filter, null, HashMap::new);
     }
 
     @Override
-    public HashMap<String, Object> toMap(MapFilter filter, Object extra) {
-        HashMap<String, Object> objectMap = new HashMap<>();
+    public Map<String, Object> toMap(MapFilter filter, Object extra, MapCreator mapCreator) {
+        Map<String, Object> objectMap = mapCreator.get();
         HashSet<Long> circulars = new HashSet<>();
-        convertToMap(this, objectMap, circulars, filter, extra);
+        convertToMap(this, objectMap, circulars, filter, extra, mapCreator);
         circulars.clear();
         return objectMap;
     }
 
     @Override
-    public ArrayList<Object> toArray(MapFilter filter, Object extra) {
+    public ArrayList<Object> toArray(MapFilter filter, Object extra, MapCreator mapCreator) {
         throw new UnsupportedOperationException("Object types are not yet supported for conversion to array. You should use toMap.");
 
     }
 
     @Override
     public ArrayList<Object> toArray(MapFilter filter) {
-        return toArray(filter, null);
+        return toArray(filter, null, null);
     }
 
     /**
      * 注意点：循环引用的对象会被过滤掉
      */
-    protected void convertToMap(Object target, Object map, HashSet<Long> circulars, MapFilter filter, Object extra) {
+    protected void convertToMap(Object target, Object map, HashSet<Long> circulars, MapFilter filter, Object extra, MapCreator mapCreator) {
         circulars.add(((JSObject) target).getPointer());
 
         boolean isArray = target instanceof JSArray;
@@ -326,9 +327,9 @@ public class QuickJSObject implements JSObject {
 
             if (value instanceof JSArray) {
                 ArrayList<Object> list = new ArrayList<>(((JSArray) value).length());
-                convertToMap(value, list, circulars, filter, extra);
-                if (map instanceof HashMap) {
-                    ((HashMap<String, Object>) map).put(key, list);
+                convertToMap(value, list, circulars, filter, extra, mapCreator);
+                if (map instanceof Map) {
+                    ((Map<String, Object>) map).put(key, list);
                 } else if (map instanceof ArrayList){
                     ((ArrayList<Object>) map).add(list);
                 }
@@ -337,10 +338,10 @@ public class QuickJSObject implements JSObject {
             }
 
             if (value instanceof JSObject) {
-                HashMap<String, Object> valueMap = new HashMap<>();
-                convertToMap(value, valueMap, circulars, filter, extra);
-                if (map instanceof HashMap) {
-                    ((HashMap<String, Object>) map).put(key, valueMap);
+                Map<String, Object> valueMap = mapCreator.get();
+                convertToMap(value, valueMap, circulars, filter, extra, mapCreator);
+                if (map instanceof Map) {
+                    ((Map<String, Object>) map).put(key, valueMap);
                 } else if (map instanceof ArrayList){
                     ((ArrayList<Object>) map).add(valueMap);
                 }
@@ -349,8 +350,8 @@ public class QuickJSObject implements JSObject {
             }
 
             // Primitive types.
-            if (map instanceof HashMap) {
-                ((HashMap<String, Object>) map).put(key, value);
+            if (map instanceof Map) {
+                ((Map<String, Object>) map).put(key, value);
             } else if (map instanceof ArrayList){
                 ((ArrayList<Object>) map).add(value);
             }
