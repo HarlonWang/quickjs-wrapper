@@ -55,7 +55,7 @@ public class QuickJSArray extends QuickJSObject implements JSArray {
     @Override
     public ArrayList<Object> toArray(MapFilter filter, Object extra, MapCreator creator) {
         ArrayList<Object> arrayList = new ArrayList<>(length());
-        HashSet<Long> circulars = new HashSet<>();
+        HashMap<Long, Object> circulars = new HashMap<>();
         convertToMap(this, arrayList, circulars, filter, extra, creator);
         circulars.clear();
         return arrayList;

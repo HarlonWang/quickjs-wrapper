@@ -1193,11 +1193,11 @@ public class QuickJSTest {
     public void testObjectToMap() {
         try (QuickJSContext context = createContext()) {
             JSObject ret = (JSObject) context.evaluate("var a = {'a': '123', 'b': [1, 2]};a.c = a;a;");
-            assertEquals("{a=123, b=[1, 2]}", ret.toMap().toString());
+            assertEquals("{a=123, b=[1, 2], c=(this Map)}", ret.toMap().toString());
             ret.release();
 
             JSArray array = (JSArray) context.evaluate("var b = [{a: { c : 'xxx'}}, 2, 'qqq', 1.22]; b.push(b); b;");
-            assertEquals("[{a={c=xxx}}, 2, qqq, 1.22]", array.toArray().toString());
+            assertEquals("[{a={c=xxx}}, 2, qqq, 1.22, (this Collection)]", array.toArray().toString());
             array.release();
 
             JSObject emptyObj = (JSObject) context.evaluate("var a = { emptyArray: [] };a;");
@@ -1211,7 +1211,7 @@ public class QuickJSTest {
     public void testObjectToMapFilter() {
         try (QuickJSContext context = createContext()) {
             HashMap<String, Object> map = context.getGlobalObject().toMap((key, pointer, extra) -> key.equals("Math") || key.equals("Infinity"));
-            assertEquals("{console={}, Reflect={}, NaN=NaN, JSON={}, Atomics={}, undefined=null}", map.toString());
+            assertEquals("{globalThis=(this Map), console={}, Reflect={}, NaN=NaN, JSON={}, Atomics={}, undefined=null}", map.toString());
         }
     }
 
@@ -1306,6 +1306,28 @@ public class QuickJSTest {
     public void testDynamicImport() {
         try (QuickJSContext context = createContext()) {
             context.evaluateModule(readFile("test_module_import_dynamic.js"));
+        }
+    }
+
+    @Test
+    public void testArraySameRefToMap() {
+        try (QuickJSContext context = createContext()){
+            JSObject ret = (JSObject) context.evaluate("const a = [7]\n" +
+                    "\n" +
+                    "const b = {\n" +
+                    "\tc: {\n" +
+                    "\t\td: a\n" +
+                    "\t},\n" +
+                    "\te: a,\n" +
+                    "\tg: null,\n" +
+                    "\tk: undefined\n" +
+                    "}\n" +
+                    "\n" +
+                    "b.f = b\n" +
+                    "\n" +
+                    "console.log(b)\n" +
+                    "b;");
+            assertEquals("{c={d=[7]}, e=[7], f=(this Map), g=null, k=null}", ret.toMap().toString());
         }
     }
 

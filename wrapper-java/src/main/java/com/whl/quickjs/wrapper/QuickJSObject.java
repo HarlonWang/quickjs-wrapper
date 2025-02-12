@@ -272,7 +272,7 @@ public class QuickJSObject implements JSObject {
     @Override
     public Map<String, Object> toMap(MapFilter filter, Object extra, MapCreator mapCreator) {
         Map<String, Object> objectMap = mapCreator.get();
-        HashSet<Long> circulars = new HashSet<>();
+        HashMap<Long, Object> circulars = new HashMap<>();
         convertToMap(this, objectMap, circulars, filter, extra, mapCreator);
         circulars.clear();
         return objectMap;
@@ -290,10 +290,12 @@ public class QuickJSObject implements JSObject {
     }
 
     /**
-     * 注意点：循环引用的对象会被过滤掉
+     * 注意点：
+     * 1. 循环引用的对象会被过滤掉
+     * 2. 当 value 值为 undefined ，和 null 的处理逻辑一样，未做区分
      */
-    protected void convertToMap(Object target, Object map, HashSet<Long> circulars, MapFilter filter, Object extra, MapCreator mapCreator) {
-        circulars.add(((JSObject) target).getPointer());
+    protected void convertToMap(Object target, Object map, HashMap<Long, Object> circulars, MapFilter filter, Object extra, MapCreator mapCreator) {
+        circulars.put(((JSObject) target).getPointer(), map);
 
         boolean isArray = target instanceof JSArray;
         JSArray array = isArray ? (JSArray) target : ((JSObject) target).getNames();
@@ -313,8 +315,14 @@ public class QuickJSObject implements JSObject {
 
             if (value instanceof JSObject) {
                 long pointer = ((JSObject) value).getPointer();
-                if (circulars.contains(pointer)) {
-                    // Circular reference objects, no processing needed.
+                if (circulars.containsKey(pointer)) {
+                    // Circular reference objects.
+                    Object refValue = circulars.get(pointer);
+                    if (map instanceof Map) {
+                        ((Map<String, Object>) map).put(key, refValue);
+                    } else if (map instanceof ArrayList){
+                        ((ArrayList<Object>) map).add(refValue);
+                    }
                     continue;
                 }
             }
