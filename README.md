@@ -237,7 +237,7 @@ context.setModuleLoader(new QuickJSContext.BytecodeModuleLoader() {
 });
 
 // 3. use `evaluateModule` for module script
-        context.evaluateModule(...);
+context.evaluateModule(...);
 ```
 JavaScript
 ```JavaScript
