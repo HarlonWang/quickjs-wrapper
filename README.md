@@ -235,6 +235,9 @@ context.setModuleLoader(new QuickJSContext.BytecodeModuleLoader() {
         return context.compileModule("export var name = 'Jack';export var age = 18;", moduleName);
     }
 });
+
+// 3. use `evaluateModule` for module script
+        context.evaluateModule(...);
 ```
 JavaScript
 ```JavaScript
