@@ -289,11 +289,6 @@ public class QuickJSObject implements JSObject {
         return toArray(filter, null, null);
     }
 
-    /**
-     * 注意点：
-     * 1. 循环引用的对象会被过滤掉
-     * 2. 当 value 值为 undefined ，和 null 的处理逻辑一样，未做区分
-     */
     protected void convertToMap(Object target, Object map, HashMap<Long, Object> circulars, MapFilter filter, Object extra, MapCreator mapCreator) {
         circulars.put(((JSObject) target).getPointer(), map);
 
