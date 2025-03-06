@@ -281,7 +281,6 @@ public class QuickJSObject implements JSObject {
     @Override
     public ArrayList<Object> toArray(MapFilter filter, Object extra, MapCreator mapCreator) {
         throw new UnsupportedOperationException("Object types are not yet supported for conversion to array. You should use toMap.");
-
     }
 
     @Override
