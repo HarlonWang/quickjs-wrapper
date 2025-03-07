@@ -2,7 +2,6 @@ package com.whl.quickjs.wrapper;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -135,24 +134,30 @@ public class QuickJSContext implements Closeable {
     }
 
     public void dumpMemoryUsage(File target) {
-        if (target == null || !target.exists()) {
-            return;
+        checkSameThread();
+        checkDestroyed();
+        String fileName = null;
+        if (target != null && target.exists()) {
+            fileName = target.getAbsolutePath();
         }
 
-        dumpMemoryUsage(runtime, target.getAbsolutePath());
+        dumpMemoryUsage(runtime, fileName);
     }
 
     // will use stdout to print.
     public void dumpMemoryUsage() {
-        dumpMemoryUsage(runtime, null);
+        dumpMemoryUsage(null);
     }
 
     public void dumpObjects(File target) {
-        if (target == null || !target.exists()) {
-            return;
+        checkSameThread();
+        checkDestroyed();
+        String fileName = null;
+        if (target != null && target.exists()) {
+            fileName = target.getAbsolutePath();
         }
 
-        dumpObjects(runtime, target.getAbsolutePath());
+        dumpObjects(runtime, fileName);
     }
 
     public JSObjectCreator getCreator() {
@@ -161,7 +166,7 @@ public class QuickJSContext implements Closeable {
 
     // will use stdout to print.
     public void dumpObjects() {
-        dumpObjects(runtime, null);
+        dumpObjects(null);
     }
 
     private final long runtime;
