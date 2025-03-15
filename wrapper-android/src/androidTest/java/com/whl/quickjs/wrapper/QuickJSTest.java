@@ -1331,4 +1331,26 @@ public class QuickJSTest {
         }
     }
 
+    @Test
+    public void testCallThrowError() {
+        QuickJSContext context = createContext();
+        JSFunction function = null;
+        try {
+            function = (JSFunction) context.evaluate("function testThrowError() {\n" +
+                    "\tthrow new Error(\"test\");\n" +
+                    "}\n" +
+                    "\n" +
+                    "testThrowError;");
+            function.call();
+        } catch (Exception e) {
+            if (function != null) {
+                // 测试
+                function.release();
+            }
+            int defaultLength = 1;
+            assertEquals(defaultLength, context.getObjectRecords().size());
+            context.destroy();
+        }
+    }
+
 }
