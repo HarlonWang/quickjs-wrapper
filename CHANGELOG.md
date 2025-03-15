@@ -1,14 +1,17 @@
 # Change Log
 
-## 2.4.4 *(2024-02-12)*
+## 2.4.5 *(2025-03-15)*
+- fix: not correctly released when an exception occurs during function execution
+
+## 2.4.4 *(2025-02-12)*
 - 优化 toMap 的循环引用处理逻辑
 - quickjs 增加判空处理，解决 OOM 场景里的异常崩溃问题
 
-## 2.4.3 *(2024-01-21)*
+## 2.4.3 *(2025-01-21)*
 - 添加了在将 JSObjects 转换为 Java Maps 时支持自定义映射创建。
 - 添加了 setGCThreshold 方法，用于控制垃圾回收阈值。
 
-## 2.4.2 *(2024-01-10)*
+## 2.4.2 *(2025-01-10)*
 - 修复：源码执行模式下的字符串泄漏问题
 
 ## 2.4.1 *(2024-12-04)*
