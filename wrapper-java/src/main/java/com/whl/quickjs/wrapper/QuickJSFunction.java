@@ -44,16 +44,22 @@ public class QuickJSFunction extends QuickJSObject implements JSFunction {
         checkRefCountIsZero();
 
         currentStatus = Status.CALLING;
-        Object ret = getContext().call(this, thisPointer, thisPointerTag, args);
-        currentStatus = Status.CALLED;
+        Object ret;
+        try {
+            ret = getContext().call(this, thisPointer, thisPointerTag, args);
+        } finally {
+            // call 可能会抛出异常，需要保障以下代码被执行，不然因为状态不对，导致无法正常 release。
+            currentStatus = Status.CALLED;
 
-        if (stashTimes > 0) {
-            // 如果有暂存，这里需要恢复下 release 操作
-            for (int i = 0; i < stashTimes; i++) {
-                release();
+            if (stashTimes > 0) {
+                // 如果有暂存，这里需要恢复下 release 操作
+                for (int i = 0; i < stashTimes; i++) {
+                    release();
+                }
+                stashTimes = 0;
             }
-            stashTimes = 0;
         }
+
         return ret;
     }
 

@@ -551,6 +551,7 @@ jobject QuickJSWrapper::call(JNIEnv *env, jobject thiz, jlong func, jlong this_o
 
     JSValue ret = JS_Call(context, jsFunc, jsObj, arguments.size(), arguments.data());
     if (JS_IsException(ret)) {
+        JS_FreeValue(context, ret);
         throwJSException(env, context);
         return nullptr;
     }
