@@ -1,5 +1,8 @@
 # Change Log
 
+## 3.1.0 *(2025-03-17)*
+- Align internal and external version numbers to 3.1.0, no functional changes – codebase remains identical to 2.4.5.
+
 ## 2.4.5 *(2025-03-15)*
 - fix: not correctly released when an exception occurs during function execution
 
