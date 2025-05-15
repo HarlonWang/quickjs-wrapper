@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.whl.quickjs.wrapper.sample'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.whl.quickjs.wrapper.sample"
         minSdkVersion 21
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
