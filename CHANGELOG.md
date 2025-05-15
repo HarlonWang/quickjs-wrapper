@@ -1,5 +1,8 @@
 # Change Log
 
+## 3.2.0 *(2025-05-15)*
+- feature: support 16 KB page sizes.
+
 ## 3.1.0 *(2025-03-17)*
 - Align internal and external version numbers to 3.1.0, no functional changes – codebase remains identical to 2.4.5.
 
