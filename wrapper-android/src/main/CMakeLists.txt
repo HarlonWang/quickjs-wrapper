@@ -41,7 +41,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         quickjs-android-wrapper
-
+        "-Wl,-z,max-page-size=16384"
         # Links the target library to the log library
         # included in the NDK.
-        ${log-lib} )
+        ${log-lib})
