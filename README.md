@@ -289,7 +289,9 @@ JavaScript runtimes are single threaded. All execution in the JavaScript runtime
 
 ## Find this repository useful?
 Support it by joining __[stargazers](https://github.com/HarlonWang/quickjs-wrapper/stargazers)__ for this repository. <br>
-Also, __[follow me](https://github.com/HarlonWang)__ on GitHub for my next creations! 
+Also, Sponsoring me will make this library even better! 
+
+<img src="images/alipay.jpg" width="372" height="508"> <img src="images/wechat.png" width="372" height="508">
 
 ## Stargazers over time
 
