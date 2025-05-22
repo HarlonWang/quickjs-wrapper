@@ -673,7 +673,7 @@ void QuickJSWrapper::removeCallFunction(int callback_id) const {
 
 JSValue QuickJSWrapper::toJSValue(JNIEnv *env, jobject thiz, jobject value) const {
     if (value == nullptr) {
-        return JS_UNDEFINED;
+        return JS_NULL;
     }
 
     JSValue result;
