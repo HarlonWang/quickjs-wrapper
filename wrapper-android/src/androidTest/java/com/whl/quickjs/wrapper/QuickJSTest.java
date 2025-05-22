@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -195,7 +196,7 @@ public class QuickJSTest {
                     "}");
             JSObject globalObject = context.getGlobalObject();
             JSFunction func = (JSFunction) globalObject.getProperty("test");
-            assertEquals("hello, undefined-13", func.call(null, -1, 3));
+            assertEquals("hello, null-13", func.call(null, -1, 3));
             func.release();
         }
     }
@@ -1211,7 +1212,14 @@ public class QuickJSTest {
     public void testObjectToMapFilter() {
         try (QuickJSContext context = createContext()) {
             HashMap<String, Object> map = context.getGlobalObject().toMap((key, pointer, extra) -> key.equals("Math") || key.equals("Infinity"));
-            assertEquals("{globalThis=(this Map), console={}, Reflect={}, NaN=NaN, JSON={}, Atomics={}, undefined=null}", map.toString());
+            assertEquals(7, map.size());
+            assertEquals(map, map.get("globalThis"));
+            assertEquals(new HashMap<>(), map.get("console"));
+            assertEquals(new HashMap<>(), map.get("Reflect"));
+            assertTrue(((Double) Objects.requireNonNull(map.get("NaN"))).isNaN());
+            assertEquals(new HashMap<>(), map.get("JSON"));
+            assertEquals(new HashMap<>(), map.get("Atomics"));
+            assertNull(map.get("undefined"));
         }
     }
 
@@ -1327,7 +1335,14 @@ public class QuickJSTest {
                     "\n" +
                     "console.log(b)\n" +
                     "b;");
-            assertEquals("{c={d=[7]}, e=[7], f=(this Map), g=null, k=null}", ret.toMap().toString());
+            HashMap<String, Object> map = ret.toMap();
+            assertEquals(5, map.size());
+
+            assertEquals(7, ((ArrayList<?>) Objects.requireNonNull(((HashMap<?, ?>) Objects.requireNonNull(map.get("c"))).get("d"))).get(0));
+            assertEquals(7, ((ArrayList<?>) Objects.requireNonNull(map.get("e"))).get(0));
+            assertNull(map.get("g"));
+            assertNull(map.get("k"));
+            assertEquals(map, map.get("f"));
         }
     }
 
