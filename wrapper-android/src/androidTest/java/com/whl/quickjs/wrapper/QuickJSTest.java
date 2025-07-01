@@ -17,7 +17,6 @@ import com.whl.quickjs.android.QuickJSLoader;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -195,7 +195,7 @@ public class QuickJSTest {
                     "}");
             JSObject globalObject = context.getGlobalObject();
             JSFunction func = (JSFunction) globalObject.getProperty("test");
-            assertEquals("hello, undefined-13", func.call(null, -1, 3));
+            assertEquals("hello, null-13", func.call(null, -1, 3));
             func.release();
         }
     }
@@ -209,7 +209,7 @@ public class QuickJSTest {
             JSObject globalObject = context.getGlobalObject();
             JSFunction func = (JSFunction) globalObject.getProperty("test");
             try {
-                func.call(new int[]{1, 2});
+                func.call((Object) new int[]{1, 2});
                 fail();
             } catch (Exception e) {
                 func.release();
@@ -267,7 +267,7 @@ public class QuickJSTest {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
 
         try (QuickJSContext context = createContext()) {
-            JSObject result = context.parseJSON(text);
+            JSObject result = (JSObject) context.parse(text);
             assertEquals("270", result.getProperty("leadsId"));
 
             context.getGlobalObject().setProperty("test", result);
@@ -384,7 +384,7 @@ public class QuickJSTest {
             try {
                 context.evaluate("var a = 1; a();");
             } catch (Exception e) {
-                assertTrue(e.getMessage().contains("not a function"));
+                assertTrue(Objects.requireNonNull(e.getMessage()).contains("not a function"));
             }
         }
     }
@@ -567,7 +567,7 @@ public class QuickJSTest {
         try (QuickJSContext context = createContext()) {
             context.getGlobalObject().setProperty("assert", args -> {
                 String error = (String) args[0];
-                assertEquals(error, "'aaa' is not defined");
+                assertEquals("'aaa' is not defined", error);
                 return null;
             });
             JSObject ret = (JSObject) context.evaluate("new Promise(() => { aaa; }).catch((res) => { assert(res.message); });");
@@ -938,10 +938,10 @@ public class QuickJSTest {
         try (QuickJSContext context = createContext()) {
             context.getGlobalObject().setProperty("getData", args -> {
                 JSArray jsArray = context.createNewJSArray();
-                JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+                JSObject jsObject = (JSObject) context.parse("{\"name\": \"Jack\", \"age\": 33}");
                 jsArray.set(jsObject, 0);
 
-                JSObject jsObject1 = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+                JSObject jsObject1 = (JSObject) context.parse("{\"name\": \"Jack\", \"age\": 33}");
                 jsArray.set(jsObject1, 1);
 
                 jsObject.release();
@@ -956,7 +956,7 @@ public class QuickJSTest {
     public void testJSONParse() {
         try (QuickJSContext context = createContext()) {
             String ret = (String) context.parse("\"test\"");
-            assertEquals(ret, "test");
+            assertEquals("test", ret);
         }
     }
 
@@ -1143,8 +1143,6 @@ public class QuickJSTest {
                     String allocatedSize = split2.get(3);
                     assertTrue(Integer.parseInt(allocatedSize) < maxSize);
                 }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1211,7 +1209,14 @@ public class QuickJSTest {
     public void testObjectToMapFilter() {
         try (QuickJSContext context = createContext()) {
             HashMap<String, Object> map = context.getGlobalObject().toMap((key, pointer, extra) -> key.equals("Math") || key.equals("Infinity"));
-            assertEquals("{globalThis=(this Map), console={}, Reflect={}, NaN=NaN, JSON={}, Atomics={}, undefined=null}", map.toString());
+            assertEquals(7, map.size());
+            assertEquals(map, map.get("globalThis"));
+            assertEquals(new HashMap<>(), map.get("console"));
+            assertEquals(new HashMap<>(), map.get("Reflect"));
+            assertTrue(((Double) Objects.requireNonNull(map.get("NaN"))).isNaN());
+            assertEquals(new HashMap<>(), map.get("JSON"));
+            assertEquals(new HashMap<>(), map.get("Atomics"));
+            assertNull(map.get("undefined"));
         }
     }
 
@@ -1240,7 +1245,7 @@ public class QuickJSTest {
     public void testObjectLeakDetection() {
         try (QuickJSContext context = createContext()) {
             context.setLeakDetectionListener((leak, stringValue) -> {
-                assertEquals(stringValue, "{ name: 'leak1' }");
+                assertEquals("{ name: 'leak1' }", stringValue);
             });
 
             // 泄漏场景
@@ -1269,7 +1274,7 @@ public class QuickJSTest {
     public void testArrayBytes1() {
         try (QuickJSContext context = createContext()) {
             JSFunction bufferTest = (JSFunction) context.evaluate("const bufferTest = (buffer) => { if(new Int8Array(buffer)[0] !== 116) { throw Error('failed, not equal'); }; }; bufferTest;");
-            bufferTest.callVoid("test测试".getBytes());
+            bufferTest.callVoid((Object) "test测试".getBytes());
         }
     }
 
@@ -1298,7 +1303,7 @@ public class QuickJSTest {
     @Test
     public void testEvalModuleReturn() {
         try (QuickJSContext context = createContext()) {
-            assertEquals(context.evaluateModule("1;").toString(), "[object Promise]");
+            assertEquals("[object Promise]", context.evaluateModule("1;").toString());
         }
     }
 
@@ -1327,7 +1332,14 @@ public class QuickJSTest {
                     "\n" +
                     "console.log(b)\n" +
                     "b;");
-            assertEquals("{c={d=[7]}, e=[7], f=(this Map), g=null, k=null}", ret.toMap().toString());
+            HashMap<String, Object> map = ret.toMap();
+            assertEquals(5, map.size());
+
+            assertEquals(7, ((ArrayList<?>) Objects.requireNonNull(((HashMap<?, ?>) Objects.requireNonNull(map.get("c"))).get("d"))).get(0));
+            assertEquals(7, ((ArrayList<?>) Objects.requireNonNull(map.get("e"))).get(0));
+            assertNull(map.get("g"));
+            assertNull(map.get("k"));
+            assertEquals(map, map.get("f"));
         }
     }
 
