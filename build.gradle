@@ -29,7 +29,7 @@ subprojects {
         group = "wang.harlon.quickjs"
 
         mavenPublishing {
-            publishToMavenCentral(SonatypeHost.S01, true)
+            publishToMavenCentral()
 
             signAllPublications()
 
