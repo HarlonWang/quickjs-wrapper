@@ -1,5 +1,8 @@
 # Change Log
 
+## 3.2.1 *(2025-07-01)*
+- refactor: 优化 JS 空返回类型
+
 ## 3.2.0 *(2025-05-15)*
 - feature: support 16 KB page sizes.
 
