@@ -120,15 +120,18 @@ public class QuickJSObject implements JSObject {
         for (Method method : methods) {
             if (method.isAnnotationPresent(JSMethod.class)) {
                 Object finalJavaObj = javaObj;
-                jsObj.setProperty(method.getName(), args -> {
-                    try {
-                        return method.invoke(finalJavaObj, args);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                jsObj.setProperty(method.getName(), new JSCallFunction(context) {
+                    @Override
+                    public Object call(Object... args) {
+                        try {
+                            return method.invoke(finalJavaObj, args);
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
                     }
-                    return null;
                 });
             }
         }

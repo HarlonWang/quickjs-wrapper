@@ -118,7 +118,12 @@ public class QuickJSTest {
             obj1.setProperty("doubleProperty", 0.1);
             obj1.setProperty("longProperty", 1686026400093L);
             obj1.setProperty("booleanProperty", true);
-            obj1.setProperty("functionProperty", (JSCallFunction) args -> args[0] + "Wang");
+            obj1.setProperty("functionProperty", new JSCallFunction(obj1.getContext()) {
+                @Override
+                public Object call(Object... args) {
+                    return args[0] + "Wang";
+                }
+            });
             obj1.setProperty("nullProperty", (String) null);
             globalObj.setProperty("obj1", obj1);
             obj1.release();
@@ -318,7 +323,12 @@ public class QuickJSTest {
     public void jsonParseTest5() {
         String text = "{\"phoneNumber\":\"呼叫 18505815627\",\"leadsId\":\"270\",\"leadsBizId\":\"xxx\",\"options\":[{\"type\":\"aliyun\",\"avatarUrl\":\"https://gw.alicdn.com/tfs/TB1BYz0vpYqK1RjSZLeXXbXppXa-187-187.png\",\"personName\":\"老板\",\"storeName\":\"小店名称\",\"title\":\"智能办公电话\",\"content\":\"免费拨打\"},{\"type\":\"direct\",\"title\":\"普通电话\",\"content\":\"运营商拨打\"}]}";
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("test", args -> context.parse(text));
+            context.getGlobalObject().setProperty("test", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return context.parse(text);
+                }
+            });
 
             JSObject ret = (JSObject) context.evaluate("var a = test(); a;");
             assertEquals(text, ret.stringify());
@@ -392,9 +402,12 @@ public class QuickJSTest {
     @Test
     public void testPromise2() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assert", args -> {
-                assertEquals("哈哈", args[0]);
-                return null;
+            context.getGlobalObject().setProperty("assert", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals("哈哈", args[0]);
+                    return null;
+                }
             });
             JSObject ret = (JSObject) context.evaluate("    var defer =\n" +
                     "        'function' == typeof Promise\n" +
@@ -408,15 +421,21 @@ public class QuickJSTest {
     @Test
     public void testProxy() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assert0", args -> {
-                assertEquals(1, args[0]);
-                assertNull(args[1]);
-                return null;
+            context.getGlobalObject().setProperty("assert0", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals(1, args[0]);
+                    assertNull(args[1]);
+                    return null;
+                }
             });
-            context.getGlobalObject().setProperty("assert1", args -> {
-                assertEquals(false, args[0]);
-                assertEquals(37, args[1]);
-                return null;
+            context.getGlobalObject().setProperty("assert1", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals(false, args[0]);
+                    assertEquals(37, args[1]);
+                    return null;
+                }
             });
             context.evaluate("const handler = {\n" +
                     "    get: function(obj, prop) {\n" +
@@ -444,7 +463,12 @@ public class QuickJSTest {
     @Test
     public void testReturnParseJSON() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("test", args -> context.parse("{}"));
+            context.getGlobalObject().setProperty("test", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return context.parse("{}");
+                }
+            });
             JSObject ret = (JSObject) context.evaluate("test();test();test();");
             ret.release();
         }
@@ -543,10 +567,13 @@ public class QuickJSTest {
     @Test(expected = QuickJSException.class)
     public void testOnError() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assertTrue", args -> {
-                assertTrue((Boolean) args[0]);
-                assertEquals("'a' is not defined", args[1]);
-                return null;
+            context.getGlobalObject().setProperty("assertTrue", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertTrue((Boolean) args[0]);
+                    assertEquals("'a' is not defined", args[1]);
+                    return null;
+                }
             });
             context.evaluate("onError = (e) => { assertTrue(e instanceof Error, e.message); }; a();");
         }
@@ -565,10 +592,13 @@ public class QuickJSTest {
     @Test
     public void testPromiseUnhandledRejections2() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assert", args -> {
-                String error = (String) args[0];
-                assertEquals(error, "'aaa' is not defined");
-                return null;
+            context.getGlobalObject().setProperty("assert", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    String error = (String) args[0];
+                    assertEquals(error, "'aaa' is not defined");
+                    return null;
+                }
             });
             JSObject ret = (JSObject) context.evaluate("new Promise(() => { aaa; }).catch((res) => { assert(res.message); });");
             ret.release();
@@ -598,9 +628,12 @@ public class QuickJSTest {
     @Test
     public void testPromiseUnhandledRejections5() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assert", args -> {
-                assertEquals(1, args[0]);
-                return null;
+            context.getGlobalObject().setProperty("assert", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals(1, args[0]);
+                    return null;
+                }
             });
             JSObject ret = (JSObject) context.evaluate("new Promise((resolve, reject) => { resolve(1); }).then((res) => { assert(res); });");
             ret.release();
@@ -649,9 +682,12 @@ public class QuickJSTest {
     @Test
     public void testPromiseUnhandledRejections9() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assert", args -> {
-                assertEquals(1, args[0]);
-                return null;
+            context.getGlobalObject().setProperty("assert", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals(1, args[0]);
+                    return null;
+                }
             });
             JSObject ret = (JSObject) context.evaluate("(function(){\n" +
                     "    return new Promise((resolve, reject) => {\n" +
@@ -816,11 +852,19 @@ public class QuickJSTest {
 
             // Java -> JavaScript
             long currentTime = System.currentTimeMillis();
-            context.getGlobalObject().setProperty("longValue", args -> currentTime);
-            context.getGlobalObject().setProperty("assert", args -> {
-                long actual = (long) args[0];
-                assertEquals(currentTime, actual);
-                return null;
+            context.getGlobalObject().setProperty("longValue", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return currentTime;
+                }
+            });
+            context.getGlobalObject().setProperty("assert", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    long actual = (long) args[0];
+                    assertEquals(currentTime, actual);
+                    return null;
+                }
             });
             context.evaluate("assert(longValue());");
 
@@ -870,16 +914,24 @@ public class QuickJSTest {
             console1.release();
 
             JSObject console2 = context.getGlobalObject().getJSObject("console");
-            console2.setProperty("log", args -> {
-                assertEquals("nativeCall", args[0].toString());
-                return null;
+            console2.setProperty("log", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals("nativeCall", args[0].toString());
+                    return null;
+                }
             });
             console2.release();
 
             context.evaluate("var nativeObj = {};");
 
             JSObject tinyDOM = context.getGlobalObject().getJSObject("nativeObj");
-            tinyDOM.setProperty("nativeCall", args -> null);
+            tinyDOM.setProperty("nativeCall", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return null;
+                }
+            });
             tinyDOM.release();
             context.evaluate("console.log(nativeObj.nativeCall.name);");
         }
@@ -902,12 +954,15 @@ public class QuickJSTest {
     @Test
     public void testNativeCallWithAsyncFunc() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("nativeCall", args -> {
-                JSFunction function = (JSFunction) args[0];
-                JSObject ret = (JSObject) function.call();
-                ret.release();
-                function.release();
-                return null;
+            context.getGlobalObject().setProperty("nativeCall", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    JSFunction function = (JSFunction) args[0];
+                    JSObject ret = (JSObject) function.call();
+                    ret.release();
+                    function.release();
+                    return null;
+                }
             });
             context.evaluate("nativeCall(async () => { console.log(123); });");
         }
@@ -920,9 +975,17 @@ public class QuickJSTest {
             JSFunction test = context.getGlobalObject().getJSFunction("test");
             JSObject promise = (JSObject) test.call();
             JSFunction then = promise.getJSFunction("then");
-            JSObject ret = (JSObject) then.call((JSCallFunction) args -> {
-                System.out.println(args[0]);
-                return null;
+            JSObject ret = (JSObject) then.call(new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return new JSCallFunction(context) {
+                        @Override
+                        public Object call(Object... args) {
+                            System.out.println(args[0]);
+                            return null;
+                        }
+                    };
+                }
             });
 
             ret.release();
@@ -936,17 +999,20 @@ public class QuickJSTest {
     @Test
     public void testJSArraySetParseJSON() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("getData", args -> {
-                JSArray jsArray = context.createNewJSArray();
-                JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
-                jsArray.set(jsObject, 0);
+            context.getGlobalObject().setProperty("getData", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    JSArray jsArray = context.createNewJSArray();
+                    JSObject jsObject = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+                    jsArray.set(jsObject, 0);
 
-                JSObject jsObject1 = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
-                jsArray.set(jsObject1, 1);
+                    JSObject jsObject1 = context.parseJSON("{\"name\": \"Jack\", \"age\": 33}");
+                    jsArray.set(jsObject1, 1);
 
-                jsObject.release();
-                jsObject1.release();
-                return jsArray;
+                    jsObject.release();
+                    jsObject1.release();
+                    return jsArray;
+                }
             });
             context.evaluate("var array = getData();console.log(JSON.stringify(array));console.log(array[0]);");
         }
@@ -983,7 +1049,17 @@ public class QuickJSTest {
     @Test
     public void testReturnJSCallback() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("test", args -> (JSCallFunction) args1 -> "123");
+            context.getGlobalObject().setProperty("test", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return new JSCallFunction(context) {
+                        @Override
+                        public Object call(Object... args) {
+                            return "123";
+                        }
+                    };
+                }
+            });
             context.evaluate("console.log(test()());");
         }
     }
@@ -996,9 +1072,12 @@ public class QuickJSTest {
             JSObject pofeng = context.createNewJSObject();
             JSObject gol = context.getGlobalObject();
             gol.setProperty("pofeng", pofeng);
-            pofeng.setProperty("getSystemInfo", args -> {
-                ((JSFunction) ((JSObject) args[0]).getJSObject("success")).call("我来自Exception的值");
-                return "我来自Java的值";
+            pofeng.setProperty("getSystemInfo", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    ((JSFunction) ((JSObject) args[0]).getJSObject("success")).call("我来自Exception的值");
+                    return "我来自Java的值";
+                }
             });
 
             String js = "new Promise((resolve, reject) => {\n" +
@@ -1017,7 +1096,12 @@ public class QuickJSTest {
         QuickJSContext jsContext = createContext();
         for (int i = 0; i < 100; i++) {
             JSObject jsObject = jsContext.createNewJSObject();
-            JSCallFunction function = args -> null;
+            JSCallFunction function = new JSCallFunction(jsContext) {
+                @Override
+                public Object call(Object... args) {
+                    return null;
+                }
+            };
             jsObject.setProperty("test", function);
             jsObject.release();
         }
@@ -1033,11 +1117,19 @@ public class QuickJSTest {
     @Test
     public void testLongMaxValue() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assert", args -> {
-                assertEquals(Long.MAX_VALUE, args[0]);
-                return null;
+            context.getGlobalObject().setProperty("assert", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals(Long.MAX_VALUE, args[0]);
+                    return null;
+                }
             });
-            context.getGlobalObject().setProperty("longMaxValue", args -> Long.MAX_VALUE);
+            context.getGlobalObject().setProperty("longMaxValue", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return Long.MAX_VALUE;
+                }
+            });
             context.evaluate("assert(longMaxValue());");
         }
     }
@@ -1045,22 +1137,55 @@ public class QuickJSTest {
     @Test
     public void testMaxSafeInteger() {
         try (QuickJSContext context = createContext()) {
-            context.getGlobalObject().setProperty("assertEquals", args -> {
-                assertEquals(args[0], args[1]);
-                return null;
+            context.getGlobalObject().setProperty("assertEquals", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    assertEquals(args[0], args[1]);
+                    return null;
+                }
             });
 
-            context.getGlobalObject().setProperty("minThanMSF", args -> 9007199254740990L);
-            context.getGlobalObject().setProperty("equalThanMSF", args -> 9007199254740991L);
-            context.getGlobalObject().setProperty("maxThanMSF", args -> 9007199254740993L);
+            context.getGlobalObject().setProperty("minThanMSF", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return 9007199254740990L;
+                }
+            });
+            context.getGlobalObject().setProperty("equalThanMSF", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return 9007199254740991L;
+                }
+            });
+            context.getGlobalObject().setProperty("maxThanMSF", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return 9007199254740993L;
+                }
+            });
 
             context.evaluate("assertEquals(typeof minThanMSF(), 'number'); assertEquals(minThanMSF(), 9007199254740990);");
             context.evaluate("assertEquals(typeof equalThanMSF(), 'number'); assertEquals(equalThanMSF(), 9007199254740991);");
             context.evaluate("assertEquals(typeof maxThanMSF(), 'bigint'); assertEquals(maxThanMSF(), 9007199254740993n);");
 
-            context.getGlobalObject().setProperty("minThanMinSF", args -> -9007199254740993L);
-            context.getGlobalObject().setProperty("equalThanMinSF", args -> -9007199254740991L);
-            context.getGlobalObject().setProperty("maxThanMinSF", args -> -9007199254740990L);
+            context.getGlobalObject().setProperty("minThanMinSF", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return -9007199254740993L;
+                }
+            });
+            context.getGlobalObject().setProperty("equalThanMinSF", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return -9007199254740991L;
+                }
+            });
+            context.getGlobalObject().setProperty("maxThanMinSF", new JSCallFunction(context) {
+                @Override
+                public Object call(Object... args) {
+                    return -9007199254740990L;
+                }
+            });
 
             context.evaluate("assertEquals(typeof minThanMinSF(), 'bigint'); assertEquals(minThanMinSF(), -9007199254740993n);");
             context.evaluate("assertEquals(typeof equalThanMinSF(), 'number'); assertEquals(equalThanMinSF(), -9007199254740991);");

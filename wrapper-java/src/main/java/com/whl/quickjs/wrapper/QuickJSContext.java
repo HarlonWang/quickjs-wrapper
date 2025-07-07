@@ -21,6 +21,10 @@ public class QuickJSContext implements Closeable {
         void error(String info);
     }
 
+    public interface DuplicateCallback {
+        void onDuplicateDetected(Object value, int callbackId);
+    }
+
     public interface LeakDetectionListener {
         void notifyLeakDetected(JSObject leak, String stringValue);
     }
@@ -85,30 +89,35 @@ public class QuickJSContext implements Closeable {
         }
 
         JSObject consoleObj = getGlobalObject().getJSObject("console");
-        consoleObj.setProperty("stdout", args -> {
-            if (args.length == 2) {
-                String level = (String) args[0];
-                String info = (String) args[1];
-                switch (level) {
-                    case "info":
-                        console.info(info);
-                        break;
-                    case "warn":
-                        console.warn(info);
-                        break;
-                    case "error":
-                        console.error(info);
-                        break;
-                    case "log":
-                    case "debug":
-                    default:
-                        console.log(info);
-                        break;
-                }
-            }
 
-            return null;
+        consoleObj.setProperty("stdout", new JSCallFunction(consoleObj.getContext()) {
+            @Override
+            public Object call(Object... args) {
+                if (args.length == 2) {
+                    String level = (String) args[0];
+                    String info = (String) args[1];
+                    switch (level) {
+                        case "info":
+                            console.info(info);
+                            break;
+                        case "warn":
+                            console.warn(info);
+                            break;
+                        case "error":
+                            console.error(info);
+                            break;
+                        case "log":
+                        case "debug":
+                        default:
+                            console.log(info);
+                            break;
+                    }
+                }
+
+                return null;
+            }
         });
+
         consoleObj.release();
     }
 
@@ -181,6 +190,8 @@ public class QuickJSContext implements Closeable {
     private final List<JSObject> objectRecords = new ArrayList<>();
     private LeakDetectionListener leakDetectionListener;
     private boolean enableStackTrace = false;
+    private int nextCallbackId = Integer.MIN_VALUE;
+    private DuplicateCallback duplicateCallback;
 
     private QuickJSContext(JSObjectCreator creator) {
         try {
@@ -248,6 +259,16 @@ public class QuickJSContext implements Closeable {
         }
 
         this.moduleLoader = moduleLoader;
+    }
+
+    public void setDuplicateCallback(DuplicateCallback duplicateCallback) {
+        this.duplicateCallback = duplicateCallback;
+    }
+
+    public int nextCallbackId() {
+        checkSameThread();
+        nextCallbackId++;
+        return nextCallbackId;
     }
 
     public ModuleLoader getModuleLoader() {
@@ -369,6 +390,11 @@ public class QuickJSContext implements Closeable {
 
     private void putCallFunction(JSCallFunction callFunction) {
         int callFunctionId = callFunction.hashCode();
+        if (callFunctionMap.containsKey(callFunctionId)) {
+            if (duplicateCallback != null) {
+                duplicateCallback.onDuplicateDetected(callFunction, callFunctionId);
+            }
+        }
         callFunctionMap.put(callFunctionId, callFunction);
     }
 

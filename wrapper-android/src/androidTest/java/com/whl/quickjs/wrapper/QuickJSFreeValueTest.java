@@ -81,11 +81,14 @@ public class QuickJSFreeValueTest {
 
     @Test
     public void testState() {
-        context.getGlobalObject().setProperty("setState", args -> {
-            JSObject ret = (JSObject) args[0];
-            Log.d("test", ret.toString());
-            ret.release();
-            return "test";
+        context.getGlobalObject().setProperty("setState", new JSCallFunction(context) {
+            @Override
+            public Object call(Object... args) {
+                JSObject ret = (JSObject) args[0];
+                Log.d("test", ret.toString());
+                ret.release();
+                return "test";
+            }
         });
 
         context.evaluate("setState({age: 12});");
@@ -115,7 +118,7 @@ public class QuickJSFreeValueTest {
         // set console.log
         context.evaluate("var console = {};");
         JSObject console = (JSObject) context.getGlobalObject().getProperty("console");
-        console.setProperty("log", new JSCallFunction() {
+        console.setProperty("log", new JSCallFunction(context) {
             @Override
             public Object call(Object... args) {
                 StringBuilder b = new StringBuilder();
