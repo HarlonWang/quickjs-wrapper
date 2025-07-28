@@ -15,7 +15,7 @@ Experimental Features Stability not guaranteed.
 
 ## Download
 
-[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper-android.svg?label=Maven%20Central&color=blue)](https://search.maven.org/search?q=g:%22wang.harlon.quickjs%22%20AND%20a:%22wrapper-android%22)
+[![Maven Central](https://img.shields.io/maven-central/v/wang.harlon.quickjs/wrapper-android.svg?label=Maven%20Central&color=blue)](https://central.sonatype.com/artifact/wang.harlon.quickjs/wrapper-android)
 
 ```Groovy
 repositories {
